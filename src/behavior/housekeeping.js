@@ -23,11 +23,11 @@ export class HousekeepingEngine {
     habitScore = 0.6,
   } = {}) {
     if (!isHome) {
-      return { shouldClean: false, probability: 0, reason: 'Не на базе' };
+      return { shouldClean: false, probability: 0, reason: 'Not at the base' };
     }
 
     if (hasUrgentGoal) {
-      return { shouldClean: false, probability: 0.02, reason: 'Есть срочная активная задача' };
+      return { shouldClean: false, probability: 0.02, reason: 'There is an urgent active task' };
     }
 
     const now = Date.now();
@@ -53,7 +53,7 @@ export class HousekeepingEngine {
     return {
       shouldClean,
       probability: finalProb,
-      reason: shouldClean ? 'Пора навести порядок в сундуках' : 'Сундуки пока в нормальном состоянии или недавно убирались',
+      reason: shouldClean ? 'It is time to tidy the chests' : 'The chests are in good shape or were cleaned recently',
     };
   }
 
