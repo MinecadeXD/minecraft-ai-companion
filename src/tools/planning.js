@@ -1,10 +1,10 @@
 /**
- * Регистрирует инструменты планирования для AI.
+ * Register planning tools for the AI.
  */
 export function registerPlanningTools(registry, { planner }) {
   if (!planner) return;
 
-  // 1. Создать план
+  // 1. Create a plan.
   registry.register({
     name: 'create_plan',
     description: 'Create a multi-step execution plan for a complex task (e.g. build house, get iron armor, explore cave).',
@@ -26,7 +26,7 @@ export function registerPlanningTools(registry, { planner }) {
         const stepsText = plan.steps.map((s, i) => `${i + 1}. ${s.description}`).join('\n');
         return {
           success: true,
-          data: `План составлен:\nЦель: ${plan.goal}\nШаги:\n${stepsText}`,
+          data: `Plan created:\nGoal: ${plan.goal}\nSteps:\n${stepsText}`,
         };
       } catch (err) {
         return { success: false, error: err.message };
@@ -34,7 +34,7 @@ export function registerPlanningTools(registry, { planner }) {
     },
   });
 
-  // 2. Получить текущий план
+  // 2. Get the current plan.
   registry.register({
     name: 'get_current_plan',
     description: 'Get the status and steps of the currently active plan.',
@@ -42,12 +42,12 @@ export function registerPlanningTools(registry, { planner }) {
     handler: async () => {
       try {
         const plan = planner.getActivePlan();
-        if (!plan) return { success: true, data: 'В данный момент активного плана нет.' };
+        if (!plan) return { success: true, data: 'There is no active plan right now.' };
 
         const stepsText = plan.steps
           .map((s, i) => {
             const mark = s.status === 'completed' ? '✓' : s.status === 'in_progress' ? '►' : s.status === 'failed' ? '✗' : '○';
-            return `${mark} Шаг ${i + 1}: ${s.description} [${s.status}]`;
+            return `${mark} Step ${i + 1}: ${s.description} [${s.status}]`;
           })
           .join('\n');
 
@@ -61,7 +61,7 @@ export function registerPlanningTools(registry, { planner }) {
     },
   });
 
-  // 3. Завершить шаг плана
+  // 3. Complete a plan step.
   registry.register({
     name: 'complete_step',
     description: 'Mark the current plan step as completed and advance to the next step.',
@@ -75,17 +75,17 @@ export function registerPlanningTools(registry, { planner }) {
     },
     handler: async (args) => {
       try {
-        const plan = planner.completeStep(args.stepIndex, args.result || 'Готово');
-        if (!plan) return { success: false, error: 'Активный план не найден' };
+        const plan = planner.completeStep(args.stepIndex, args.result || 'Done');
+        if (!plan) return { success: false, error: 'No active plan found.' };
 
         if (plan.status === 'completed') {
-          return { success: true, data: `Все шаги плана "${plan.goal}" успешно завершены!` };
+          return { success: true, data: `All steps in the plan "${plan.goal}" успешно завершены!` };
         }
 
         const nextStep = plan.steps[plan.currentStepIndex];
         return {
           success: true,
-          data: `Шаг ${args.stepIndex + 1} завершён. Следующий шаг ${plan.currentStepIndex + 1}: "${nextStep.description}"`,
+          data: `Step ${args.stepIndex + 1} completed. Next step ${plan.currentStepIndex + 1}: "${nextStep.description}"`,
         };
       } catch (err) {
         return { success: false, error: err.message };
@@ -93,7 +93,7 @@ export function registerPlanningTools(registry, { planner }) {
     },
   });
 
-  // 4. Пересмотреть план при ошибке
+  // 4. Revise the plan after an error.
   registry.register({
     name: 'revise_plan',
     description: 'Revise the remaining steps of the plan when an unexpected obstacle or failure occurs.',
@@ -111,11 +111,11 @@ export function registerPlanningTools(registry, { planner }) {
     handler: async (args) => {
       try {
         const plan = planner.revisePlan(args.newSteps);
-        if (!plan) return { success: false, error: 'Нет активного плана для пересмотра' };
+        if (!plan) return { success: false, error: 'There is no active plan to revise.' };
 
         return {
           success: true,
-          data: `План обновлён. Осталось шагов: ${plan.steps.length - plan.currentStepIndex}`,
+          data: `Plan updated. Remaining steps: ${plan.steps.length - plan.currentStepIndex}`,
         };
       } catch (err) {
         return { success: false, error: err.message };
@@ -123,7 +123,7 @@ export function registerPlanningTools(registry, { planner }) {
     },
   });
 
-  // 5. Отменить план
+  // 5. Cancel the plan.
   registry.register({
     name: 'cancel_plan',
     description: 'Cancel the current plan and stop all associated actions.',
@@ -135,10 +135,10 @@ export function registerPlanningTools(registry, { planner }) {
     },
     handler: async (args) => {
       try {
-        const success = planner.cancelPlan(args.reason || 'Отмена');
+        const success = planner.cancelPlan(args.reason || 'Cancelled');
         return {
           success,
-          data: success ? 'Текущий план отменён.' : 'Нет активного плана.',
+          data: success ? 'The current plan was cancelled.' : 'There is no active plan.',
         };
       } catch (err) {
         return { success: false, error: err.message };
