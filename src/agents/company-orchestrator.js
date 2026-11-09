@@ -24,13 +24,13 @@ const logger = createLogger('COMPANY_ORCHESTRATOR');
 export const AGENT_NAMES = ['Sam', 'Max', 'Jack', 'Ryan', 'Alex', 'Leo'];
 
 /**
- * CompanyOrchestrator — инфраструктурный координатор компании из 6 игроков.
- * НЕ ПРИНИМАЕТ РЕШЕНИЙ за агентов. Отвечает только за жизненный цикл,
- * распределение глобального бюджета API, общую инфраструктуру и безопасность.
+ * CompanyOrchestrator — infrastructure coordinator for a company of six players.
+ * Does NOT make decisions for agents. It only manages their lifecycle,
+ * the global API budget, shared infrastructure, and safety.
  */
 export class CompanyOrchestrator {
   /**
-   * @param {Object} config — глобальная конфигурация приложения
+   * @param {Object} config — global application configuration.
    */
   constructor(config) {
     this.config = config;
@@ -47,43 +47,43 @@ export class CompanyOrchestrator {
     this.isStarting = false;
     this.availability = 'starting';
 
-    // 1. Единый провайдер AI
+    // 1. Shared AI provider.
     this.aiProvider = createAIProvider(config);
 
-    // 2. Глобальный бюджетный менеджер API (увеличены лимиты для нормальной работы)
-    const maxGlobalRPM = config.ai?.rateLimit?.maxGlobalRPM || 60; // Было 14
-    const maxPerAgentRPM = config.ai?.rateLimit?.maxPerAgentRPM || 15; // Было 3
+    // 2. Global API budget manager (limits increased for normal operation).
+    const maxGlobalRPM = config.ai?.rateLimit?.maxGlobalRPM || 60; // Previously 14.
+    const maxPerAgentRPM = config.ai?.rateLimit?.maxPerAgentRPM || 15; // Previously 3.
     this.budgetManager = new APIBudgetManager({
       maxGlobalRPM,
       maxPerAgentRPM,
       agents: this.agentNames,
     });
 
-    // 3. Социальный граф отношений (42 направленных ребра между 6 ботами и игроком)
+    // 3. Social relationship graph (42 directed edges among six bots and the player).
     this.socialGraph = new SocialGraph({
       agents: this.agentNames,
       humanPlayer: config.bot?.owner || 'kustash01',
     });
     this.socialRelationshipUpdater = new SocialRelationshipUpdater({ socialGraph: this.socialGraph, entities: [...this.agentNames, config.bot?.owner || 'kustash01'] });
 
-    // 4. Общая память компании
+    // 4. Shared company memory.
     const companyDbPath = path.join(__dirname, '..', '..', 'data', 'company_memory.db');
     this.companyMemory = new CompanyMemory({ dbPath: companyDbPath });
     this.companyMemory.init();
 
-    // 5. Менеджер бесед и молчания
+    // 5. Conversation and silence manager.
     this.conversationManager = new ConversationManager({
       socialGraph: this.socialGraph,
       profiles: AGENT_PROFILES,
     });
 
-    // 6. Динамические группы
+    // 6. Dynamic groups.
     this.groupManager = new GroupManager({
       socialGraph: this.socialGraph,
       profiles: AGENT_PROFILES,
     });
 
-    // Создаём 6 независимых экземпляров агентов
+    // Create six independent agent instances.
     for (const name of this.agentNames) {
       let agent = null;
       const personalSocialState = new PersonalSocialState({ getActiveGeneration: () => agent?.activeGeneration });
@@ -107,12 +107,12 @@ export class CompanyOrchestrator {
       agent.on('availabilityChanged', () => this._refreshAvailability());
     }
 
-    logger.info(`Инициализирован CompanyOrchestrator для 6 игроков: ${this.agentNames.join(', ')}`);
+    logger.info(`CompanyOrchestrator initialized for six players: ${this.agentNames.join(', ')}`);
   }
 
 
   /**
-   * Запуск всех агентов и старт инфраструктурных циклов
+   * Start all agents and the infrastructure loops.
    */
   async start() {
     if (this.startPromise) return this.startPromise;
@@ -128,28 +128,28 @@ export class CompanyOrchestrator {
     this.isRunning = true;
 
     logger.info('=============================================');
-    logger.info('👥 Minecraft AI Company — Запуск 6 игроков');
-    logger.info(`Игроки: ${this.agentNames.join(', ')}`);
-    logger.info(`Сервер: ${this.config.minecraft.host}:${this.config.minecraft.port}`);
+    logger.info('👥 Minecraft AI Company — Starting six players');
+    logger.info(`Players: ${this.agentNames.join(', ')}`);
+    logger.info(`Server: ${this.config.minecraft.host}:${this.config.minecraft.port}`);
     logger.info('=============================================');
 
-    // Последовательное подключение с задержкой 5 секунд (предотвращает duplicate_login ошибки)
+    // Connect sequentially with a 5-second delay to prevent duplicate_login errors.
     for (const [name, agent] of this.agents.entries()) {
       if (!this.isRunning) break;
-      logger.info(`Подключение игрока [${name}]...`);
+      logger.info(`Connecting player [${name}]...`);
       try {
         await agent.start();
-        logger.info(`[${name}] подключился успешно.`);
+        logger.info(`[${name}] connected successfully.`);
       } catch (err) {
-        logger.warn(`Не удалось сразу подключить [${name}]: ${err.message}. Будет повторная попытка.`);
+        logger.warn(`Could not connect [${name}] immediately: ${err.message}. It will be retried.`);
       }
-      await new Promise((resolve) => setTimeout(resolve, 5000)); // УВЕЛИЧИЛИ с 2000 на 5000!
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // Increased from 2,000 to 5,000 ms.
     }
 
     // The aggregate availability owns the loop: no available agents means no ticks.
     const startup = this.getAvailability();
 
-    logger.info('✅ Компания из 6 игроков успешно запущена!');
+    logger.info('✅ The six-player company started successfully!');
     return startup;
   }
 
@@ -172,7 +172,7 @@ export class CompanyOrchestrator {
   }
 
   /**
-   * Цикл координации тиков агентов
+   * Coordinate agent ticks.
    * @private
    */
   _startOrchestrationLoop() {
@@ -185,7 +185,7 @@ export class CompanyOrchestrator {
         if (this.activeTicks.has(agent.name)) continue;
         this.activeTicks.add(agent.name);
         Promise.resolve(agent.tick())
-          .catch(err => logger.error(`Ошибка в цикле агента [${agent.name}]: ${err.message}`))
+          .catch(err => logger.error(`Agent tick failed for [${agent.name}]: ${err.message}`))
           .finally(() => this.activeTicks.delete(agent.name));
       }
     }, 500);
@@ -199,7 +199,7 @@ export class CompanyOrchestrator {
   }
 
   /**
-   * Получить агента по имени
+   * Get an agent by name.
    * @param {string} name 
    * @returns {AgentInstance|null}
    */
@@ -208,7 +208,7 @@ export class CompanyOrchestrator {
   }
 
   /**
-   * Получить всех агентов
+   * Get all agents.
    * @returns {AgentInstance[]}
    */
   getAllAgents() {
@@ -216,7 +216,7 @@ export class CompanyOrchestrator {
   }
 
   /**
-   * Снимок состояния всей компании для диагностики и локальных интеграций
+   * Snapshot the entire company state for diagnostics and local integrations.
    */
   getStateSnapshot() {
     const agentsSnapshots = {};
@@ -236,25 +236,25 @@ export class CompanyOrchestrator {
   }
 
   /**
-   * Полная остановка всех систем и отключение всех ботов
+   * Stop all systems and disconnect all bots.
    */
   async stop() {
-    logger.info('Остановка CompanyOrchestrator...');
+    logger.info('Stopping CompanyOrchestrator...');
     this.isRunning = false;
     this._refreshAvailability();
     this._stopOrchestrationLoop();
 
-    // Остановка каждого агента
+    // Stop each agent.
     for (const [name, agent] of this.agents.entries()) {
       try {
         const result = await agent.stop();
-        logger.info(`[${name}] остановлен: ${JSON.stringify(result)}`);
+        logger.info(`[${name}] stopped: ${JSON.stringify(result)}`);
       } catch (err) {
-        logger.error(`Ошибка при остановке [${name}]: ${err.message}`);
+        logger.error(`Failed to stop [${name}]: ${err.message}`);
       }
     }
 
-    // Закрытие памяти компании
+    // Close shared company memory.
     if (this.companyMemory) {
       this.companyMemory.close();
     }
@@ -262,6 +262,6 @@ export class CompanyOrchestrator {
     this.groupConversationWindow.clear();
     this.budgetManager.dispose();
 
-    logger.info('CompanyOrchestrator успешно остановлен.');
+    logger.info('CompanyOrchestrator stopped successfully.');
   }
 }
