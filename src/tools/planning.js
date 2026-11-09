@@ -53,7 +53,7 @@ export function registerPlanningTools(registry, { planner }) {
 
         return {
           success: true,
-          data: `План "${plan.goal}" (${plan.status}):\n${stepsText}`,
+          data: `Plan "${plan.goal}" (${plan.status}):\n${stepsText}`,
         };
       } catch (err) {
         return { success: false, error: err.message };
@@ -79,7 +79,7 @@ export function registerPlanningTools(registry, { planner }) {
         if (!plan) return { success: false, error: 'No active plan found.' };
 
         if (plan.status === 'completed') {
-          return { success: true, data: `All steps in the plan "${plan.goal}" успешно завершены!` };
+          return { success: true, data: `All steps in the plan "${plan.goal}" have been completed successfully!` };
         }
 
         const nextStep = plan.steps[plan.currentStepIndex];
