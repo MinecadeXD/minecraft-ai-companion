@@ -16,19 +16,19 @@ export function registerMiningTools(registry, { bot }) {
     handler: async (args) => {
       try {
         if (!bot.collectBlock || typeof bot.collectBlock.collect !== 'function') {
-          return { success: false, error: 'Плагин collectBlock не загружен.' };
+          return { success: false, error: 'The collectBlock plugin is not loaded.' };
         }
 
         const mcData = minecraftData(bot.version || '1.20.1');
         const rawName = (args.blockName || args.blockType || 'oak_log').toLowerCase();
         let targetIds = [];
 
-        // Умный поиск: если просят дерево/wood/log/tree — ищем любые бревна поблизости
-        if (['wood', 'tree', 'log', 'дерево', 'бревно', 'дуб', 'береза', 'сосна'].some((k) => rawName.includes(k))) {
+        // Smart search: requests for wood, trees, or logs match nearby log and stem blocks.
+        if (['wood', 'tree', 'log'].some((k) => rawName.includes(k))) {
           targetIds = Object.values(mcData.blocksByName)
             .filter((b) => b && (b.name.includes('_log') || b.name.includes('_wood') || b.name.includes('stem')))
             .map((b) => b.id);
-        } else if (['stone', 'камень', 'булыжник', 'cobble'].some((k) => rawName.includes(k))) {
+        } else if (['stone', 'cobble'].some((k) => rawName.includes(k))) {
           targetIds = Object.values(mcData.blocksByName)
             .filter((b) => b && (b.name === 'stone' || b.name === 'cobblestone' || b.name === 'deepslate'))
             .map((b) => b.id);
@@ -40,7 +40,7 @@ export function registerMiningTools(registry, { bot }) {
         }
 
         if (targetIds.length === 0) {
-          return { success: false, error: `Неизвестный тип блока: ${rawName}` };
+          return { success: false, error: `Unknown block type: ${rawName}` };
         }
 
         const blocks = bot.findBlocks({
@@ -50,12 +50,12 @@ export function registerMiningTools(registry, { bot }) {
         });
 
         if (blocks.length === 0) {
-          return { success: false, error: `Поблизости не найдено блоков типа ${rawName}.` };
+          return { success: false, error: `No nearby blocks of type ${rawName} were found.` };
         }
 
         const targets = blocks.map((pos) => bot.blockAt(pos)).filter(Boolean);
         await bot.collectBlock.collect(targets);
-        return { success: true, data: `Успешно добыто ${targets.length} блоков (${rawName}).` };
+        return { success: true, data: `Successfully mined ${targets.length} blocks (${rawName}).` };
       } catch (err) {
         return { success: false, error: err.message };
       }
