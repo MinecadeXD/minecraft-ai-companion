@@ -1,19 +1,19 @@
 import { POITypes } from '../memory/poi-manager.js';
 
 /**
- * Регистрирует инструменты работы с памятью для AI.
+ * Register memory tools for the AI.
  */
 export function registerMemoryTools(registry, { memoryManager, bot, worldState }) {
   if (!memoryManager) return;
 
-  // 1. Сохранить точку интереса
+  // 1. Save a point of interest.
   registry.register({
     name: 'save_poi',
     description: 'Save a Point of Interest (base, village, cave, mine, farm, etc.) to long-term memory with coordinates.',
     parameters: {
       type: 'object',
       properties: {
-        name: { type: 'string', description: 'Name of the location (e.g., "Главная база", "Деревня жителей")' },
+        name: { type: 'string', description: 'Name of the location (e.g., "Main Base", "Villager Village")' },
         type: {
           type: 'string',
           enum: Object.values(POITypes),
@@ -30,7 +30,7 @@ export function registerMemoryTools(registry, { memoryManager, bot, worldState }
       try {
         let { x, y, z } = args;
         if (x === undefined || y === undefined || z === undefined) {
-          if (!bot || !bot.entity) return { success: false, error: 'Бот не заспавнен для определения координат' };
+          if (!bot || !bot.entity) return { success: false, error: 'The bot has not spawned, so its coordinates cannot be determined.' };
           x = bot.entity.position.x;
           y = bot.entity.position.y;
           z = bot.entity.position.z;
@@ -39,7 +39,7 @@ export function registerMemoryTools(registry, { memoryManager, bot, worldState }
         const poi = memoryManager.pois.addPOI(args.name, args.type, { x, y, z }, args.notes || '');
         return {
           success: true,
-          data: `Сохранено место "${args.name}" (${args.type}) на координатах [${Math.round(x)}, ${Math.round(y)}, ${Math.round(z)}]`,
+          data: `Saved place "${args.name}" (${args.type}) at coordinates [${Math.round(x)}, ${Math.round(y)}, ${Math.round(z)}]`,
         };
       } catch (err) {
         return { success: false, error: err.message };
@@ -47,7 +47,7 @@ export function registerMemoryTools(registry, { memoryManager, bot, worldState }
     },
   });
 
-  // 2. Найти POI
+  // 2. Find a point of interest.
   registry.register({
     name: 'find_poi',
     description: 'Find a saved Point of Interest by name or type.',
@@ -65,13 +65,13 @@ export function registerMemoryTools(registry, { memoryManager, bot, worldState }
           if (poi) {
             return {
               success: true,
-              data: `Найдено: ${poi.name} (${poi.type}) на [${Math.round(poi.x)}, ${Math.round(poi.y)}, ${Math.round(poi.z)}] - ${poi.notes || ''}`,
+              data: `Found: ${poi.name} (${poi.type}) at [${Math.round(poi.x)}, ${Math.round(poi.y)}, ${Math.round(poi.z)}] - ${poi.notes || ''}`,
             };
           }
         }
 
         const pois = memoryManager.pois.getPOIs(args.type || null);
-        if (pois.length === 0) return { success: true, data: 'Места не найдены.' };
+        if (pois.length === 0) return { success: true, data: 'No places found.' };
 
         return {
           success: true,
@@ -83,7 +83,7 @@ export function registerMemoryTools(registry, { memoryManager, bot, worldState }
     },
   });
 
-  // 3. Запомнить факт
+  // 3. Save a fact.
   registry.register({
     name: 'save_fact',
     description: 'Save a key fact, agreement, or player preference to long-term memory.',
@@ -99,14 +99,14 @@ export function registerMemoryTools(registry, { memoryManager, bot, worldState }
     handler: async (args) => {
       try {
         memoryManager.longTerm.setFact(args.key, args.value, args.category || 'general');
-        return { success: true, data: `Запомнил: ${args.key} = ${args.value}` };
+        return { success: true, data: `Remembered: ${args.key} = ${args.value}` };
       } catch (err) {
         return { success: false, error: err.message };
       }
     },
   });
 
-  // 4. Запись в дневник
+  // 4. Write a diary entry.
   registry.register({
     name: 'write_diary',
     description: 'Write an entry in the adventure diary for a significant event or accomplishment.',
@@ -123,14 +123,14 @@ export function registerMemoryTools(registry, { memoryManager, bot, worldState }
       try {
         const day = args.mcDay || (bot && bot.time ? Math.floor(bot.time.time / 24000) + 1 : 1);
         memoryManager.diary.logEntry(day, args.title, args.content);
-        return { success: true, data: `Запись в дневник [День ${day}] "${args.title}" добавлена.` };
+        return { success: true, data: `Added diary entry [Day ${day}] "${args.title}".` };
       } catch (err) {
         return { success: false, error: err.message };
       }
     },
   });
 
-  // 5. Чтение дневника
+  // 5. Read the diary.
   registry.register({
     name: 'read_diary',
     description: 'Read recent entries from the adventure diary to recall past adventures.',
@@ -145,8 +145,8 @@ export function registerMemoryTools(registry, { memoryManager, bot, worldState }
       try {
         if (args.day) {
           const entries = memoryManager.diary.getEntriesByDay(args.day);
-          if (entries.length === 0) return { success: true, data: `Записей за день ${args.day} нет.` };
-          return { success: true, data: entries.map(e => `[День ${e.mc_day}] ${e.title}: ${e.content}`).join('\n') };
+          if (entries.length === 0) return { success: true, data: `There are no entries for day ${args.day}.` };
+          return { success: true, data: entries.map(e => `[Day ${e.mc_day}] ${e.title}: ${e.content}`).join('\n') };
         }
 
         const summary = memoryManager.diary.getFormattedSummary(args.limit || 5);
