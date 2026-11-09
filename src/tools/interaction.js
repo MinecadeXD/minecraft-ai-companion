@@ -22,7 +22,7 @@ export function registerInteractionTools(registry, { bot }) {
         if (!block) return { success: false, error: 'No block at coordinates.' };
 
         if (bot.entity?.position && bot.entity.position.distanceTo(v) > 4.5) {
-          return { success: false, error: 'Контейнер слишком далеко (расстояние > 4.5 блоков). Подойди ближе.' };
+          return { success: false, error: 'The container is too far away (more than 4.5 blocks). Move closer.' };
         }
 
         chest = await bot.openContainer(block);
@@ -57,13 +57,13 @@ export function registerInteractionTools(registry, { bot }) {
         const block = bot.blockAt(v);
         if (!block) return { success: false, error: 'No block at coordinates.' };
         if (bot.entity?.position && bot.entity.position.distanceTo(v) > 4.5) {
-          return { success: false, error: 'Контейнер слишком далеко (>4.5 блоков). Подойди ближе.' };
+          return { success: false, error: 'The container is too far away (more than 4.5 blocks). Move closer.' };
         }
         chest = await bot.openContainer(block);
         const items = chest.containerItems ? chest.containerItems() : [];
         const summary = items.length
           ? items.map(i => `${i.count}x ${i.name}`).join(', ')
-          : 'пусто';
+          : 'Empty';
         return { success: true, data: summary, items: items.map(i => ({ name: i.name, count: i.count })) };
       } catch (err) {
         return { success: false, error: err.message };
@@ -97,7 +97,7 @@ export function registerInteractionTools(registry, { bot }) {
         if (!block) return { success: false, error: 'No block at coordinates.' };
 
         if (bot.entity?.position && bot.entity.position.distanceTo(v) > 4.5) {
-          return { success: false, error: 'Контейнер слишком далеко (расстояние > 4.5 блоков). Подойди ближе.' };
+          return { success: false, error: 'The container is too far away (more than 4.5 blocks). Move closer.' };
         }
 
         const mcData = minecraftData(bot.version || '1.20.1');
@@ -145,7 +145,7 @@ export function registerInteractionTools(registry, { bot }) {
         if (!block) return { success: false, error: 'No block at coordinates.' };
 
         if (bot.entity?.position && bot.entity.position.distanceTo(v) > 4.5) {
-          return { success: false, error: 'Контейнер слишком далеко (расстояние > 4.5 блоков). Подойди ближе.' };
+          return { success: false, error: 'The container is too far away (more than 4.5 blocks). Move closer.' };
         }
 
         const mcData = minecraftData(bot.version || '1.20.1');
@@ -282,7 +282,7 @@ export function registerInteractionTools(registry, { bot }) {
         const result = await SmartCraterRepair.repairCrater(bot, centerPos, { radius: args.radius || 3 });
         return {
           success: true,
-          data: `Кратер восстановлен аутентичными материалами (${result.repaired} блоков): ${result.blocksPlaced.join(', ') || 'нет подходящих блоков'}`,
+          data: `Crater repaired with matching materials (${result.repaired} blocks): ${result.blocksPlaced.join(', ') || 'no suitable blocks'}`, 
         };
       } catch (err) {
         return { success: false, error: err.message };
@@ -314,13 +314,13 @@ export function registerInteractionTools(registry, { bot }) {
         }
 
         if (!chestBlock) {
-          return { success: false, error: 'Поблизости не найден сундук или бочка для сброса хлама.' };
+          return { success: false, error: 'No nearby chest or barrel was found for storing excess items.' };
         }
 
         chest = await bot.openContainer(chestBlock);
         const items = bot.inventory?.items() || [];
 
-        // Категории хлама, которые безопасно сбросить в сундук-помойку
+        // Categories of excess items that can safely be stored in a junk chest.
         const clutterTypes = [
           'dirt', 'cobblestone', 'gravel', 'sand', 'diorite', 'andesite', 'granite',
           'rotten_flesh', 'bone', 'spider_eye', 'string', 'wheat_seeds', 'beetroot_seeds',
@@ -330,14 +330,14 @@ export function registerInteractionTools(registry, { bot }) {
         let depositedCount = 0;
         const depositedNames = [];
 
-        // Сохраняем 1 стак строительных блоков для себя
+        // Keep one stack of building blocks for the bot.
         let keptBuildingStack = false;
 
         for (const item of items) {
           const isClutter = clutterTypes.some((c) => item.name.includes(c));
           if (!isClutter) continue;
 
-          // Сохраняем первый стак булыжника или земли
+          // Keep the first stack of cobblestone or dirt.
           if (!keptBuildingStack && (item.name.includes('cobblestone') || item.name.includes('dirt'))) {
             keptBuildingStack = true;
             continue;
@@ -352,7 +352,7 @@ export function registerInteractionTools(registry, { bot }) {
 
         return {
           success: true,
-          data: `Сброшено ${depositedCount} предметов в сундук-помойку: ${depositedNames.slice(0, 5).join(', ')}${depositedNames.length > 5 ? '...' : ''}`,
+          data: `Stored ${depositedCount} items in the junk chest: ${depositedNames.slice(0, 5).join(', ')}${depositedNames.length > 5 ? '...' : ''}`, 
         };
       } catch (err) {
         return { success: false, error: err.message };
