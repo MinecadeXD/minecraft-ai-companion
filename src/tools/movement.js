@@ -4,7 +4,7 @@ import vec3 from 'vec3';
 const { goals } = pathfinderPkg;
 
 /**
- * Регистрирует инструменты движения.
+ * Register movement tools.
  */
 export function registerMovementTools(registry, { bot, worldState, mcBot }) {
   let homePosition = null;
@@ -23,7 +23,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.pathfinder) return { success: false, error: 'Pathfinder не инициализирован.' };
+        if (!bot.pathfinder) return { success: false, error: 'Pathfinder is not initialized.' };
         const goal = new goals.GoalNear(Math.floor(args.x), Math.floor(args.y), Math.floor(args.z), 1);
         bot.pathfinder.setGoal(goal);
         return { success: true, data: `Moving to ${args.x}, ${args.y}, ${args.z}` };
@@ -50,12 +50,12 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
         const player = bot.players[args.playerName]
           || Object.entries(bot.players || {}).find(([name]) => name.toLowerCase() === args.playerName.toLowerCase())?.[1];
         if (!player || !player.entity) {
-          return { success: false, error: `Игрок ${args.playerName} не найден или слишком далеко.` };
+          return { success: false, error: `Player ${args.playerName} was not found or is too far away.` };
         }
         const distance = args.distance || 3;
         const goal = new goals.GoalFollow(player.entity, distance);
         bot.pathfinder.setGoal(goal, true); // true = dynamic (updates as player moves)
-        return { success: true, data: `Следую за ${args.playerName} на расстоянии ${distance}` };
+        return { success: true, data: `Following ${args.playerName} at a distance of ${distance} blocks.` };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -70,7 +70,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
       try {
         bot.pathfinder?.stop?.();
         bot.clearControlStates?.();
-        return { success: true, data: 'Остановился.' };
+        return { success: true, data: 'Stopped moving.' };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -82,13 +82,13 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
     description: 'Save the current position as home base.',
     parameters: { type: 'object', properties: {} },
     handler: async () => {
-      if (!bot.entity) return { success: false, error: 'Бот не заспавнился' };
+      if (!bot.entity) return { success: false, error: 'The bot has not spawned.' };
       homePosition = {
         x: Math.floor(bot.entity.position.x),
         y: Math.floor(bot.entity.position.y),
         z: Math.floor(bot.entity.position.z),
       };
-      return { success: true, data: `Дом установлен: ${homePosition.x}, ${homePosition.y}, ${homePosition.z}` };
+      return { success: true, data: `Home set at ${homePosition.x}, ${homePosition.y}, ${homePosition.z}` };
     },
   });
 
@@ -97,12 +97,12 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
     description: 'Navigate back to the saved home position.',
     parameters: { type: 'object', properties: {} },
     handler: async () => {
-      if (!homePosition) return { success: false, error: 'Дом не установлен. Сначала используй set_home.' };
+      if (!homePosition) return { success: false, error: 'Home is not set. Use set_home first.' };
       try {
         if (!bot.pathfinder) return { success: false, error: 'Pathfinder не инициализирован.' };
         const goal = new goals.GoalNear(homePosition.x, homePosition.y, homePosition.z, 1);
         bot.pathfinder.setGoal(goal);
-        return { success: true, data: `Возвращаюсь домой: ${homePosition.x}, ${homePosition.y}, ${homePosition.z}` };
+        return { success: true, data: `Returning home: ${homePosition.x}, ${homePosition.y}, ${homePosition.z}` };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -129,15 +129,15 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
             || Object.entries(bot.players || {}).find(([name]) => name.toLowerCase() === args.playerName.toLowerCase())?.[1];
           if (player?.entity) {
             await adaptiveCamera.calmLookAt(bot, player.entity.position.offset(0, player.entity.height || 1.6, 0));
-            return { success: true, data: `Посмотрел на игрока ${args.playerName}` };
+            return { success: true, data: `Looked at player ${args.playerName}` };
           }
         }
         if (args.x !== undefined && args.y !== undefined && args.z !== undefined) {
           const target = vec3(args.x, args.y, args.z);
           await adaptiveCamera.calmLookAt(bot, target);
-          return { success: true, data: `Посмотрел на ${args.x}, ${args.y}, ${args.z}` };
+          return { success: true, data: `Looked at ${args.x}, ${args.y}, ${args.z}` };
         }
-        return { success: false, error: 'Укажи координаты или имя игрока.' };
+        return { success: false, error: 'Specify coordinates or a player name.' };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -157,7 +157,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
       try {
         const { KinematicsEngine } = await import('../behavior/kinematics.js');
         await KinematicsEngine.crouchNod(bot, Math.min(5, Math.max(1, args.times || 3)));
-        return { success: true, data: 'Поприседал на шифте (приветствие/благодарность).' };
+        return { success: true, data: 'Crouched using Shift (greeting / thanks).' };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -180,7 +180,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
         setTimeout(() => {
           bot.setControlState('sneak', false);
         }, duration);
-        return { success: true, data: `Безопасный шифт включен на ${duration} мс.` };
+        return { success: true, data: `Safe sneak enabled for ${duration} ms.` };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -195,7 +195,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
       try {
         const { HumanMotor } = await import('../behavior/human-motor.js');
         HumanMotor.startJumpSprint(bot);
-        return { success: true, data: 'Совершен паркурный прыжок со спринтом.' };
+        return { success: true, data: 'Performed a sprint-jump for parkour.' };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -217,7 +217,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
         const height = Math.min(5, Math.max(1, args.height || 3));
         const items = bot.inventory?.items() || [];
 
-        // Ищем твердый строительный блок
+        // Find a solid building block.
         let blockItem = null;
         if (args.blockName) {
           blockItem = items.find((i) => i.name.includes(args.blockName));
@@ -234,7 +234,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
         }
 
         if (!blockItem) {
-          return { success: false, error: 'В инвентаре нет твердых строительных блоков для столба.' };
+          return { success: false, error: 'There are no solid building blocks in the inventory for pillaring up.' };
         }
 
         await bot.equip(blockItem, 'hand');
@@ -245,14 +245,14 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
           const blockBelow = bot.blockAt(currentPos.offset(0, -1, 0));
           if (!blockBelow || blockBelow.name === 'air') break;
 
-          // Резкий взгляд строго под ноги
+          // Turn sharply to look straight down.
           await bot.look(bot.entity.yaw, -Math.PI / 2, true);
 
-          // Прыжок
+          // Jump.
           bot.setControlState('jump', true);
           await new Promise((r) => setTimeout(r, 160));
 
-          // Ставим блок под ноги в воздухе
+          // Place a block beneath the player while airborne.
           if (typeof bot.placeBlock === 'function') {
             try {
               const vec3 = (await import('vec3')).default;
@@ -265,7 +265,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
           await new Promise((r) => setTimeout(r, 200));
         }
 
-        return { success: true, data: `Построен столб на ${placed} блоков вверх из ${blockItem.name}.` };
+        return { success: true, data: `Pillared up ${placed} blocks using ${blockItem.name}.` };
       } catch (err) {
         return { success: false, error: err.message };
       }
