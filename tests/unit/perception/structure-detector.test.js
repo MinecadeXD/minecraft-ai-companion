@@ -57,7 +57,7 @@ describe('StructureDetector - village', () => {
       { x: 2, y: 64, z: -42, name: 'blue_bed' },
     ];
     const det = new StructureDetector().detectVillage(makeMockBot({ blocks }));
-    expect(det.direction.ru).toBe('север');
+    expect(det.direction.en).toBe('north');
     expect(det.distance).toBeGreaterThan(35);
   });
 
@@ -90,7 +90,7 @@ describe('StructureDetector - village', () => {
     ];
     const det = new StructureDetector().detectVillage(makeMockBot({ blocks }));
     const text = new StructureDetector().describeVillage(det);
-    expect(text).toContain('деревня');
-    expect(text).toContain('север');
+    expect(text).toContain('village');
+    expect(text).toContain('north');
   });
 });
