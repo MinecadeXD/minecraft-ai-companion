@@ -138,7 +138,7 @@ Write like a real person in game chat:`;
   async _getFallback(intent, playerMessage = '', context = {}) {
     if (this.aiBrain?.generateQuickResponse) {
       try {
-        const name = this.profile?.name || 'ты';
+        const name = this.profile?.name || 'you';
         const prompt = `You are ${name}, playing Minecraft with friends. Someone wrote: "${playerMessage}". Reply in ONE natural, short phrase (1–4 words), in your own words, using lowercase and no period:`;
         const res = await this.aiBrain.generateQuickResponse(prompt, {
           maxTokens: 16,
