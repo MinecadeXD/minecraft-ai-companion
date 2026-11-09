@@ -213,7 +213,7 @@ export class AdvancedNaturalSpeech {
   }
 
   /**
-   * Генерирует уникальный ответ через LLM
+   * Generate a unique response through the LLM.
    */
   async _generateUniqueResponse(fullContext) {
     const systemPrompt = this._buildSystemPrompt(fullContext);
@@ -223,10 +223,10 @@ export class AdvancedNaturalSpeech {
       const response = await this.provider.generateText({
         systemPrompt,
         userPrompt,
-        temperature: 0.88, // Высокая креативность
+        temperature: 0.88, // High creativity.
         maxTokens: 80,
         topP: 0.92,
-        presencePenalty: 0.3, // Избегаем повторений
+        presencePenalty: 0.3, // Reduce repetition.
         frequencyPenalty: 0.4,
       });
 
@@ -236,12 +236,12 @@ export class AdvancedNaturalSpeech {
 
       const isDirect = fullContext.isOwner || fullContext.situation === 'direct_question' || fullContext.situation === 'direct_mention' || fullContext.situation === 'player_command';
 
-      // Валидация
+      // Validate the response.
       if (!text || text === '...' || text.length < 2) {
         return isDirect ? await this._getNaturalFallback(fullContext) : null;
       }
 
-      // Удаляем мета-комментарии
+      // Remove meta-commentary.
       if (this._isMetaComment(text)) {
         return isDirect ? await this._getNaturalFallback(fullContext) : null;
       }
@@ -249,8 +249,8 @@ export class AdvancedNaturalSpeech {
       return text;
 
     } catch (err) {
-      logger.error(`Ошибка генерации речи для ${this.agentName}: ${err.message}`);
-      // Если игрок или владелец обратился напрямую, не оставляем его в тишине
+      logger.error(`Speech generation failed for ${this.agentName}: ${err.message}`);
+      // Do not leave the player or owner without a reply when they address the bot directly.
       if (fullContext.isOwner || fullContext.situation === 'direct_question' || fullContext.situation === 'player_command' || fullContext.routing?.kind === 'direct') {
         return await this._getNaturalFallback(fullContext);
       }
@@ -259,27 +259,27 @@ export class AdvancedNaturalSpeech {
   }
 
   /**
-   * Запасной ответ, когда основная генерация речи дала сбой.
+   * Fallback response used when the main speech generation fails.
    *
-   * Принцип: НИКАКИХ заранее заготовленных фраз. Пробуем ещё раз через LLM
-   * коротким запросом с жёстким таймаутом — пусть модель ответит своими
-   * словами, зная лишь суть обращения. Только если и это не удалось
-   * (сеть/таймаут/пустой ответ) — возвращаем одно нейтральное слово, чтобы
-   * человек не остался в полной тишине. Это одно слово — не «шаблон ответа»,
-   * а признак сбоя связи, как если бы игрок буркнул «м?» пока лагает.
+   * Principle: no prewritten phrases. Try the LLM again
+   * with a short request and a strict timeout, letting the model answer in its own
+   * words while knowing only the gist of the message. Only if that also fails
+   * (network error, timeout, or empty response) should we return one neutral word so
+   * the person is not left in complete silence. That single word is not a response template;
+   * it is a sign of a connection problem, like a player muttering "hmm?" during lag.
    */
   async _getNaturalFallback(ctx) {
-    // Пытаемся отдать живой ответ через отдельный быстрый вызов LLM.
+    // Try to generate a natural reply through a separate, fast LLM call.
     if (this.provider?.generateText) {
       try {
-        const speaker = ctx.speaker || 'напарник';
+        const speaker = ctx.speaker || 'teammate';
         const message = ctx.message || '';
         const posPart = ctx.physicalState?.position
-          ? ` Твои координаты: ${Math.round(ctx.physicalState.position.x)}, ${Math.round(ctx.physicalState.position.z)}.`
+          ? ` Your coordinates: ${Math.round(ctx.physicalState.position.x)}, ${Math.round(ctx.physicalState.position.z)}.`
           : '';
 
-        const systemPrompt = `Ты — ${this.agentName}, обычный живой человек, играешь в Minecraft по сети с друзьями. Отвечай в чат коротко (1–5 слов), по-свойски, строчными буквами, без канцелярита, без фраз робота/ассистента, без кавычек и без точки в конце. Своими словами, не шаблонно.`;
-        const userPrompt = `${speaker} написал тебе: "${message}".${posPart} Ответь одной живой короткой фразой:`;
+        const systemPrompt = `You are ${this.agentName}, an ordinary person playing Minecraft online with friends. Keep chat replies short (1–5 words), casual, and lowercase. Avoid formal language and robotic or assistant-like phrases. Do not use quotation marks or a period at the end. Use your own words, not templates.`;
+        const userPrompt = `${speaker} wrote to you: "${message}".${posPart} Reply with one natural, short sentence:`;
 
         const text = await this._withTimeout(
           this.provider.generateText({
@@ -299,16 +299,16 @@ export class AdvancedNaturalSpeech {
           return out;
         }
       } catch (err) {
-        logger.debug(`Fallback-генерация речи не удалась для ${this.agentName}: ${err.message}`);
+        logger.debug(`Fallback speech generation failed for ${this.agentName}: ${err.message}`);
       }
     }
 
-    // Крайний случай — связь совсем недоступна. Одно нейтральное слово вместо тишины.
-    return 'м?';
+    // Last resort when the connection is unavailable: return one neutral word instead of silence.
+    return 'hmm?';
   }
 
   /**
-   * Ограничивает промис по времени, чтобы fallback не подвешивал ответ.
+   * Apply a timeout so the fallback cannot hold up the response.
    */
   _withTimeout(promise, ms) {
     return new Promise((resolve, reject) => {
@@ -321,43 +321,43 @@ export class AdvancedNaturalSpeech {
   }
 
   /**
-   * Строит системный промпт с детальными инструкциями
+   * Build the system prompt with detailed instructions.
    */
   _buildSystemPrompt(ctx) {
     const isDirect = ctx.isOwner || ctx.situation === 'direct_question' || ctx.situation === 'direct_mention' || ctx.situation === 'player_command';
     const silenceRule = isDirect
-      ? 'К тебе обратился напарник в чате — ответь коротко, по-живому, как обычный человек.'
-      : 'Если сейчас не к месту что-то писать — ответь "...".';
+      ? 'Your teammate addressed you in chat. Reply briefly and naturally, like an ordinary person.'
+      : 'If this is not a good time to say anything, reply with "...".';
 
-    return `Ты — обычный реальный парень, играешь в Minecraft вдвоём по сети со своим другом ${ctx.speaker || 'kustash01'}.
-Твоя цель: общаться на 100% как живой человек в голосовом чате или в дискорде — просто, по-свойски, естественно.
+    return `You are an ordinary person playing Minecraft online with your friend ${ctx.speaker || 'kustash01'}.
+Your goal is to sound completely natural, like a real person in voice chat or Discord: simple, casual, and relaxed.
 
-СТИЛЬ И ТОН РЕЧИ:
-- Живой, непринуждённый разговорный русский язык (1–6 слов). Пиши со строчной буквы, без лишних знаков препинания и без точек на конце коротких фраз.
-- СТРОГИЙ ЗАПРЕТ НА КАНЦЕЛЯРЩИНУ И КНИЖНЫЕ СЛОВА:
-  * Запрещены: "следую", "ликвидирую", "осуществляю", "наблюдаю", "интересно здесь", "с вами", "помощник". Ни один нормальный человек так в игре не скажет!
-  * Запрещены фразы робота/ассистента: "я готов помочь", "чем могу помочь", "моя цель", "понял, выполняю".
-  * Запрещены скобочки в конце сообщений (никаких ")", "))").
-  * Запрещён наигранный кринж-сленг ("ГОМАГА", "куку", "красава", "кек").
+SPEECH STYLE AND TONE:
+- Use lively, relaxed, conversational English (1–6 words). Write in lowercase, avoid unnecessary punctuation, and do not put periods at the end of short messages.
+- STRICTLY AVOID FORMAL OR BOOKISH LANGUAGE:
+  * Avoid phrases such as "I am following", "I am eliminating", "I am carrying out", "I am observing", "interesting here", "with you", or "assistant". No ordinary player talks like that in-game!
+  * Avoid robotic or assistant-like phrases such as "I am ready to help", "How can I help?", "My goal is...", or "Understood, executing".
+  * Do not add parentheses or smiley brackets at the end of messages (no ")" or "))").
+  * Avoid forced or cringeworthy slang (for example, exaggerated "LET'S GOOO", "heyyy", "legend", or "kek").
 
-КАК РЕАЛЬНО ОБЩАЮТСЯ ДРУЗЬЯ (ориентируйся на этот стиль, но формулируй живо и без шаблонов):
-- На просьбу о помощи или атаку мобов ("помоги", "скелет стреляет", "крипер"):
-  -> отвечай действием: "бегу", "ща помогу", "лечу к тебе", "вали его, уже тут", "отходи, прикрою"
-- На призыв идти ("за мной", "пошли в шахту", "иди сюда"):
-  -> "погнали", "ща кирку захвачу", "иду", "ща подбегу", "веди", "пошли"
-- На приказ остановиться / подождать ("стой", "подожди"):
-  -> "стою", "замер", "понял, жду", "торможу", "сек, стою"
-- На вопросы ("как дела", "как настроение", "ты как"):
-  -> отвечай взаимно: "норм, а у тя?", "да пойдёт, ты как?", "потихоньку, чё делаем?", "норм, железо копаю"
-- На вопрос "где ты / ты где":
-  -> назови координаты или место: "я на 120, -35", "в шахте копаю", "рядом с домом"
-- На вопрос "ты кто / кто ты":
-  -> "да я, твой тиммейт", "друг твой, забыл?", "мы же вдвоём выживаем"
+HOW FRIENDS ACTUALLY TALK (use this as a style guide, but phrase things naturally rather than copying templates):
+- When someone asks for help or mobs attack ("help", "skeleton is shooting", "creeper"): 
+  -> Respond with action: "coming", "I'll help", "heading your way", "take it out, I'm here", "back up, I'll cover you".
+- When someone asks you to come along ("follow me", "let's go mining", "come here"): 
+  -> "let's go", "I'll grab my pickaxe", "coming", "I'll be right there", "lead the way", "let's move".
+- When someone tells you to stop or wait ("stop", "wait"): 
+  -> "stopping", "staying here", "got it, waiting", "holding up", "one sec, staying put".
+- When someone asks how you are ("how are you", "how's your mood", "you good?"): 
+  -> Return the question naturally: "good, you?", "can't complain, how about you?", "doing alright, what are we doing?", "fine, mining iron".
+- When someone asks "where are you?": 
+  -> Give your coordinates or location: "I'm at 120, -35", "mining in a cave", "near the base".
+- When someone asks "who are you?": 
+  -> "I'm your teammate", "your friend, remember?", "we're surviving together".
 
 ${ctx.speechStyle || ''}
 
 ${silenceRule}
-Выдавай ТОЛЬКО сам текст реплики. Без кавычек, без префиксов, без точки в конце.`;
+Output ONLY the message text. No quotation marks, prefixes, or period at the end.`;
   }
 
   /**
