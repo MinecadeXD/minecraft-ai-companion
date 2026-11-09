@@ -141,12 +141,12 @@ export class StructureDetector {
   }
 
   describeVillage(detection) {
-    if (!detection) return 'Деревни поблизости не вижу.';
-    const conf = detection.confidence >= 0.7 ? 'точно' : detection.confidence >= 0.4 ? 'похоже' : 'возможно';
-    const parts = [`${conf} деревня на ${detection.direction.ru}, примерно ${detection.distance}м`];
-    if (detection.villagerCount > 0) parts.push(`жителей рядом: ${detection.villagerCount}`);
-    if (detection.bedCount > 0) parts.push(`кроватей: ${detection.bedCount}`);
-    parts.push(`координаты ~[${detection.center.x}, ${detection.center.y}, ${detection.center.z}]`);
+    if (!detection) return 'I do not see a village nearby.';
+    const conf = detection.confidence >= 0.7 ? 'definitely' : detection.confidence >= 0.4 ? 'probably' : 'possibly';
+    const parts = [`${conf} a village to the ${detection.direction.en}, about ${detection.distance} blocks away`];
+    if (detection.villagerCount > 0) parts.push(`villagers nearby: ${detection.villagerCount}`);
+    if (detection.bedCount > 0) parts.push(`beds: ${detection.bedCount}`);
+    parts.push(`approximate coordinates: [${detection.center.x}, ${detection.center.y}, ${detection.center.z}]`);
     return parts.join(', ') + '.';
   }
 }
