@@ -75,8 +75,9 @@ All configuration is via `.env` (loaded by `config/default.js`). Key settings:
 | `MC_USERNAME` | Bot username | `GeminiBot` |
 | `MC_VERSION` | Minecraft version | `1.20.4` |
 | `BOT_OWNER` | Your in-game username (the bot treats you as a friend) | — |
-| `BOT_LANGUAGE` | Chat language (English-only build) | `en` |
 | `LOG_LEVEL` | `info` \| `debug` | `info` |
+
+The bot's chat language is English and is fixed by the application; it is not configurable through an environment variable.
 
 > ⚠️ **Never commit your `.env`** — it holds API keys and is git-ignored by default.
 
