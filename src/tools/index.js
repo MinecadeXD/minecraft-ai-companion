@@ -20,7 +20,7 @@ import { registerWorldInteractionTools } from './world-interaction.js';
 import { registerCodeActionTools } from './code-action-tools.js';
 
 export function registerAllTools(registry, deps) {
-  // Универсальный запуск JS-кода и библиотека навыков (Code-as-Action)
+  // General-purpose JavaScript execution and the skill library (Code-as-Action).
   registerCodeActionTools(registry, deps);
 
   registerMovementTools(registry, deps);
