@@ -34,10 +34,10 @@ export class InnerMonologue {
 
     const prompt = `You are ${this.agentName}. Think of one short thought (2–7 words), like a person would.
 
-Ситуация: ${situation || 'an ordinary day in Minecraft'}
-Настроение: ${emotion || 'neutral'}
+Situation: ${situation || 'an ordinary day in Minecraft'}
+Mood: ${emotion || 'neutral'}
 ${recentEvents && recentEvents.length > 0 ? `Recently: ${recentEvents.slice(-3).join('; ')}` : ''}
-${silenceDuration > 300000 ? `Your friend has not chatted in a while (${Math.floor(silenceDuration / 60000)} минут)` : ''}
+${silenceDuration > 300000 ? `Your friend has not chatted in a while (${Math.floor(silenceDuration / 60000)} minutes)` : ''}
 ${physState?.fatigue > 0.6 ? 'Tired' : ''}
 ${physState?.stress > 0.5 ? 'Stressed' : ''}
 
@@ -46,7 +46,7 @@ Examples of the STYLE of thoughts (do NOT copy them; only understand the tone):
 - "I wonder where everyone is"
 - "I should clear out my inventory"
 - "Beautiful sunset"
-- "Tired немного"
+- "A little tired"
 
 Your thought (2–7 words):`;
 
@@ -176,7 +176,7 @@ NO repetition and NO templates.`,
   }
 
   /**
-   * Добавляет concern (о чём-то волнуется).
+   * Add a worry (something the character is concerned about).
    */
   addWorry(text) {
     this.worries.push({ text, timestamp: Date.now() });
