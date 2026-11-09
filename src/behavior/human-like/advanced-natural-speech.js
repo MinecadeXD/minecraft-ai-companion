@@ -361,27 +361,27 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
   }
 
   /**
-   * Строит пользовательский промпт с контекстом
+   * Build the user prompt with context.
    */
   _buildUserPrompt(ctx) {
     const parts = [
-      `Ситуация: ${this._describeSituation(ctx.situation, ctx)}`,
+      `Situation: ${this._describeSituation(ctx.situation, ctx)}`,
       ``,
-      `Недавний чат:`,
-      ctx.chatHistory || '(тишина)',
+      `Recent chat:`,
+      ctx.chatHistory || '(silence)',
       ``,
     ];
 
-    if (ctx.moodDesc && ctx.moodDesc !== 'спокоен') {
-      parts.push(`Твоё настроение: ${ctx.moodDesc}`);
+    if (ctx.moodDesc && ctx.moodDesc !== 'calm') {
+      parts.push(`Your mood: ${ctx.moodDesc}`);
     }
 
     if (ctx.physDesc) {
-      parts.push(`Твоё состояние и локация: ${ctx.physDesc}`);
+      parts.push(`Your condition and location: ${ctx.physDesc}`);
     }
 
     if (ctx.recentEvents && ctx.recentEvents.length > 0) {
-      parts.push(`Недавно произошло: ${ctx.recentEvents.join(', ')}`);
+      parts.push(`Recent events: ${ctx.recentEvents.join(', ')}`);
     }
 
     if (ctx.socialContext) {
@@ -389,11 +389,11 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
     }
 
     if (ctx.topicContext) {
-      parts.push(`Текущая тема: ${ctx.topicContext}`);
+      parts.push(`Current topic: ${ctx.topicContext}`);
     }
 
     if (ctx.mentalFatigue > 0.3) {
-      parts.push(`(ты немного устал от долгой сессии)`);
+      parts.push(`(you are a little tired from the long session)`);
     }
 
     const isDirect = ctx.isOwner || ctx.situation === 'direct_question' || ctx.situation === 'direct_mention' || ctx.situation === 'player_command';
