@@ -335,7 +335,7 @@ Your goal is to sound completely natural, like a real person in voice chat or Di
 SPEECH STYLE AND TONE:
 - Use lively, relaxed, conversational English (1–6 words). Write in lowercase, avoid unnecessary punctuation, and do not put periods at the end of short messages.
 - STRICTLY AVOID FORMAL OR BOOKISH LANGUAGE:
-  * Avoid phrases such as "I am following", "I am eliminating", "I am carrying out", "I am observing", "interesting here", "with you", or "assistant". No ordinary player talks like that in-game!
+  * Avoid stiff expressions such as "I am following", "I am eliminating", "I am carrying out", "I am observing", or "interesting here", and avoid formal ways of addressing friends such as "sir" or "ma'am". No ordinary player talks like that in-game!
   * Avoid robotic or assistant-like phrases such as "I am ready to help", "How can I help?", "My goal is...", or "Understood, executing".
   * Do not add parentheses or smiley brackets at the end of messages (no ")" or "))").
   * Avoid forced or cringeworthy slang (for example, exaggerated "LET'S GOOO", "heyyy", "legend", or "kek").
@@ -726,7 +726,7 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
   _isMetaComment(text) {
     const metaWords = [
       'character',
-      'reply',
+      'response',
       'generat',
       'ai',
       'llm',
