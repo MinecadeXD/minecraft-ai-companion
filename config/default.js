@@ -56,7 +56,7 @@ export const config = {
   },
   bot: {
     owner: process.env.BOT_OWNER || 'kustash01',
-    language: process.env.BOT_LANGUAGE || 'ru',
+    language: 'en',
     initiative: process.env.BOT_INITIATIVE || 'balanced',
     voiceEnabled: process.env.VOICE_ENABLED === 'true',
     afkEnabled: process.env.BOT_AFK_ENABLED === 'true',
