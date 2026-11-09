@@ -399,35 +399,35 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
     const isDirect = ctx.isOwner || ctx.situation === 'direct_question' || ctx.situation === 'direct_mention' || ctx.situation === 'player_command';
     parts.push(``);
     if (isDirect) {
-      parts.push(`Напиши свой естественный ответ (одна короткая спокойная фраза без смайликов и скобок):`);
+      parts.push(`Write your natural response (one short, calm sentence without emojis or parentheses):`);
     } else {
-      parts.push(`Что ты скажешь? (Одна короткая спокойная фраза без скобок, или "..." если лучше промолчать)`);
+      parts.push(`What will you say? (One short, calm sentence without parentheses, or "..." if it is better to stay silent)`);
     }
 
     return parts.join('\n');
   }
 
   /**
-   * Обрабатывает ответ — добавляет естественные несовершенства
+   * Process the response by adding natural imperfections.
    */
   _processResponse(text, ctx) {
     let processed = text;
 
-    // Убираем любые скобочки и смайлики в конце реплики
+    // Remove any trailing parentheses or smileys from the message.
     processed = processed.replace(/[\)\(]+$/g, '').trim();
 
-    // Исправляем возможные неестественные формы слов
-    processed = processed.replace(/\bбежу\b/gi, 'бегу');
-    processed = processed.replace(/\bстаю\b/gi, 'стою');
-    processed = processed.replace(/\bследую\b/gi, 'иду');
+    // Correct a few common awkward English verb forms.
+    processed = processed.replace(/\bI am go\b/gi, "I'm going");
+    processed = processed.replace(/\bI am stand\b/gi, "I'm standing");
+    processed = processed.replace(/\bI am follow\b/gi, "I'm following");
 
-    // 1. Редкие опечатки (1% если не устал, 3% если устал)
+    // 1. Rare typos (1% when not tired, 3% when tired).
     const typoChance = ctx.mentalFatigue > 0.5 ? 0.03 : 0.01;
     if (HumanErrorEngine.chance(typoChance)) {
       processed = this._addTypo(processed);
     }
 
-    // 2. Иногда незаконченная мысль (2%)
+    // 2. Occasionally leave a thought unfinished (2%).
     if (HumanErrorEngine.chance(0.02) && processed.length > 20) {
       const words = processed.split(' ');
       if (words.length > 4) {
@@ -435,11 +435,11 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
       }
     }
 
-    // 3. Убираем излишнюю пунктуацию
+    // 3. Remove excessive punctuation.
     processed = processed.replace(/!{2,}/g, '!');
     processed = processed.replace(/\?{2,}/g, '?');
 
-    // Для коротких игровых фраз убираем точку в конце (как в настоящем чате)
+    // Remove the final period from short in-game messages, as in real chat.
     if (processed.split(' ').length <= 5) {
       processed = processed.replace(/\.$/, '');
     }
@@ -448,13 +448,13 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
   }
 
   /**
-   * Добавляет естественную опечатку
+   * Add a natural typo.
    */
   _addTypo(text) {
     const words = text.split(' ');
     if (words.length === 0) return text;
 
-    // Выбираем случайное слово (не первое и не последнее)
+    // Choose a random word (not the first or last).
     if (words.length < 3) return text;
 
     const wordIndex = Math.floor(HumanErrorEngine.range(1, words.length - 1));
@@ -462,7 +462,7 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
 
     if (word.length < 4) return text;
 
-    // Типы опечаток
+    // Types of typos.
     const typoTypes = ['swap', 'skip', 'duplicate'];
     const type = HumanErrorEngine.choice(typoTypes);
 
@@ -488,99 +488,99 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
   }
 
   /**
-   * Описывает ситуацию человеческим языком
+   * Describe the situation in natural language.
    */
   _describeSituation(situation, ctx) {
     const descriptions = {
-      'player_command': `${ctx.speaker} скомандовал: "${ctx.message}" (твоё действие: ${this._describeCommandAction(ctx.intent, ctx.commandAction)})`,
-      'direct_mention': `${ctx.speaker} обращается к тебе: "${ctx.message}"`,
-      'direct_question': `${ctx.speaker} спрашивает тебя: "${ctx.message}"`,
-      'group_question': `${ctx.speaker} спросил группу: "${ctx.message}"`,
-      'important_event': ctx.eventDescription || 'произошло важное событие',
-      'routine_event': ctx.eventDescription || 'обычное событие',
-      'social_chat': `${ctx.speaker} говорит: "${ctx.message}"`,
-      'silence_break': 'тишина в чате, можно сказать что-то ненавязчивое',
+      'player_command': `${ctx.speaker} gave a command: "${ctx.message}" (your action: ${this._describeCommandAction(ctx.intent, ctx.commandAction)})`,
+      'direct_mention': `${ctx.speaker} mentioned you: "${ctx.message}"`,
+      'direct_question': `${ctx.speaker} asked you: "${ctx.message}"`,
+      'group_question': `${ctx.speaker} asked the group: "${ctx.message}"`,
+      'important_event': ctx.eventDescription || 'an important event occurred',
+      'routine_event': ctx.eventDescription || 'a routine event occurred',
+      'social_chat': `${ctx.speaker} says: "${ctx.message}"`,
+      'silence_break': 'the chat is quiet; you can say something casual if appropriate',
     };
 
     return descriptions[situation] || situation;
   }
 
   /**
-   * Описывает выполняемое по команде действие
+   * Describe the action being performed in response to a command.
    */
   _describeCommandAction(intent, commandAction) {
     switch (intent) {
-      case 'STOP': return 'ты встал на месте';
-      case 'WAIT': return 'ты ждёшь игрока';
-      case 'COME_HERE': return 'ты бежишь к игроку';
-      case 'FOLLOW': return 'ты идёшь вместе с игроком';
-      case 'HELP': return 'ты бежишь выручать игрока';
-      case 'WHERE_ARE_YOU': return 'игрок спрашивает, где ты';
-      default: return commandAction || 'выполняешь команду';
+      case 'STOP': return 'you are standing still';
+      case 'WAIT': return 'you are waiting for the player';
+      case 'COME_HERE': return 'you are running toward the player';
+      case 'FOLLOW': return 'you are following the player';
+      case 'HELP': return 'you are running to help the player';
+      case 'WHERE_ARE_YOU': return 'the player is asking where you are';
+      default: return commandAction || 'performing the command';
     }
   }
 
   /**
-   * Описывает настроение
+   * Describe the mood.
    */
   _describeMood(mood) {
     const parts = [];
 
-    if (mood.excitement > 0.7) parts.push('взволнован');
-    if (mood.stress > 0.6) parts.push('напряжён');
-    if (mood.satisfaction > 0.7) parts.push('доволен');
-    if (mood.frustration > 0.6) parts.push('раздражён');
-    if (mood.curiosity > 0.7) parts.push('любопытен');
-    if (mood.boredom > 0.6) parts.push('скучает');
-    if (mood.fatigue > 0.7) parts.push('устал');
+    if (mood.excitement > 0.7) parts.push('excited');
+    if (mood.stress > 0.6) parts.push('tense');
+    if (mood.satisfaction > 0.7) parts.push('satisfied');
+    if (mood.frustration > 0.6) parts.push('frustrated');
+    if (mood.curiosity > 0.7) parts.push('curious');
+    if (mood.boredom > 0.6) parts.push('bored');
+    if (mood.fatigue > 0.7) parts.push('tired');
 
-    return parts.length > 0 ? parts.join(', ') : 'спокоен';
+    return parts.length > 0 ? parts.join(', ') : 'calm';
   }
 
   /**
-   * Описывает физическое состояние
+   * Describe the physical state.
    */
   _describePhysicalState(state) {
     const parts = [];
 
     if (state.position) {
-      parts.push(`координаты x: ${Math.round(state.position.x)}, y: ${Math.round(state.position.y)}, z: ${Math.round(state.position.z)}`);
+      parts.push(`coordinates x: ${Math.round(state.position.x)}, y: ${Math.round(state.position.y)}, z: ${Math.round(state.position.z)}`);
     }
 
-    if (state.health < 8) parts.push('мало здоровья');
-    else if (state.health < 14) parts.push('ранен');
+    if (state.health < 8) parts.push('low on health');
+    else if (state.health < 14) parts.push('injured');
 
-    if (state.food < 6) parts.push('голоден');
-    else if (state.food < 12) parts.push('хочет есть');
+    if (state.food < 6) parts.push('hungry');
+    else if (state.food < 12) parts.push('getting hungry');
 
-    if (state.inWater) parts.push('в воде');
-    if (state.onFire) parts.push('горит!');
+    if (state.inWater) parts.push('in water');
+    if (state.onFire) parts.push('on fire!');
 
-    if (state.inCave) parts.push('в пещере');
+    if (state.inCave) parts.push('in a cave');
     if (state.isDark) {
       if (state.torchCount === 0) {
-        parts.push('темно, нет факелов');
+        parts.push('dark, no torches');
       } else {
-        parts.push('вокруг темно');
+        parts.push('dark all around');
       }
     }
     if (state.hasShield || state.offHand?.name === 'shield') {
-      parts.push('щит во второй руке');
+      parts.push('holding a shield in the off-hand');
     }
     if (state.freeSlots !== undefined && state.freeSlots <= 2) {
-      parts.push('инвентарь почти полон');
+      parts.push('inventory almost full');
     }
 
     return parts.length > 0 ? parts.join(', ') : null;
   }
 
   /**
-   * Получает недавние важные события
+   * Get recent important events.
    */
   async _getRecentImportantEvents() {
     const events = [];
 
-    // Из эмоциональной памяти
+    // From emotional memory.
     const memories = this.memoryManager?.getRecentEmotionalEvents?.(5) || [];
     events.push(...memories.map(m => m.description));
 
@@ -588,7 +588,7 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
   }
 
   /**
-   * Строит социальный контекст
+   * Build the social context.
    */
   _buildSocialContext(ctx) {
     if (!ctx.speaker) return null;
