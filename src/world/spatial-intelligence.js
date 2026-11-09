@@ -95,7 +95,7 @@ export class SpatialIntelligence {
   }
 
   /**
-   * Full human description, for example: "a village to the northeast, about 120 blocks away, to your right".
+   * Full human description, for example: "a village to the northeast, to your right (about 120 blocks away)".
    */
   describeTarget(botPos, botYaw, targetPos, label = 'target') {
     if (!botPos || !targetPos) return `${label}: position unknown`;
