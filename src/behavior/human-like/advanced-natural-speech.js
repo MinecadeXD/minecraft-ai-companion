@@ -599,30 +599,30 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
     const parts = [];
 
     if (relationship.friendship > 0.8) {
-      parts.push(`${ctx.speaker} — твой близкий друг`);
+      parts.push(`${ctx.speaker} is your close friend`);
     } else if (relationship.friendship > 0.6) {
-      parts.push(`${ctx.speaker} — твой друг`);
+      parts.push(`${ctx.speaker} is your friend`);
     }
 
     if (relationship.irritation > 0.6) {
-      parts.push(`(${ctx.speaker} тебя немного раздражает)`);
+      parts.push(`(you are a little annoyed with ${ctx.speaker})`);
     }
 
     if (relationship.trust > 0.8) {
-      parts.push(`(ты полностью доверяешь ${ctx.speaker})`);
+      parts.push(`(you trust ${ctx.speaker} completely)`);
     }
 
     return parts.length > 0 ? parts.join(', ') : null;
   }
 
   /**
-   * Получает контекст текущей темы разговора
+   * Get the context of the current conversation topic.
    */
   _getTopicContext() {
     if (!this.currentTopic) return null;
 
     const topicAge = Date.now() - this.topicStartTime;
-    if (topicAge > 300000) { // 5 минут
+    if (topicAge > 300000) { // 5 minutes.
       this.currentTopic = null;
       return null;
     }
@@ -631,45 +631,45 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
   }
 
   /**
-   * Инициализирует уникальные речевые паттерны
+   * Initialize unique speech patterns.
    */
   _initializeSpeechPatterns() {
     const patterns = {
       Sam: {
-        fillerWords: ['хм', 'м', 'ну'],
+        fillerWords: ['hmm', 'uh', 'well'],
         hesitation: 0.3,
         questionFrequency: 0.4,
-        detailLevel: 'высокий',
+        detailLevel: 'high',
       },
       Max: {
-        fillerWords: ['так', 'итак'],
+        fillerWords: ['so', 'well'],
         hesitation: 0.1,
         questionFrequency: 0.2,
-        detailLevel: 'точный',
+        detailLevel: 'precise',
       },
       Jack: {
-        fillerWords: ['э', 'ну', 'типа'],
+        fillerWords: ['uh', 'well', 'like'],
         hesitation: 0.15,
         questionFrequency: 0.5,
-        detailLevel: 'общий',
+        detailLevel: 'general',
       },
       Ryan: {
         fillerWords: [],
         hesitation: 0.05,
         questionFrequency: 0.1,
-        detailLevel: 'краткий',
+        detailLevel: 'concise',
       },
       Alex: {
-        fillerWords: ['хм', 'знаешь'],
+        fillerWords: ['hmm', 'you know'],
         hesitation: 0.25,
         questionFrequency: 0.35,
-        detailLevel: 'образный',
+        detailLevel: 'descriptive',
       },
       Leo: {
-        fillerWords: ['ну'],
+        fillerWords: ['well'],
         hesitation: 0.1,
         questionFrequency: 0.15,
-        detailLevel: 'прямой',
+        detailLevel: 'direct',
       },
     };
 
@@ -677,34 +677,34 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
   }
 
   /**
-   * Получает рекомендации по стилю речи для промпта
+   * Get speech-style guidance for the prompt.
    */
   _getSpeechStyleGuidelines() {
     const guidelines = {
-      Sam: 'Ты говоришь вдумчиво и спокойно. Замечаешь детали. Задаёшь уточняющие вопросы по делу.',
-      Max: 'Ты говоришь чётко и по делу. Факты важнее эмоций. Без лишних слов.',
-      Jack: 'Ты открытый и надёжный напарник. Говоришь просто и легко, без кринжа.',
-      Ryan: 'Ты немногословен. Говоришь коротко и спокойно. Не тратишь слов впустую.',
-      Alex: 'Ты спокойный и наблюдательный. Иногда делишься наблюдениями.',
-      Leo: 'Ты говоришь прямо и уверенно. Без лишних слов.',
+      Sam: 'You speak thoughtfully and calmly. You notice details and ask relevant clarifying questions.',
+      Max: 'You speak clearly and stay on point. Facts matter more than emotions. Do not use unnecessary words.',
+      Jack: 'You are an open and reliable teammate. Speak simply and casually without forced slang.',
+      Ryan: 'You are concise. Speak briefly and calmly, without wasting words.',
+      Alex: 'You are calm and observant. You sometimes share things you notice.',
+      Leo: 'You speak directly and confidently, without unnecessary words.',
     };
 
-    return guidelines[this.agentName] || 'Ты спокойный, адекватный игрок в Minecraft. Общаешься естественно и по делу.';
+    return guidelines[this.agentName] || 'You are a calm, sensible Minecraft player. Speak naturally and stay on point.';
   }
 
   /**
-   * Обновляет ментальную усталость (от длинных сессий)
+   * Update mental fatigue from long sessions.
    */
   _updateMentalFatigue() {
     const sessionDuration = Date.now() - this.sessionStartTime;
     const hours = sessionDuration / (1000 * 60 * 60);
 
-    // Усталость растёт логарифмически
+    // Fatigue increases logarithmically.
     this.mentalFatigue = Math.min(0.8, Math.log(hours + 1) / 3);
   }
 
   /**
-   * Записывает реплику в историю
+   * Record a message in the history.
    */
   _recordSpeech(text, situation, timestamp) {
     this.recentSpeech.push({
@@ -721,19 +721,19 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
   }
 
   /**
-   * Проверяет, является ли текст мета-комментарием
+   * Check whether the text is meta-commentary.
    */
   _isMetaComment(text) {
     const metaWords = [
-      'персонаж',
-      'реплика',
-      'сгенерир',
-      'AI',
-      'LLM',
-      'промолч',
-      'ответ на',
-      'система',
-      'контекст',
+      'character',
+      'reply',
+      'generat',
+      'ai',
+      'llm',
+      'silence',
+      'answer to',
+      'system',
+      'context',
     ];
 
     const lower = text.toLowerCase();
@@ -741,7 +741,7 @@ Output ONLY the message text. No quotation marks, prefixes, or period at the end
   }
 
   /**
-   * Сброс для новой сессии
+   * Reset for a new session.
    */
   reset() {
     this.recentSpeech = [];
