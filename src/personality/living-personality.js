@@ -5,8 +5,8 @@ import { HumanErrorEngine } from '../behavior/human-error-engine.js';
 const logger = createLogger('LIVING_PERSONALITY');
 
 /**
- * LivingPersonality — бот живёт постоянно, а не ждёт сообщений.
- * Думает, наблюдает, вспоминает, чувствует — даже когда ты молчишь.
+ * LivingPersonality — the bot lives continuously instead of waiting for messages.
+ * It thinks, observes, remembers, and feels — even when you are silent.
  */
 export class LivingPersonality {
   constructor({
@@ -36,19 +36,19 @@ export class LivingPersonality {
   }
 
   /**
-   * Запускает жизненный цикл бота.
+   * Start the bot's life cycle.
    */
   start() {
     if (this.alive) return;
 
     this.alive = true;
-    logger.info(`[${this.agentName}] начинает жить своей жизнью`);
+    logger.info(`[${this.agentName}] starts living its own life`);
 
     this.liveLoop();
   }
 
   /**
-   * Останавливает жизненный цикл.
+   * Stop the life cycle.
    */
   stop() {
     this.alive = false;
@@ -56,11 +56,11 @@ export class LivingPersonality {
       clearTimeout(this.lifeLoopInterval);
       this.lifeLoopInterval = null;
     }
-    logger.info(`[${this.agentName}] остановил жизненный цикл`);
+    logger.info(`[${this.agentName}] stopped its life cycle`);
   }
 
   /**
-   * Главный цикл жизни — работает постоянно.
+   * Main life loop — runs continuously.
    */
   async liveLoop() {
     if (!this.alive) return;
@@ -72,7 +72,7 @@ export class LivingPersonality {
       await this.maybeSpeak();
       await this.maybeRemember();
     } catch (err) {
-      logger.debug(`[${this.agentName}] ошибка в цикле жизни: ${err.message}`);
+      logger.debug(`[${this.agentName}] life loop error: ${err.message}`);
     }
 
     const nextInterval = HumanErrorEngine.range(8000, 20000);
@@ -80,7 +80,7 @@ export class LivingPersonality {
   }
 
   /**
-   * Думает (внутренний монолог).
+   * Think (internal monologue).
    */
   async think() {
     const silenceDuration = Date.now() - this.lastPlayerMessageTime;
@@ -98,7 +98,7 @@ export class LivingPersonality {
   }
 
   /**
-   * Наблюдает за миром (замечает детали).
+   * Observe the world (notice details).
    */
   async observe() {
     const now = Date.now();
@@ -111,9 +111,9 @@ export class LivingPersonality {
 
     if (world.timeOfDay === 'sunset' && HumanErrorEngine.chance(0.15)) {
       this.innerMonologue.currentThoughts.push({
-        text: 'Красивый закат',
+        text: 'Beautiful sunset',
         timestamp: now,
-        emotion: 'умиротворение',
+        emotion: 'peacefulness',
         spoken: false,
       });
     }
@@ -123,16 +123,16 @@ export class LivingPersonality {
     );
 
     if (newPlayers && newPlayers.length > 0 && HumanErrorEngine.chance(0.3)) {
-      this.innerMonologue.addCuriosity(`Кто-то новый: ${newPlayers[0]}`);
+      this.innerMonologue.addCuriosity(`Someone new: ${newPlayers[0]}`);
     }
 
     if (world.health < 10 && HumanErrorEngine.chance(0.4)) {
-      this.innerMonologue.addWorry('Мало здоровья');
+      this.innerMonologue.addWorry('Low health');
     }
   }
 
   /**
-   * Обрабатывает эмоции.
+   * Process emotions.
    */
   async feel() {
     if (!this.emotionalState) return;
@@ -141,7 +141,7 @@ export class LivingPersonality {
   }
 
   /**
-   * Решает, говорить ли что-то спонтанно.
+   * Decide whether to say something spontaneously.
    */
   async maybeSpeak() {
     const now = Date.now();
@@ -155,17 +155,17 @@ export class LivingPersonality {
       if (thought && this.bot?.chat) {
         this.bot.chat(thought);
         this.lastSpontaneousMessageTime = now;
-        logger.info(`[${this.agentName}] сказал мысль вслух: "${thought}"`);
+        logger.info(`[${this.agentName}] said a thought out loud: "${thought}"`);
       }
       return;
     }
 
     if (silenceDuration > 600000 && HumanErrorEngine.chance(0.05)) {
       const messages = [
-        'ты тут?',
-        'как успехи?',
-        'всё в порядке?',
-        'куда пропал?',
+        'you there?',
+        'how's it going?',
+        'everything alright?',
+        'where did you go?',
       ];
 
       const msg = HumanErrorEngine.choice(messages);
@@ -174,13 +174,13 @@ export class LivingPersonality {
         this.bot.chat(msg);
         this.lastSpontaneousMessageTime = now;
         this.lastPlayerMessageTime = now - 300000;
-        logger.info(`[${this.agentName}] беспокоится и пишет первым: "${msg}"`);
+        logger.info(`[${this.agentName}] is concerned and messages first: "${msg}"`);
       }
     }
   }
 
   /**
-   * Спонтанно вспоминает прошлое.
+   * Spontaneously remember the past.
    */
   async maybeRemember() {
     if (!HumanErrorEngine.chance(0.02)) return;
@@ -188,7 +188,7 @@ export class LivingPersonality {
     const memory = this.emotionalMemory.randomMemory();
 
     if (memory) {
-      const thought = `Вспомнил, как ${memory.what}... ${memory.feeling}`;
+      const thought = `Remembered when ${memory.what}... ${memory.feeling}`;
       this.innerMonologue.currentThoughts.push({
         text: thought,
         timestamp: Date.now(),
@@ -196,19 +196,19 @@ export class LivingPersonality {
         spoken: false,
       });
 
-      logger.debug(`[${this.agentName}] спонтанно вспомнил: "${memory.what}"`);
+      logger.debug(`[${this.agentName}] spontaneously remembered: "${memory.what}"`);
     }
   }
 
   /**
-   * Обновляет время последнего сообщения от игрока.
+   * Update the time of the player's latest message.
    */
   onPlayerMessage() {
     this.lastPlayerMessageTime = Date.now();
   }
 
   /**
-   * Собирает недавние события для контекста.
+   * Collect recent events for context.
    */
   getRecentEvents() {
     const events = [];
