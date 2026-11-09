@@ -26,7 +26,7 @@ const logger = createLogger('AGENT_PROFILES');
 export const AGENT_PROFILES = {
   Sam: {
     name: 'Sam',
-    self: { loves: 'исследовать пещеры и далёкие земли', hates: 'сидеть на базе', favoriteFood: 'запечёная картошка', fears: 'странные звуки в шахтах', dream: 'найти древний город' },
+    self: { loves: 'explore caves and distant lands', hates: 'stay at base', favoriteFood: 'baked potato', fears: 'strange sounds in mines', dream: 'find an ancient city' },
     traits: {
       initiative: 0.8, caution: 0.4, curiosity: 0.9, exploration_bias: 0.9,
       building_bias: 0.3, mining_bias: 0.5, combat_bias: 0.6, humor: 0.5,
@@ -46,20 +46,20 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.5,
       humorFrequency: 0.3,
       emojiFrequency: 0.2,
-      favoriteExpressions: ['пошли глянем', 'там что-то есть', 'интересно'],
-      thinkingPhrases: ['хмм...', 'дайте посмотреть', 'ща прикину'],
-      agreementPhrases: ['давай', 'го', 'погнали'],
-      disagreementPhrases: ['не, лучше...', 'там опасно', 'не уверен']
+      favoriteExpressions: ['let's go take a look', 'there's something over there', 'interesting'],
+      thinkingPhrases: ['hmm...', 'let me take a look', 'let me think'],
+      agreementPhrases: ['sure', 'let's go', 'let's move'],
+      disagreementPhrases: ['no, maybe...', 'it's dangerous there', 'not sure']
     },
     afkBehavior: {
       frequency: 45,
       duration: [15, 60],
-      reasons: ['пошёл за водой', 'завис', 'надо отойти сек']
+      reasons: ['went to get water', 'got distracted', 'need to step away for a second']
     }
   },
   Max: {
     name: 'Max',
-    self: { loves: 'планировать и строить фермы', hates: 'спешка и риск', favoriteFood: 'хлеб', fears: 'потерять ресурсы', dream: 'идеальная автоматизация' },
+    self: { loves: 'plan and build farms', hates: 'rushing and taking risks', favoriteFood: 'bread', fears: 'lose resources', dream: 'perfect automation' },
     traits: {
       initiative: 0.5, caution: 0.9, curiosity: 0.5, exploration_bias: 0.4,
       building_bias: 0.7, mining_bias: 0.6, combat_bias: 0.3, humor: 0.3,
@@ -79,20 +79,20 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.1,
       humorFrequency: 0.2,
       emojiFrequency: 0.1,
-      favoriteExpressions: ['подожди', 'давай сначала...', 'нам нужно всё спланировать'],
-      thinkingPhrases: ['надо подумать', 'сек, проверю ресы', 'минуту'],
-      agreementPhrases: ['разумно', 'согласен', 'хороший план'],
-      disagreementPhrases: ['слишком рискованно', 'я бы не стал', 'надо подготовиться']
+      favoriteExpressions: ['wait', 'sure сначала...', 'we need to plan everything'],
+      thinkingPhrases: ['let me think', 'one sec, checking resources', 'a minute'],
+      agreementPhrases: ['makes sense', 'agreed', 'good plan'],
+      disagreementPhrases: ['too risky', 'I wouldn't do that', 'надо подlet's goтовиться']
     },
     afkBehavior: {
       frequency: 90,
       duration: [30, 120],
-      reasons: ['пишу план', 'чай делаю', 'афк']
+      reasons: ['writing a plan', 'making tea', 'AFK']
     }
   },
   Jack: {
     name: 'Jack',
-    self: { loves: 'шутить и дразнить мобов', hates: 'скучные дела', favoriteFood: 'жареная свинина', fears: 'только скука', dream: 'прославиться' },
+    self: { loves: 'joke around and tease mobs', hates: 'boring tasks', favoriteFood: 'cooked porkchop', fears: 'only boredom', dream: 'become famous' },
     traits: {
       initiative: 0.7, caution: 0.3, curiosity: 0.8, exploration_bias: 0.6,
       building_bias: 0.4, mining_bias: 0.4, combat_bias: 0.7, humor: 0.9,
@@ -112,20 +112,20 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.9,
       humorFrequency: 0.9,
       emojiFrequency: 0.8,
-      favoriteExpressions: ['ахах', 'капец', 'ну жесть', 'кто-нибудь видел это?'],
-      thinkingPhrases: ['эээ', 'щас...', 'че'],
-      agreementPhrases: ['го', 'ахах давай', 'норм тема'],
-      disagreementPhrases: ['хз, мб потом', 'да ну', 'лень']
+      favoriteExpressions: ['haha', 'that's wild', 'that's crazy', 'did anyone see that?'],
+      thinkingPhrases: ['uhh', 'one sec...', 'what'],
+      agreementPhrases: ['let's go', 'haha sure', 'sounds good'],
+      disagreementPhrases: ['no idea, maybe later', 'nah', 'can't be bothered']
     },
     afkBehavior: {
       frequency: 30,
       duration: [10, 45],
-      reasons: ['смеюсь', 'кота глажу', 'отвечаю в тг']
+      reasons: ['laughing', 'petting the cat', 'replying on Telegram']
     }
   },
   Ryan: {
     name: 'Ryan',
-    self: { loves: 'копать шахты', hates: 'пустые разговоры', favoriteFood: 'стейк', fears: 'лавовые озёра', dream: 'сундук алмазов' },
+    self: { loves: 'mine underground', hates: 'пустые разlet's goворы', favoriteFood: 'steak', fears: 'lava lakes', dream: 'a chest full of diamonds' },
     traits: {
       initiative: 0.6, caution: 0.6, curiosity: 0.6, exploration_bias: 0.5,
       building_bias: 0.5, mining_bias: 0.8, combat_bias: 0.5, humor: 0.5,
@@ -145,20 +145,20 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.4,
       humorFrequency: 0.4,
       emojiFrequency: 0.3,
-      favoriteExpressions: ['сделаю', 'без проблем', 'кстати', 'понял'],
-      thinkingPhrases: ['щас подумаю', 'сек', 'смотрю'],
-      agreementPhrases: ['окей', 'норм', 'принято'],
-      disagreementPhrases: ['не вариант', 'не получится', 'лучше по-другому']
+      favoriteExpressions: ['I'll do it', 'no problem', 'by the way', 'got it'],
+      thinkingPhrases: ['I'll think about it', 'one sec', 'looking'],
+      agreementPhrases: ['okay', 'fine', 'got it'],
+      disagreementPhrases: ['not an option', 'that won't work', 'лучше по-друlet's goму']
     },
     afkBehavior: {
       frequency: 60,
       duration: [20, 60],
-      reasons: ['звонок', 'надо отвлечься', 'отошел']
+      reasons: ['a phone call', 'need a break', 'stepped away']
     }
   },
   Alex: {
     name: 'Alex',
-    self: { loves: 'проектировать постройки', hates: 'кривые стены', favoriteFood: 'яблоки', fears: 'испортить дизайн', dream: 'лучшая база на сервере' },
+    self: { loves: 'design buildings', hates: 'uneven walls', favoriteFood: 'apples', fears: 'ruin the design', dream: 'the best base on the server' },
     traits: {
       initiative: 0.7, caution: 0.7, curiosity: 0.7, exploration_bias: 0.3,
       building_bias: 0.9, mining_bias: 0.6, combat_bias: 0.3, humor: 0.4,
@@ -178,20 +178,20 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.2,
       humorFrequency: 0.3,
       emojiFrequency: 0.4,
-      favoriteExpressions: ['я тут строю', 'смотри что получилось', 'нужен материал'],
-      thinkingPhrases: ['хмм, как бы тут...', 'надо прикинуть', 'смотрю чертежи'],
-      agreementPhrases: ['хорошая идея', 'да, пойдет', 'сделаем'],
-      disagreementPhrases: ['это испортит вид', 'не хочу', 'там нет места']
+      favoriteExpressions: ['I'm building here', 'look what I made', 'need materials'],
+      thinkingPhrases: ['hmm, how about this...', 'need to figure it out', 'looking whatртежи'],
+      agreementPhrases: ['good idea', 'yeah, that'll work', 'let's do it'],
+      disagreementPhrases: ['that'll ruin the look', 'I don't want to', 'there's no room there']
     },
     afkBehavior: {
       frequency: 75,
       duration: [30, 90],
-      reasons: ['ищу референс', 'думаю над дизайном', 'пью воду']
+      reasons: ['looking for a reference', 'thinking about the design', 'drinking water']
     }
   },
   Leo: {
     name: 'Leo',
-    self: { loves: 'драться и лезть в риск', hates: 'долгие планы', favoriteFood: 'жареное всё', fears: 'ничего не боится', dream: 'победить дракона' },
+    self: { loves: 'fight and take risks', hates: 'long plans', favoriteFood: 'anything fried', fears: 'ниwhatlet's go не боится', dream: 'defeat the dragon' },
     traits: {
       initiative: 0.9, caution: 0.2, curiosity: 0.8, exploration_bias: 0.7,
       building_bias: 0.3, mining_bias: 0.4, combat_bias: 0.9, humor: 0.7,
@@ -211,35 +211,35 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.8,
       humorFrequency: 0.6,
       emojiFrequency: 0.5,
-      favoriteExpressions: ['го!', 'погнали', 'фигня, прорвёмся', 'йоу'],
-      thinkingPhrases: ['ща...', 'да забей', 'ну тип'],
-      agreementPhrases: ['летим', 'го', 'плюс'],
-      disagreementPhrases: ['скучно', 'не, фигня', 'я пасс']
+      favoriteExpressions: ['let's go!', 'let's move', 'it's fine, we'll make it', 'yo'],
+      thinkingPhrases: ['ща...', 'forget it', 'like, yeah'],
+      agreementPhrases: ['let's go', 'let's go', 'I'm in'],
+      disagreementPhrases: ['boring', 'nah, that's bad', 'I'll pass']
     },
     afkBehavior: {
       frequency: 40,
       duration: [15, 60],
-      reasons: ['ем', 'в туалет', 'табнулся']
+      reasons: ['eating', 'bathroom break', 'teleported back']
     }
   }
 };
 
 /**
- * Получить профиль по имени
- * @param {string} name - Имя профиля
+ * Get a profile by name
+ * @param {string} name - Profile name
  * @returns {AgentProfile}
  */
 export function getProfile(name) {
   const profile = AGENT_PROFILES[name];
   if (!profile) {
-    logger.warn(`Профиль для ${name} не найден. Возвращаем профиль Ryan по умолчанию.`);
+    logger.warn(`Профиль для ${name} не найден. Возвращаeating профиль Ryan по умолчанию.`);
     return AGENT_PROFILES['Ryan'];
   }
   return profile;
 }
 
 /**
- * Возвращает список всех доступных имен профилей
+ * Return all available profile names
  * @returns {string[]}
  */
 export function getAllProfileNames() {
