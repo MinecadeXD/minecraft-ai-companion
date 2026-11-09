@@ -206,7 +206,7 @@ export class InitiativeController {
               `Village (${detection.direction.en})`,
               POITypes.VILLAGE,
               detection.center,
-              `Noticed while idle: confidence ${detection.confidence}`, 
+              `Noticed while idle: confidence ${detection.confidence}`,
             );
             logger.debug(`[idle] remembered a village to the ${detection.direction.en}`);
           }
