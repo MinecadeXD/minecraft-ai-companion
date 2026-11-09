@@ -6,8 +6,8 @@ const logger = createLogger('API_BUDGET');
 export class APIBudgetManager {
   /**
    * @param {Object} options
-   * @param {number} [options.maxGlobalRPM=60] - Увеличено с 14 до 60
-   * @param {number} [options.maxPerAgentRPM=15] - Увеличено с 4 до 15
+   * @param {number} [options.maxGlobalRPM=60] - Increased from 14 to 60.
+   * @param {number} [options.maxPerAgentRPM=15] - Increased from 4 to 15.
    * @param {string[]} options.agents
    */
   constructor({ maxGlobalRPM = 60, maxPerAgentRPM = 15, agents = [] }) {
@@ -33,13 +33,13 @@ export class APIBudgetManager {
       };
     }
 
-    // Запускаем окно сброса лимитов каждую минуту
+    // Reset the rate-limit window every minute.
     this._resetInterval = setInterval(() => this.resetMinuteWindow(), 60000);
-    logger.info(`Инициализирован APIBudgetManager (Global RPM: ${this.maxGlobalRPM}, Per-Agent RPM: ${this.maxPerAgentRPM})`);
+    logger.info(`APIBudgetManager initialized (global RPM: ${this.maxGlobalRPM}, per-agent RPM: ${this.maxPerAgentRPM})`);
   }
 
   /**
-   * Сбрасывает счетчики за минуту
+   * Reset the per-minute counters.
    */
   resetMinuteWindow() {
     this.windowStart = Date.now();
@@ -49,7 +49,7 @@ export class APIBudgetManager {
       this.agentsStats[agent].requestsThisMinute = 0;
     }
     this._processQueue();
-    logger.debug('Минутное окно API-лимитов сброшено.');
+    logger.debug('API rate-limit window reset.');
   }
 
   /**
@@ -76,7 +76,7 @@ export class APIBudgetManager {
   }
 
   /**
-   * Запрашивает слот для выполнения LLM-запроса
+   * Request a slot for an LLM call.
    * @param {string} agentName 
    * @param {'normal_tick'|'event_driven'|'deep_thinking'|'emergency'} priority 
    * @param {string} eventType 
@@ -84,7 +84,7 @@ export class APIBudgetManager {
    */
   async requestSlot(agentName, priority, eventType, options = {}) {
     if (!this.agentsStats[agentName]) {
-      logger.warn(`Агент ${agentName} не зарегистрирован в APIBudgetManager`);
+      logger.warn(`Agent ${agentName} is not registered with APIBudgetManager`);
       return false;
     }
 
@@ -131,8 +131,8 @@ export class APIBudgetManager {
       }
       signal?.addEventListener('abort', onAbort, { once: true });
 
-      // Экстренные запросы пропускаются без очереди, если есть хоть малейший бюджет,
-      // или даже с перерасходом, если это вопрос выживания
+      // Emergency requests bypass the queue when any budget remains,
+      // and may exceed the limit when survival is at stake.
       if (priority === 'emergency') {
         this._grantSlot(requestObj);
         return;
@@ -141,17 +141,17 @@ export class APIBudgetManager {
       this.requestQueue.push(requestObj);
       requestObj.wasQueued = true;
       telemetry.increment('queuedRequests');
-      this.requestQueue.sort((a, b) => b.priorityWeight - a.priorityWeight); // По убыванию приоритета
+      this.requestQueue.sort((a, b) => b.priorityWeight - a.priorityWeight); // Highest priority first.
       
       this._processQueue();
 
-      // Таймаут ожидания слота - 10 секунд
+      // Slot request timeout: 10 seconds.
       timeoutTimer = setTimeout(() => {
         const index = this.requestQueue.indexOf(requestObj);
         if (index !== -1) {
           this.requestQueue.splice(index, 1);
           requestObj.wasQueued = false;
-          logger.debug(`[${agentName}] Отклонен запрос слота по таймауту (${priority})`);
+          logger.debug(`[${agentName}] Slot request timed out (${priority})`);
           finish(false);
           telemetry.decrement('queuedRequests');
         }
@@ -160,7 +160,7 @@ export class APIBudgetManager {
   }
 
   /**
-   * Обрабатывает очередь запросов
+   * Process the request queue.
    * @private
    */
   _processQueue() {
@@ -174,13 +174,13 @@ export class APIBudgetManager {
       this.requestQueue.splice(index, 1);
       this._grantSlot(nextReq);
       
-      // Рекурсивно проверяем следующий
+      // Recursively check the next queued request.
       this._processQueue();
     }
   }
 
   /**
-   * Выдает слот
+   * Grant a request slot.
    * @private
    */
   _grantSlot(req) {
@@ -196,17 +196,17 @@ export class APIBudgetManager {
       telemetry.decrement('queuedRequests');
     }
     
-    logger.debug(`[${req.agentName}] Слот выдан (Приоритет: ${req.priorityLabel}, Событие: ${req.eventType}). Global reqs: ${this.globalRequestsThisMinute}/${this.maxGlobalRPM}`);
+    logger.debug(`[${req.agentName}] Slot granted (priority: ${req.priorityLabel}, event: ${req.eventType}). Global requests: ${this.globalRequestsThisMinute}/${this.maxGlobalRPM}`);
     req.resolve(true);
   }
 
   /**
-   * Сообщает менеджеру о завершении запроса
+   * Notify the manager that a request has finished.
    * @param {string} agentName 
    */
   releaseSlot(agentName) {
-    // В будущем тут можно освобождать слоты для параллельных лимитов, 
-    // но для RPM-базированных просто фиксируем.
+    // In the future, this can release slots for parallel limits;
+    // for RPM-based limits, we only record the completion.
     this.activeRequests = Math.max(0, this.activeRequests - 1);
     if (this.agentsStats[agentName]) {
       this.agentsStats[agentName].activeRequests = Math.max(0, this.agentsStats[agentName].activeRequests - 1);
@@ -215,19 +215,19 @@ export class APIBudgetManager {
   }
 
   /**
-   * Блокирует агенту доступ к API на заданное время
+   * Block an agent from accessing the API for a specified duration.
    * @param {string} agentName 
    * @param {number} durationMs 
    */
   setCooldown(agentName, durationMs) {
     if (this.agentsStats[agentName]) {
       this.agentsStats[agentName].cooldownUntil = Date.now() + durationMs;
-      logger.info(`[${agentName}] Установлен кулдаун на ${durationMs}мс`);
+      logger.info(`[${agentName}] API cooldown set for ${durationMs} ms`);
     }
   }
 
   /**
-   * Возвращает статистику для дашборда
+   * Return statistics for the dashboard.
    * @returns {Object}
    */
   getStats() {
