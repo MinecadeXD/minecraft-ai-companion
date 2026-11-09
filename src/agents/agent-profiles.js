@@ -79,10 +79,10 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.1,
       humorFrequency: 0.2,
       emojiFrequency: 0.1,
-      favoriteExpressions: ['wait', 'sure сначала...', 'we need to plan everything'],
+      favoriteExpressions: ['wait', 'let us start with...', 'we need to plan everything'],
       thinkingPhrases: ['let me think', 'one sec, checking resources', 'a minute'],
       agreementPhrases: ['makes sense', 'agreed', 'good plan'],
-      disagreementPhrases: ['too risky', 'I wouldn't do that', 'надо подlet's goтовиться']
+      disagreementPhrases: ['too risky', 'I wouldn't do that', 'we should prepare']
     },
     afkBehavior: {
       frequency: 90,
@@ -125,7 +125,7 @@ export const AGENT_PROFILES = {
   },
   Ryan: {
     name: 'Ryan',
-    self: { loves: 'mine underground', hates: 'пустые разlet's goворы', favoriteFood: 'steak', fears: 'lava lakes', dream: 'a chest full of diamonds' },
+    self: { loves: 'mine underground', hates: 'empty talk', favoriteFood: 'steak', fears: 'lava lakes', dream: 'a chest full of diamonds' },
     traits: {
       initiative: 0.6, caution: 0.6, curiosity: 0.6, exploration_bias: 0.5,
       building_bias: 0.5, mining_bias: 0.8, combat_bias: 0.5, humor: 0.5,
@@ -148,7 +148,7 @@ export const AGENT_PROFILES = {
       favoriteExpressions: ['I'll do it', 'no problem', 'by the way', 'got it'],
       thinkingPhrases: ['I'll think about it', 'one sec', 'looking'],
       agreementPhrases: ['okay', 'fine', 'got it'],
-      disagreementPhrases: ['not an option', 'that won't work', 'лучше по-друlet's goму']
+      disagreementPhrases: ['not an option', 'that won't work', 'better another way']
     },
     afkBehavior: {
       frequency: 60,
@@ -179,7 +179,7 @@ export const AGENT_PROFILES = {
       humorFrequency: 0.3,
       emojiFrequency: 0.4,
       favoriteExpressions: ['I'm building here', 'look what I made', 'need materials'],
-      thinkingPhrases: ['hmm, how about this...', 'need to figure it out', 'looking whatртежи'],
+      thinkingPhrases: ['hmm, how about this...', 'need to figure it out', 'looking at the plans'],
       agreementPhrases: ['good idea', 'yeah, that'll work', 'let's do it'],
       disagreementPhrases: ['that'll ruin the look', 'I don't want to', 'there's no room there']
     },
@@ -191,7 +191,7 @@ export const AGENT_PROFILES = {
   },
   Leo: {
     name: 'Leo',
-    self: { loves: 'fight and take risks', hates: 'long plans', favoriteFood: 'anything fried', fears: 'ниwhatlet's go не боится', dream: 'defeat the dragon' },
+    self: { loves: 'fight and take risks', hates: 'long plans', favoriteFood: 'anything fried', fears: 'afraid of nothing', dream: 'defeat the dragon' },
     traits: {
       initiative: 0.9, caution: 0.2, curiosity: 0.8, exploration_bias: 0.7,
       building_bias: 0.3, mining_bias: 0.4, combat_bias: 0.9, humor: 0.7,
@@ -212,7 +212,7 @@ export const AGENT_PROFILES = {
       humorFrequency: 0.6,
       emojiFrequency: 0.5,
       favoriteExpressions: ['let's go!', 'let's move', 'it's fine, we'll make it', 'yo'],
-      thinkingPhrases: ['ща...', 'forget it', 'like, yeah'],
+      thinkingPhrases: ['one sec...', 'forget it', 'like, yeah'],
       agreementPhrases: ['let's go', 'let's go', 'I'm in'],
       disagreementPhrases: ['boring', 'nah, that's bad', 'I'll pass']
     },
@@ -232,7 +232,7 @@ export const AGENT_PROFILES = {
 export function getProfile(name) {
   const profile = AGENT_PROFILES[name];
   if (!profile) {
-    logger.warn(`Профиль для ${name} не найден. Возвращаeating профиль Ryan по умолчанию.`);
+    logger.warn(`Profile for ${name} was not found. Falling back to the Ryan profile.`);
     return AGENT_PROFILES['Ryan'];
   }
   return profile;
