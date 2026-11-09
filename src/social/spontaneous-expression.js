@@ -120,7 +120,7 @@ Reply ONLY with the message text, without explanation. Or write "..." if it is b
           systemPrompt: `Generate short, natural messages from a Minecraft player.
 Reply ONLY with the message itself, without explanations.
 Every message should be unique and human-like.
-People speak simply and naturally, without forced slang.`, 
+People speak simply and naturally, without forced slang.`,
           tools: [],
         });
       }
@@ -143,13 +143,13 @@ People speak simply and naturally, without forced slang.`,
       }
 
       // Reject meta-commentary.
+      const lowerExpression = expression.toLowerCase();
       if (
-        expression.toLowerCase().includes('character') ||
-        expression.toLowerCase().includes('response') ||
-        expression.toLowerCase().includes('generat') ||
-        expression.toLowerCase().includes('llm') ||
-        expression.toLowerCase().includes('ai') ||
-        expression.toLowerCase().includes('silence')
+        lowerExpression.includes('character') ||
+        lowerExpression.includes('response') ||
+        lowerExpression.includes('generat') ||
+        /\\b(?:llm|ai)\\b/.test(lowerExpression) ||
+        lowerExpression.includes('silence')
       ) {
         return null;
       }
