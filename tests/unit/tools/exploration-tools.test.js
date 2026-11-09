@@ -120,7 +120,7 @@ describe('Exploration tools', () => {
 
     const res = await registry.execute('scout_direction', { direction: 'north' });
     expect(res.success).toBe(true);
-    expect(res.data).toContain('деревня');
+    expect(res.data).toContain('village');
     expect(memoryManager._store.filter(p => p.type === POITypes.VILLAGE)).toHaveLength(1);
   });
 
