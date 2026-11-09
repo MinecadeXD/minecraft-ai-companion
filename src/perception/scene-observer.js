@@ -6,7 +6,7 @@ const logger = createLogger('SCENE');
 
 /**
  * SceneObserver — turns raw block/entity data into a human-readable scene
- * description ("что видит игрок"): facing direction, terrain around, biome,
+ * description ("what the player sees"): facing direction, surrounding terrain, biome,
  * what stands out in each compass direction, nearby entities and their side.
  *
  * This is intentionally cheap (sparse block sampling, no per-tick raycasts) so
@@ -58,35 +58,35 @@ export class SceneObserver {
 
   _recentSoundsNearby(botPos, botYaw) {
     const now = Date.now();
-    // Оставляем звуки за последние 10 секунд
+    // Keep only sounds from the last 10 seconds.
     this.recentSounds = this.recentSounds.filter(s => now - s.time < 10000);
     if (this.recentSounds.length === 0) return [];
 
-    const sideRu = { ahead: 'впереди', behind: 'позади', left: 'слева', right: 'справа', above: 'сверху', below: 'снизу' };
-    const soundRu = {
-      'creeper.primed': 'шипение крипера! (ОПАСНОСТЬ)',
-      'creeper': 'звук крипера',
-      'lava.ambient': 'бурление лавы',
-      'lava.pop': 'всплеск лавы',
-      'water.ambient': 'шум воды',
-      'zombie.ambient': 'стоны зомби',
-      'zombie.step': 'шаги зомби',
-      'skeleton.ambient': 'звуки скелета',
-      'spider.ambient': 'шипение паука',
-      'explosion': 'грохот взрыва!',
-      'chest.open': 'открытие сундука',
-      'player.hurt': 'звук получения урона',
-      'ambient.cave': 'жуткий звук пещеры',
+    const sideEn = { ahead: 'ahead', behind: 'behind', left: 'to the left', right: 'to the right', above: 'above', below: 'below' };
+    const soundDescriptions = {
+      'creeper.primed': 'creeper hissing! (DANGER)',
+      'creeper': 'creeper sound',
+      'lava.ambient': 'bubbling lava',
+      'lava.pop': 'lava popping',
+      'water.ambient': 'flowing water',
+      'zombie.ambient': 'zombie groans',
+      'zombie.step': 'zombie footsteps',
+      'skeleton.ambient': 'skeleton sounds',
+      'spider.ambient': 'spider hissing',
+      'explosion': 'explosion boom!',
+      'chest.open': 'chest opening',
+      'player.hurt': 'damage sound',
+      'ambient.cave': 'eerie cave sound',
     };
 
     const out = [];
     const seen = new Set();
     for (let i = this.recentSounds.length - 1; i >= 0 && out.length < 4; i--) {
       const s = this.recentSounds[i];
-      let ruName = s.name;
-      for (const [k, v] of Object.entries(soundRu)) {
+      let soundDescription = s.name;
+      for (const [k, v] of Object.entries(soundDescriptions)) {
         if (s.name.includes(k)) {
-          ruName = v;
+          soundDescription = v;
           break;
         }
       }
@@ -95,10 +95,10 @@ export class SceneObserver {
       if (s.pos && botPos) {
         const side = spatialIntelligence.getRelativeDirection(botPos, botYaw, s.pos);
         const dist = Math.round(Math.hypot(s.pos.x - botPos.x, s.pos.y - botPos.y, s.pos.z - botPos.z));
-        direction = ` (${sideRu[side] || side}, ~${dist}м)`;
+        direction = ` (${sideEn[side] || side}, about ${dist} blocks away)`;
       }
 
-      const desc = `${ruName}${direction}`;
+      const desc = `${soundDescription}${direction}`;
       if (!seen.has(desc)) {
         seen.add(desc);
         out.push(desc);
@@ -169,11 +169,11 @@ export class SceneObserver {
   _groundContext(bot, pos) {
     const below = this._safeBlockName(bot, { x: pos.x, y: pos.y - 1, z: pos.z });
     const surfaceY = this._surfaceHeight(bot, pos.x, pos.z, pos.y);
-    let elevation = 'на ровной земле';
+    let elevation = 'on level ground';
     if (surfaceY !== null) {
       const delta = pos.y - surfaceY;
-      if (delta > 3) elevation = 'высоко (на возвышении/в воздухе)';
-      else if (delta < -3) elevation = 'в низине/яме';
+      if (delta > 3) elevation = 'high up (on elevated ground or in the air)';
+      else if (delta < -3) elevation = 'in a low area or pit';
     }
     return { standingOn: below, surfaceY, elevation };
   }
@@ -244,16 +244,16 @@ export class SceneObserver {
       }
 
       const features = [];
-      if (maxRise >= 12) features.push('высокая гора');
-      else if (maxRise >= 5) features.push('холм/возвышенность');
-      if (maxDrop <= -8) features.push('обрыв/низина');
-      if (sawWater) features.push('вода');
-      if (sawTrees) features.push('деревья/лес');
-      if (features.length === 0) features.push('ровная местность');
+      if (maxRise >= 12) features.push('high mountain');
+      else if (maxRise >= 5) features.push('hill / elevated ground');
+      if (maxDrop <= -8) features.push('cliff / lowland');
+      if (sawWater) features.push('water');
+      if (sawTrees) features.push('trees / forest');
+      if (features.length === 0) features.push('flat terrain');
 
       results.push({
         code: dir.code,
-        ru: spatialIntelligence.compassFromVector(dir.dx, dir.dz).ru,
+        en: spatialIntelligence.compassFromVector(dir.dx, dir.dz).en,
         rise: maxRise,
         drop: maxDrop,
         features,
@@ -346,27 +346,27 @@ export class SceneObserver {
       // Damage detection via HP delta between observes.
       if (hp !== null) {
         if (this._lastHealth != null && hp < this._lastHealth - 0.1) {
-          status.push(`получаю урон (${Math.round(this._lastHealth - hp)} хп)`);
+          status.push(`taking damage (${Math.round(this._lastHealth - hp)} HP)`);
         }
         this._lastHealth = hp;
       }
 
       // On fire (metadata bit 0x01 of index 0).
       const onFire = e?.metadata && (Number(e.metadata[0]) & 0x01) !== 0;
-      if (onFire) status.push('горю');
+      if (onFire) status.push('on fire');
 
-      if (e?.isInLava) status.push('в лаве');
+      if (e?.isInLava) status.push('in lava');
       else if (e?.isInWater) {
         const air = typeof bot.oxygenLevel === 'number' ? bot.oxygenLevel : null;
-        status.push(air != null && air < 10 ? `под водой, задыхаюсь (воздух ${air})` : 'в воде');
+        status.push(air != null && air < 10 ? `underwater, running out of air (${air} air)` : 'in water');
       }
 
       // Falling fast (not in liquid).
       if (e?.velocity && e.velocity.y < -0.6 && !e.isInWater && !e.isInLava && !e.onGround) {
-        status.push('падаю');
+        status.push('falling');
       }
 
-      if (hp !== null && hp <= 6) status.push('мало здоровья!');
+      if (hp !== null && hp <= 6) status.push('low on health!');
     } catch (_) {}
     return status;
   }
@@ -415,7 +415,7 @@ export class SceneObserver {
         type: e.type,
         distance: Math.round(dist * 10) / 10,
         side: spatialIntelligence.getRelativeDirection(botPos, yaw, target),
-        compass: spatialIntelligence.getCompassToTarget(botPos, target).ru,
+        compass: spatialIntelligence.getCompassToTarget(botPos, target).en,
         isPlayer,
         heldItem,
         isSneaking,
@@ -447,14 +447,14 @@ export class SceneObserver {
 
   _celestialContext(bot) {
     const time = typeof bot?.time?.timeOfDay === 'number' ? bot.time.timeOfDay : null;
-    let timeDesc = 'день';
+    let timeDesc = 'day';
     if (time !== null) {
-      if (time >= 0 && time < 1000) timeDesc = 'рассвет (восход солнца)';
-      else if (time >= 1000 && time < 11500) timeDesc = 'день';
-      else if (time >= 11500 && time < 13000) timeDesc = 'закат (солнце садится, скоро ночь!)';
-      else if (time >= 13000 && time < 18000) timeDesc = 'ночь (спавнятся монстры, можно спать)';
-      else if (time >= 18000 && time < 23000) timeDesc = 'глубокая ночь';
-      else timeDesc = 'рассвет';
+      if (time >= 0 && time < 1000) timeDesc = 'sunrise';
+      else if (time >= 1000 && time < 11500) timeDesc = 'day';
+      else if (time >= 11500 && time < 13000) timeDesc = 'sunset (the sun is setting; night is coming!)';
+      else if (time >= 13000 && time < 18000) timeDesc = 'night (monsters spawn; you can sleep)';
+      else if (time >= 18000 && time < 23000) timeDesc = 'late night';
+      else timeDesc = 'sunrise';
     }
     const isRaining = Boolean(bot?.isRaining);
     const isThundering = Boolean(bot?.thunderState && bot.thunderState > 0);
@@ -483,93 +483,93 @@ export class SceneObserver {
   }
 
   /**
-   * Compact Russian narration of a scene, for injection into the AI context.
+   * Compact English narration of a scene, for injection into the AI context.
    */
   describe(scene) {
-    if (!scene) return 'Вид недоступен.';
+    if (!scene) return 'View unavailable.';
     const parts = [];
 
     // Most urgent first: what is happening to me right now.
     if (scene.status && scene.status.length > 0) {
-      parts.push(`Сейчас со мной: ${scene.status.join(', ')}.`);
+      parts.push(`Current status: ${scene.status.join(', ')}.`);
     }
 
-    parts.push(`Смотрю на ${scene.facing.ru}. Биом: ${scene.biome}. ${scene.ground.elevation}, под ногами ${scene.ground.standingOn || 'воздух'}.`);
+    parts.push(`Facing ${scene.facing.en}. Biome: ${scene.biome}. ${scene.ground.elevation}, standing on ${scene.ground.standingOn || 'air'}.`);
 
     // Only mention directions that have something notable.
-    const notable = scene.horizon.filter(h => !(h.features.length === 1 && h.features[0] === 'ровная местность'));
+    const notable = scene.horizon.filter(h => !(h.features.length === 1 && h.features[0] === 'flat terrain'));
     if (notable.length > 0) {
-      const bits = notable.map(h => `на ${h.ru} — ${h.features.join(', ')}`);
-      parts.push(`Вокруг: ${bits.join('; ')}.`);
+      const bits = notable.map(h => `to the ${h.en}: ${h.features.join(', ')}`);
+      parts.push(`Around you: ${bits.join('; ')}.`);
     } else {
-      parts.push('Вокруг в основном ровная местность.');
+      parts.push('The surrounding terrain is mostly flat.');
     }
 
     // Wide situational awareness: what I'm aiming at, ores, hazards, stations.
     const n = scene.nearby;
     if (n) {
-      if (n.lookingAt) parts.push(`Прямо перед взглядом: ${n.lookingAt}.`);
+      if (n.lookingAt) parts.push(`Directly ahead: ${n.lookingAt}.`);
       if (n.ores.length > 0) {
-        parts.push(`Руда рядом: ${n.ores.map(o => `${o.name} (${o.dist}м)`).join(', ')}.`);
+        parts.push(`Nearby ores: ${n.ores.map(o => `${o.name} (${o.dist} blocks)`).join(', ')}.`);
       }
       if (n.hazards.length > 0) {
-        parts.push(`Опасно рядом: ${n.hazards.map(h => `${h.name} (${h.dist}м)`).join(', ')}.`);
+        parts.push(`Nearby hazards: ${n.hazards.map(h => `${h.name} (${h.dist} blocks)`).join(', ')}.`);
       }
       if (n.stations.length > 0) {
-        parts.push(`Полезное рядом: ${n.stations.map(s => `${s.name} (${s.dist}м)`).join(', ')}.`);
+        parts.push(`Useful nearby stations: ${n.stations.map(s => `${s.name} (${s.dist} blocks)`).join(', ')}.`);
       }
     }
 
     // Light and safety context
     if (scene.light && scene.light.blockLight !== null) {
       if (scene.light.blockLight <= 0) {
-        parts.push(`Освещение под ногами: полная тьма (свет: ${scene.light.blockLight}), здесь могут спавниться монстры!`);
+        parts.push(`Light level at your feet: complete darkness (block light: ${scene.light.blockLight}); monsters can spawn here!`);
       } else if (scene.light.blockLight <= 4) {
-        parts.push(`Освещение под ногами: тускло (свет: ${scene.light.blockLight}).`);
+        parts.push(`Light level at your feet: dim (block light: ${scene.light.blockLight}).`);
       }
     }
 
     // Celestial / weather
     if (scene.celestial) {
       if (scene.celestial.isThundering) {
-        parts.push('Погода: гроза с молниями (очень темно, монстры спавнятся даже днём)!');
+        parts.push('Weather: thunderstorm with lightning (it is very dark, and monsters can spawn even during the day)!');
       } else if (scene.celestial.isRaining) {
-        parts.push('Погода: идёт дождь.');
+        parts.push('Weather: raining.');
       }
       if (scene.celestial.timeDesc) {
-        parts.push(`Время: ${scene.celestial.timeDesc}.`);
+        parts.push(`Time: ${scene.celestial.timeDesc}.`);
       }
     }
 
     // Metabolism & body state
     if (scene.metabolism) {
       if (scene.metabolism.food !== null && scene.metabolism.food < 6) {
-        parts.push(`Критический голод (${scene.metabolism.food}/20), спринт заблокирован!`);
+        parts.push(`Critical hunger (${scene.metabolism.food}/20); sprinting is disabled!`);
       }
       if (scene.metabolism.effects && scene.metabolism.effects.length > 0) {
-        parts.push(`Эффекты: ${scene.metabolism.effects.join(', ')}.`);
+        parts.push(`Effects: ${scene.metabolism.effects.join(', ')}.`);
       }
     }
 
     if (scene.entities.length > 0) {
-      const sideRu = { ahead: 'впереди', behind: 'позади', left: 'слева', right: 'справа', above: 'сверху', below: 'снизу' };
+      const sideEn = { ahead: 'ahead', behind: 'behind', left: 'to the left', right: 'to the right', above: 'above', below: 'below' };
       const ents = scene.entities.slice(0, 5).map(e => {
-        let details = `${e.name} (${sideRu[e.side] || e.side}, ${e.distance}м`;
+        let details = `${e.name} (${sideEn[e.side] || e.side}, ${e.distance} blocks`;
         if (e.isPlayer) {
           const pBits = [];
-          if (e.isLookingAtBot) pBits.push('смотрит на тебя');
-          if (e.heldItem) pBits.push(`держит ${e.heldItem}`);
-          if (e.isSneaking) pBits.push('приседает');
+          if (e.isLookingAtBot) pBits.push('looking at you');
+          if (e.heldItem) pBits.push(`holding ${e.heldItem}`);
+          if (e.isSneaking) pBits.push('sneaking');
           if (pBits.length > 0) details += `, ${pBits.join(', ')}`;
         }
         details += ')';
         return details;
       });
-      parts.push(`Рядом: ${ents.join(', ')}.`);
+      parts.push(`Nearby: ${ents.join(', ')}.`);
     }
 
     if (scene.sounds && scene.sounds.length > 0) {
-      parts.push(`Слышу: ${scene.sounds.join(', ')}.`);
+      parts.push(`I hear: ${scene.sounds.join(', ')}.`);
     }
 
     return parts.join(' ');
