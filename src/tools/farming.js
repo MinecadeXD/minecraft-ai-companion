@@ -6,7 +6,7 @@ const logger = createLogger('FARMING_TOOLS');
 
 export function registerFarmingTools(registry, { bot }) {
   /**
-   * Вспашка земли и посадка семян
+   * Till soil and plant seeds.
    */
   registry.register({
     name: 'till_and_plant',
@@ -25,27 +25,27 @@ export function registerFarmingTools(registry, { bot }) {
       try {
         const targetPos = vec3(args.x, args.y, args.z);
         const block = bot.blockAt(targetPos);
-        if (!block) return { success: false, error: 'Блок не найден.' };
+        if (!block) return { success: false, error: 'Block not found.' };
 
-        // 1. Ищем мотыгу
+        // 1. Find a hoe.
         const items = bot.inventory.items();
         const hoe = items.find((i) => i.name.includes('hoe'));
-        if (!hoe) return { success: false, error: 'В инвентаре нет мотыги для вспашки.' };
+        if (!hoe) return { success: false, error: 'There is no hoe in the inventory for tilling.' };
 
-        // 2. Ищем семена
+        // 2. Find seeds.
         const seed = items.find((i) => i.name === args.seedName || i.name.includes(args.seedName));
-        if (!seed) return { success: false, error: `В инвентаре нет семян: ${args.seedName}` };
+        if (!seed) return { success: false, error: `Seeds not found in inventory: ${args.seedName}` };
 
-        // Плавный взгляд
+        // Turn smoothly toward the target.
         await adaptiveCamera.calmLookAt(bot, targetPos);
 
-        // Вспахиваем мотыгой
+        // Till the soil with the hoe.
         await bot.equip(hoe, 'hand');
         if (typeof bot.activateBlock === 'function') {
           await bot.activateBlock(block);
         }
 
-        // Ждем 150 мс и сажаем семена
+        // Wait 150 ms, then plant the seeds.
         await new Promise((r) => setTimeout(r, 150));
         await bot.equip(seed, 'hand');
         const farmlandBlock = bot.blockAt(targetPos);
@@ -53,7 +53,7 @@ export function registerFarmingTools(registry, { bot }) {
           await bot.placeBlock(farmlandBlock, vec3(0, 1, 0));
         }
 
-        return { success: true, data: `Вспахана земля и посажены ${args.seedName} на [${args.x}, ${args.y}, ${args.z}]` };
+        return { success: true, data: `Tilled the soil and planted ${args.seedName} at [${args.x}, ${args.y}, ${args.z}]` };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -61,7 +61,7 @@ export function registerFarmingTools(registry, { bot }) {
   });
 
   /**
-   * Сбор урожая и повторный посев
+   * Harvest crops and replant them.
    */
   registry.register({
     name: 'harvest_crops',
@@ -85,7 +85,7 @@ export function registerFarmingTools(registry, { bot }) {
               const pos = myPos.offset(dx, dy, dz);
               const block = bot.blockAt(pos);
               if (block && cropNames.includes(block.name)) {
-                // В Minecraft 1.20 у зрелых растений metadata или stateage максимальный (7 для пшеницы/моркови/картошки)
+                // In Minecraft 1.20, mature crops have the maximum metadata or state age (7 for wheat, carrots, and potatoes).
                 const isMature = block.metadata >= 7 || block._properties?.age >= 7;
                 if (isMature) {
                   await adaptiveCamera.calmLookAt(bot, pos);
@@ -93,7 +93,7 @@ export function registerFarmingTools(registry, { bot }) {
                   harvestedCount++;
                   await new Promise((r) => setTimeout(r, 200));
 
-                  // Перепосадка
+                  // Replant the crop.
                   const seedMap = {
                     wheat: 'wheat_seeds',
                     carrots: 'carrot',
@@ -115,7 +115,7 @@ export function registerFarmingTools(registry, { bot }) {
           }
         }
 
-        return { success: true, data: `Собрано и перепосажено ${harvestedCount} урожая.` };
+        return { success: true, data: `Harvested and replanted ${harvestedCount} crops.` };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -123,7 +123,7 @@ export function registerFarmingTools(registry, { bot }) {
   });
 
   /**
-   * Взаимодействие с животными (разведение, стрижка, дойка)
+   * Interact with animals (breeding, shearing, and milking).
    */
   registry.register({
     name: 'interact_with_animal',
@@ -146,7 +146,7 @@ export function registerFarmingTools(registry, { bot }) {
         });
 
         if (animals.length === 0) {
-          return { success: false, error: 'Поблизости нет подходящих животных.' };
+          return { success: false, error: 'No suitable animals are nearby.' };
         }
 
         const target = animals[0];
@@ -154,18 +154,18 @@ export function registerFarmingTools(registry, { bot }) {
 
         if (args.action === 'shear') {
           const shears = bot.inventory.items().find((i) => i.name === 'shears');
-          if (!shears) return { success: false, error: 'В инвентаре нет ножниц.' };
+          if (!shears) return { success: false, error: 'There are no shears in the inventory.' };
           await bot.equip(shears, 'hand');
           await bot.useOn(target);
-          return { success: true, data: `Постригли ${target.name}` };
+          return { success: true, data: `Sheared ${target.name}` };
         }
 
         if (args.action === 'milk') {
           const bucket = bot.inventory.items().find((i) => i.name === 'bucket');
-          if (!bucket) return { success: false, error: 'В инвентаре нет пустого ведра.' };
+          if (!bucket) return { success: false, error: 'There is no empty bucket in the inventory.' };
           await bot.equip(bucket, 'hand');
           await bot.useOn(target);
-          return { success: true, data: `Подоили ${target.name}` };
+          return { success: true, data: `Milked ${target.name}` };
         }
 
         if (args.action === 'breed') {
@@ -177,13 +177,13 @@ export function registerFarmingTools(registry, { bot }) {
           };
           const foodName = foodMap[target.name] || 'wheat';
           const foodItem = bot.inventory.items().find((i) => i.name.includes(foodName));
-          if (!foodItem) return { success: false, error: `Для разведения ${target.name} требуется ${foodName}` };
+          if (!foodItem) return { success: false, error: `${target.name} needs ${foodName} for breeding.` };
           await bot.equip(foodItem, 'hand');
           await bot.useOn(target);
-          return { success: true, data: `Покормили ${target.name} для разведения` };
+          return { success: true, data: `Fed ${target.name} for breeding.` };
         }
 
-        return { success: false, error: `Неизвестное действие: ${args.action}` };
+        return { success: false, error: `Unknown action: ${args.action}` };
       } catch (err) {
         return { success: false, error: err.message };
       }
