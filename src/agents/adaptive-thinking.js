@@ -24,7 +24,7 @@ export class AdaptiveThinkingController {
     this.lastTickTime = Date.now();
     this.lastLLMCallTime = 0;
     
-    logger.info(`Инициализирован AdaptiveThinkingController для агента ${agentName}`);
+    logger.info(`AdaptiveThinkingController initialized for agent ${agentName}`);
   }
 
   /**
@@ -34,12 +34,12 @@ export class AdaptiveThinkingController {
     const validLevels = ['idle', 'working', 'group', 'danger'];
     if (validLevels.includes(level) && this.activityLevel !== level) {
       this.activityLevel = level;
-      logger.debug(`[${this.agentName}] Уровень активности изменен на: ${level}`);
+      logger.debug(`[${this.agentName}] Activity level changed to: ${level}`);
     }
   }
 
   /**
-   * @returns {number} Текущий интервал в миллисекундах
+   * @returns {number} Current interval in milliseconds.
    */
   getTickInterval() {
     switch (this.activityLevel) {
@@ -56,7 +56,7 @@ export class AdaptiveThinkingController {
   }
 
   /**
-   * Проверяет, пришло ли время для NORMAL_TICK
+   * Check whether it is time for a NORMAL_TICK.
    * @returns {boolean}
    */
   shouldTick() {
@@ -70,44 +70,44 @@ export class AdaptiveThinkingController {
   }
 
   /**
-   * Фиксирует время последнего вызова LLM
+   * Record the time of the latest LLM call.
    */
   recordLLMCall() {
     this.lastLLMCallTime = Date.now();
   }
 
   /**
-   * Оценивает событие и решает, на каком слое его обработать.
+   * Evaluate an event and decide which layer should handle it.
    * @param {Object} event
    * @param {string} event.type
    * @param {any} [event.payload]
    * @returns {{ layer: LayerType, priority: number, shouldCallLLM: boolean }}
    */
   evaluateEvent(event) {
-    // 1. FAST_PATH проверки
+    // 1. FAST_PATH checks.
     const fastPathEvents = ['entity_hurt', 'creeper_nearby', 'low_health', 'falling'];
     if (fastPathEvents.includes(event.type)) {
       return { layer: 'FAST_PATH', priority: 10, shouldCallLLM: false };
     }
 
-    // 4. DEEP_THINKING проверки
+    // 4. DEEP_THINKING checks.
     const deepThinkingEvents = ['complex_goal_planning', 'conflict_resolution', 'craft_strategy'];
     if (deepThinkingEvents.includes(event.type)) {
       return { layer: 'DEEP_THINKING', priority: 5, shouldCallLLM: true };
     }
 
-    // 2. EVENT_DRIVEN проверки
+    // 2. EVENT_DRIVEN checks.
     const eventDrivenEvents = ['chat', 'player_joined', 'inventory_full', 'death', 'respawn', 'block_broken'];
     if (eventDrivenEvents.includes(event.type)) {
       return { layer: 'EVENT_DRIVEN', priority: 8, shouldCallLLM: true };
     }
 
-    // 3. NORMAL_TICK fallback
+    // 3. NORMAL_TICK fallback.
     return { layer: 'NORMAL_TICK', priority: 3, shouldCallLLM: true };
   }
 
   /**
-   * Возвращает текущее состояние для дашборда
+   * Return the current state for the dashboard.
    * @returns {Object}
    */
   getState() {
