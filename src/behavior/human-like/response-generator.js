@@ -3,27 +3,27 @@ import { createLogger } from '../../utils/logger.js';
 const logger = createLogger('RESPONSE_GENERATOR');
 
 /**
- * Генератор естественных человеческих ответов вместо шаблонов.
- * Использует LLM для создания уникальных реакций.
+ * Generates natural human responses instead of templates.
+ * Uses an LLM to create unique reactions.
  */
 export class ResponseGenerator {
   constructor(aiBrain, profile) {
     this.aiBrain = aiBrain;
     this.profile = profile;
-    this.recentResponses = []; // Последние 20 ответов для избежания повторов
+    this.recentResponses = []; // Last 20 responses, used to avoid repetition
   }
 
   /**
-   * Генерирует естественный ответ на команду игрока
-   * @param {string} intent - тип команды (STOP, FOLLOW, etc)
-   * @param {string} playerMessage - оригинальное сообщение игрока
-   * @param {Object} context - контекст (позиция, здоровье, настроение, etc)
+   * Generate a natural response to a player's command
+   * @param {string} intent - command type (STOP, FOLLOW, etc)
+   * @param {string} playerMessage - original player message
+   * @param {Object} context - context (position, health, mood, etc.)
    * @returns {Promise<string>}
    */
   async generateResponse(intent, playerMessage, context = {}) {
     const { mood, health, food, position, busy, currentTask } = context;
     
-    // Формируем промпт для LLM
+    // Build the LLM prompt
     const prompt = this._buildPrompt(intent, playerMessage, {
       mood,
       health,
@@ -32,114 +32,114 @@ export class ResponseGenerator {
       busy,
       currentTask,
       personality: this.profile,
-      recentResponses: this.recentResponses.slice(-5) // последние 5 для контекста
+      recentResponses: this.recentResponses.slice(-5) // last 5 for context
     });
 
     try {
-      // Быстрый короткий запрос к LLM
+      // Quick, short LLM request
       const response = await this.aiBrain.generateQuickResponse(prompt, {
         maxTokens: 30,
-        temperature: 0.9, // высокая вариативность
+        temperature: 0.9, // high variation
         stopSequences: ['\n', '.', '!', '?']
       });
 
       const text = response.text?.trim() || await this._getFallback(intent, playerMessage, context);
 
-      // Сохраняем в историю
+      // Save to history
       this.recentResponses.push({ intent, text, timestamp: Date.now() });
       if (this.recentResponses.length > 20) this.recentResponses.shift();
 
       return text;
     } catch (err) {
-      logger.error(`Ошибка генерации ответа: ${err.message}`);
+      logger.error(`Response generation error: ${err.message}`);
       return await this._getFallback(intent, playerMessage, context);
     }
   }
 
   /**
-   * Строит промпт для LLM
+   * Build the LLM prompt
    */
   _buildPrompt(intent, playerMessage, context) {
     const { personality, mood, health, busy, currentTask, recentResponses } = context;
     
-    const moodStr = mood ? `Настроение: ${mood}. ` : '';
-    const healthStr = health < 10 ? 'Здоровье низкое. ' : '';
-    const busyStr = busy ? `Занят: ${currentTask}. ` : '';
+    const moodStr = mood ? `Mood: ${mood}. ` : '';
+    const healthStr = health < 10 ? 'Health is low.  ' : '';
+    const busyStr = busy ? `Busy: ${currentTask}. ` : '';
     
     let intentDesc = '';
     switch (intent) {
       case 'STOP':
-        intentDesc = 'Игрок приказал остановиться';
+        intentDesc = 'The player ordered you to stop';
         break;
       case 'FOLLOW':
-        intentDesc = 'Игрок просит следовать за ним';
+        intentDesc = 'The player asked you to follow';
         break;
       case 'COME_HERE':
-        intentDesc = 'Игрок зовет к себе';
+        intentDesc = 'The player called you over';
         break;
       case 'WAIT':
-        intentDesc = 'Игрок просит подождать';
+        intentDesc = 'The player asked you to wait';
         break;
       case 'HELP':
-        intentDesc = 'Игрок просит о помощи';
+        intentDesc = 'The player asked for help';
         break;
       case 'WHERE_ARE_YOU':
-        intentDesc = 'Игрок спрашивает где ты';
+        intentDesc = 'The player asked where you are';
         break;
       case 'CALL_NAME':
-        intentDesc = 'Игрок просто зовет по имени';
+        intentDesc = 'The player called your name';
         break;
     }
 
     const charDesc = this._getCharacterDescription(personality);
     
-    // Избегаем повторения последних фраз
+    // Avoid repeating recent phrases
     const avoidPhrases = recentResponses.map(r => r.text).join(', ');
 
-    return `Ты ${personality.name}, играешь в Minecraft. ${charDesc}
+    return `You are ${personality.name}, playing Minecraft. ${charDesc}
 ${moodStr}${healthStr}${busyStr}
-Игрок написал: "${playerMessage}"
+The player wrote: "${playerMessage}"
 ${intentDesc}.
 
-Ответь ОДНОЙ короткой фразой (максимум 5-7 слов), естественно и без шаблонов. 
-НЕ используй эти фразы: ${avoidPhrases}
-Пиши как живой человек в чате игры:`;
+Reply with ONE short, natural sentence (5–7 words maximum), without using a template. 
+Do NOT use these phrases: ${avoidPhrases}
+Write like a real person in game chat:`;
   }
 
   /**
-   * Описание характера для промпта
+   * Character description for the prompt
    */
   _getCharacterDescription(personality) {
     const traits = personality.traits || {};
     
     if (personality.name === 'Sam') {
-      return 'Ты спокойный, осторожный, думаешь прежде чем действовать.';
+      return 'You are calm and cautious; you think before acting.';
     } else if (personality.name === 'Max') {
-      return 'Ты формальный, деловой, немного занудный.';
+      return 'You are formal, practical, and a little fussy.';
     } else if (personality.name === 'Jack') {
-      return 'Ты энергичный, веселый, иногда безбашенный.';
+      return 'You are energetic, cheerful, and occasionally reckless.';
     } else if (personality.name === 'Ryan') {
-      return 'Ты спокойный, надежный, не болтливый.';
+      return 'You are calm, reliable, and not very talkative.';
     } else if (personality.name === 'Alex') {
-      return 'Ты дружелюбный, помогаешь всем.';
+      return 'You are friendly and helpful to others.';
     } else if (personality.name === 'Leo') {
-      return 'Ты смелый, авантюрный, любишь экшен.';
+      return 'You are brave, adventurous, and enjoy action.';
     }
     
-    return 'Ты обычный игрок.';
+    return 'You are an ordinary player.';
   }
 
   /**
-   * Запасной вариант если основной запрос к LLM дал пустоту/сбой.
-   * НИКАКИХ заготовленных фраз: пробуем ещё один максимально короткий
-   * запрос к LLM, зная только суть обращения. Если и он недоступен —
-   * возвращаем одно нейтральное слово (признак лага связи, не шаблон ответа).
+   * Fallback when the main LLM request returns empty or fails.
+   * No canned phrases: try one more very short
+   * LLM request, knowing only the gist of the message. If that also fails —
+   * return one neutral word (a sign of a connection lag, not a response template).
    */
   async _getFallback(intent, playerMessage = '', context = {}) {
     if (this.aiBrain?.generateQuickResponse) {
       try {
         const name = this.profile?.name || 'ты';
-        const prompt = `Ты ${name}, играешь в Minecraft с друзьями. Тебе написали: "${playerMessage}". Ответь ОДНОЙ живой короткой фразой (1-4 слова) своими словами, строчными буквами, без точки:`;
+        const prompt = `You are ${name}, playing Minecraft with friends. Someone wrote: "${playerMessage}". Reply in ONE natural, short phrase (1–4 words), in your own words, using lowercase and no period:`;
         const res = await this.aiBrain.generateQuickResponse(prompt, {
           maxTokens: 16,
           temperature: 0.95,
@@ -149,6 +149,6 @@ ${intentDesc}.
         if (text && text.length >= 1) return text;
       } catch (_) {}
     }
-    return 'м?';
+    return 'hmm?';
   }
 }
