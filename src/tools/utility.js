@@ -109,7 +109,7 @@ export function registerUtilityTools(registry, { bot }) {
     parameters: { type: 'object', properties: {} },
     handler: async () => {
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
         if (typeof bot.placeEntity !== 'function') return { success: false, error: 'Boat placement is not supported by this version.' };
         const boat = (bot.inventory?.items() || []).find(i => i.name.endsWith('_boat') || i.name === 'boat');
         if (!boat) return { success: false, error: 'There is no boat in the inventory.' };
