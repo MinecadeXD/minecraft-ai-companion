@@ -113,7 +113,7 @@ export class LivingPersonality {
       this.innerMonologue.currentThoughts.push({
         text: 'Beautiful sunset',
         timestamp: now,
-        emotion: 'peacefulness',
+        emotion: 'serenity',
         spoken: false,
       });
     }
@@ -180,7 +180,7 @@ export class LivingPersonality {
   }
 
   /**
-   * Spontaneously remember the past.
+   * Recall a past memory spontaneously.
    */
   async maybeRemember() {
     if (!HumanErrorEngine.chance(0.02)) return;
@@ -188,7 +188,7 @@ export class LivingPersonality {
     const memory = this.emotionalMemory.randomMemory();
 
     if (memory) {
-      const thought = `Remembered when ${memory.what}... ${memory.feeling}`;
+      const thought = `I just remembered when ${memory.what}... ${memory.feeling}`;
       this.innerMonologue.currentThoughts.push({
         text: thought,
         timestamp: Date.now(),
