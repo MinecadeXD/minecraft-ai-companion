@@ -21,11 +21,11 @@ export function registerUtilityTools(registry, { bot }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
-        if (typeof bot.fish !== 'function') return { success: false, error: 'Рыбалка не поддерживается этой версией mineflayer.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
+        if (typeof bot.fish !== 'function') return { success: false, error: 'Fishing is not supported by this Mineflayer version.' };
 
         const rod = bot.inventory?.items()?.find(i => i.name === 'fishing_rod');
-        if (!rod) return { success: false, error: 'Нет удочки (fishing_rod) в инвентаре.' };
+        if (!rod) return { success: false, error: 'There is no fishing rod in the inventory.' };
         await bot.equip(rod, 'hand');
 
         const target = Math.min(10, Math.max(1, args.catches || 1));
@@ -41,10 +41,10 @@ export function registerUtilityTools(registry, { bot }) {
           } catch (err) {
             if (err.message === 'timeout') break;
             // Not next to water / interrupted.
-            return { success: caught > 0, data: caught > 0 ? `Поймал ${caught}, потом сорвалось: ${err.message}` : `Не вышло порыбачить: ${err.message}` };
+            return { success: caught > 0, data: caught > 0 ? `Caught ${caught}, then fishing was interrupted: ${err.message}` : `Fishing failed: ${err.message}` };
           }
         }
-        return { success: true, data: `Порыбачил, поймал ${caught} раз(а).` };
+        return { success: true, data: `Finished fishing; caught ${caught}.` };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -66,37 +66,37 @@ export function registerUtilityTools(registry, { bot }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
         const v = vec3(args.x, args.y, args.z);
         if (bot.entity.position.distanceTo(v) > 5) {
-          return { success: false, error: 'Слишком далеко (>5 блоков). Подойди ближе.' };
+          return { success: false, error: 'Too far away (more than 5 blocks). Move closer.' };
         }
         const items = bot.inventory?.items() || [];
 
         if (args.action === 'fill') {
           const emptyBucket = items.find(i => i.name === 'bucket');
-          if (!emptyBucket) return { success: false, error: 'Нет пустого ведра.' };
+          if (!emptyBucket) return { success: false, error: 'There is no empty bucket.' };
           const block = bot.blockAt(v);
           if (!block || !/water|lava/.test(block.name)) {
-            return { success: false, error: 'В этой точке нет воды или лавы.' };
+            return { success: false, error: 'There is no water or lava at these coordinates.' };
           }
           await bot.equip(emptyBucket, 'hand');
           await bot.lookAt(v, true);
           await bot.activateItem();
           await new Promise(r => setTimeout(r, 400));
           bot.deactivateItem?.();
-          return { success: true, data: `Набрал ${block.name.includes('lava') ? 'лаву' : 'воду'} в ведро.` };
+          return { success: true, data: `Filled the bucket with ${block.name.includes('lava') ? 'lava' : 'water'}.` };
         }
 
         // empty
         const fullBucket = items.find(i => i.name === 'water_bucket' || i.name === 'lava_bucket');
-        if (!fullBucket) return { success: false, error: 'Нет полного ведра (water_bucket/lava_bucket).' };
+        if (!fullBucket) return { success: false, error: 'There is no filled bucket (water_bucket/lava_bucket).'};
         await bot.equip(fullBucket, 'hand');
         await bot.lookAt(v, true);
         await bot.activateItem();
         await new Promise(r => setTimeout(r, 400));
         bot.deactivateItem?.();
-        return { success: true, data: `Вылил ${fullBucket.name.includes('lava') ? 'лаву' : 'воду'} в точке [${args.x}, ${args.y}, ${args.z}].` };
+        return { success: true, data: `Emptied ${fullBucket.name.includes('lava') ? 'lava' : 'water'} at [${args.x}, ${args.y}, ${args.z}].` };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -110,9 +110,9 @@ export function registerUtilityTools(registry, { bot }) {
     handler: async () => {
       try {
         if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
-        if (typeof bot.placeEntity !== 'function') return { success: false, error: 'Размещение лодки не поддерживается этой версией.' };
+        if (typeof bot.placeEntity !== 'function') return { success: false, error: 'Boat placement is not supported by this version.' };
         const boat = (bot.inventory?.items() || []).find(i => i.name.endsWith('_boat') || i.name === 'boat');
-        if (!boat) return { success: false, error: 'Нет лодки в инвентаре.' };
+        if (!boat) return { success: false, error: 'There is no boat in the inventory.' };
 
         // Find water/ground within reach to place against.
         const base = bot.entity.position;
@@ -127,11 +127,11 @@ export function registerUtilityTools(registry, { bot }) {
           const b = bot.blockAt(pos);
           if (b && b.name !== 'air' && b.name !== 'cave_air') { ref = b; break; }
         }
-        if (!ref) return { success: false, error: 'Рядом нет подходящей поверхности/воды для лодки.' };
+        if (!ref) return { success: false, error: 'There is no suitable nearby surface or water for the boat.' };
 
         await bot.equip(boat, 'hand');
         await bot.placeEntity(ref, vec3(0, 1, 0));
-        return { success: true, data: 'Поставил лодку рядом.' };
+        return { success: true, data: 'Placed a boat nearby.' };
       } catch (err) {
         return { success: false, error: err.message };
       }
