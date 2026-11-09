@@ -4,9 +4,9 @@ import { HumanErrorEngine } from '../behavior/human-error-engine.js';
 const logger = createLogger('INNER_MONOLOGUE');
 
 /**
- * InnerMonologue — внутренний поток сознания.
- * Бот думает постоянно, даже когда никто не пишет.
- * Мысли иногда прорываются в чат, создавая эффект живого человека.
+ * InnerMonologue — internal stream of consciousness.
+ * The bot keeps thinking even when nobody is chatting.
+ * Some thoughts occasionally make it into chat, making the bot feel more human.
  */
 export class InnerMonologue {
   constructor({ provider, agentName, personality }) {
@@ -26,29 +26,29 @@ export class InnerMonologue {
   }
 
   /**
-   * Генерирует внутреннюю мысль через LLM.
-   * НЕ tool calling — просто чистое человеческое мышление.
+   * Generate an internal thought through the LLM.
+   * No tool calls — this is ordinary internal thinking.
    */
   async generateThought(context) {
     const { situation, emotion, recentEvents, silenceDuration, physState } = context;
 
-    const prompt = `Ты — ${this.agentName}. Подумай одну короткую мысль (2-7 слов), как человек.
+    const prompt = `You are ${this.agentName}. Think of one short thought (2–7 words), like a person would.
 
-Ситуация: ${situation || 'обычный день в майнкрафте'}
-Настроение: ${emotion || 'нейтральное'}
-${recentEvents && recentEvents.length > 0 ? `Недавно: ${recentEvents.slice(-3).join('; ')}` : ''}
-${silenceDuration > 300000 ? `Друг давно не писал (${Math.floor(silenceDuration / 60000)} минут)` : ''}
-${physState?.fatigue > 0.6 ? 'Устал' : ''}
-${physState?.stress > 0.5 ? 'Напряжён' : ''}
+Ситуация: ${situation || 'an ordinary day in Minecraft'}
+Настроение: ${emotion || 'neutral'}
+${recentEvents && recentEvents.length > 0 ? `Recently: ${recentEvents.slice(-3).join('; ')}` : ''}
+${silenceDuration > 300000 ? `Your friend has not chatted in a while (${Math.floor(silenceDuration / 60000)} минут)` : ''}
+${physState?.fatigue > 0.6 ? 'Tired' : ''}
+${physState?.stress > 0.5 ? 'Stressed' : ''}
 
-Примеры СТИЛЯ мыслей (НЕ копируй, просто пойми тон):
-- "Хм, давно не проверял шахту..."
-- "Интересно, где все"
-- "Надо бы разгрузить инвентарь"
-- "Красивый закат"
-- "Устал немного"
+Examples of the STYLE of thoughts (do NOT copy them; only understand the tone):
+- "Hmm, I have not checked the mine in a while..."
+- "I wonder where everyone is"
+- "I should clear out my inventory"
+- "Beautiful sunset"
+- "Tired немного"
 
-Твоя мысль (2-7 слов):`;
+Your thought (2–7 words):`;
 
     try {
       // Reset session periodically to prevent context bloat
@@ -60,10 +60,10 @@ ${physState?.stress > 0.5 ? 'Напряжён' : ''}
 
       if (!this.thinkingSession) {
         this.thinkingSession = await this.provider.createChat({
-          systemPrompt: `Ты генерируешь внутренние мысли персонажа.
-Отвечай ТОЛЬКО мыслью персонажа, без пояснений.
-Каждая мысль уникальна, естественна, человечна.
-БЕЗ повторов, БЕЗ шаблонов.`,
+          systemPrompt: `You generate the character's internal thoughts.
+Reply ONLY with the character's thought, without explanation.
+Every thought should be unique, natural, and human.
+NO repetition and NO templates.`,
           tools: [],
         });
       }
@@ -82,13 +82,13 @@ ${physState?.stress > 0.5 ? 'Напряжён' : ''}
 
       return null;
     } catch (err) {
-      logger.debug(`Ошибка генерации мысли: ${err.message}`);
+      logger.debug(`Thought generation failed: ${err.message}`);
       return null;
     }
   }
 
   /**
-   * Основной цикл мышления — вызывается периодически.
+   * Main thinking loop — called periodically.
    */
   async think(worldState, emotionalState, silenceDuration, recentEvents = []) {
     const now = Date.now();
@@ -100,21 +100,21 @@ ${physState?.stress > 0.5 ? 'Напряжён' : ''}
       stress: emotionalState?.stress || 0.1,
     };
 
-    let situation = 'обычная игра';
-    let emotion = 'спокойствие';
+    let situation = 'ordinary gameplay';
+    let emotion = 'calm';
 
     if (worldState?.nearbyMobs?.some(m => ['zombie', 'skeleton', 'creeper'].includes(m.name))) {
-      situation = 'рядом враги';
-      emotion = 'напряжение';
+      situation = 'hostile mobs nearby';
+      emotion = 'tension';
     } else if (silenceDuration > 300000) {
-      situation = 'давно не слышал от друга';
-      emotion = 'лёгкая тревога';
+      situation = 'have not heard from a friend in a while';
+      emotion = 'mild unease';
     } else if (worldState?.health < 10) {
-      situation = 'мало здоровья';
-      emotion = 'беспокойство';
+      situation = 'low health';
+      emotion = 'concern';
     } else if (worldState?.timeOfDay === 'sunset') {
-      situation = 'закат';
-      emotion = 'спокойствие';
+      situation = 'sunset';
+      emotion = 'calm';
     }
 
     const thought = await this.generateThought({
@@ -137,7 +137,7 @@ ${physState?.stress > 0.5 ? 'Напряжён' : ''}
         this.currentThoughts.shift();
       }
 
-      logger.debug(`[${this.agentName}] думает: "${thought}"`);
+      logger.debug(`[${this.agentName}] thinking: "${thought}"`);
       return thought;
     }
 
@@ -145,8 +145,8 @@ ${physState?.stress > 0.5 ? 'Напряжён' : ''}
   }
 
   /**
-   * Решает, говорить ли мысль вслух.
-   * 10% шанс при наличии мыслей + кулдаун 30 секунд.
+   * Decide whether to say a thought out loud.
+   * 10% chance when thoughts are available, with a 30-second cooldown.
    */
   shouldSpeakThought() {
     const now = Date.now();
@@ -161,7 +161,7 @@ ${physState?.stress > 0.5 ? 'Напряжён' : ''}
   }
 
   /**
-   * Произносит случайную невысказанную мысль вслух.
+   * Say a random unspoken thought out loud.
    */
   speakRandomThought() {
     const unspoken = this.currentThoughts.filter(t => !t.spoken);
@@ -171,12 +171,12 @@ ${physState?.stress > 0.5 ? 'Напряжён' : ''}
     thought.spoken = true;
     this.lastSpokeThoughtTime = Date.now();
 
-    logger.info(`[${this.agentName}] думает вслух: "${thought.text}"`);
+    logger.info(`[${this.agentName}] thinking out loud: "${thought.text}"`);
     return thought.text;
   }
 
   /**
-   * Добавляет беспокойство (о чём-то волнуется).
+   * Добавляет concern (о чём-то волнуется).
    */
   addWorry(text) {
     this.worries.push({ text, timestamp: Date.now() });
@@ -184,7 +184,7 @@ ${physState?.stress > 0.5 ? 'Напряжён' : ''}
   }
 
   /**
-   * Добавляет любопытство (что интересует).
+   * Add a curiosity (something the character is interested in).
    */
   addCuriosity(text) {
     this.curiosities.push({ text, timestamp: Date.now() });
