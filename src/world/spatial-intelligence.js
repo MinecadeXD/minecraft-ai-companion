@@ -67,7 +67,7 @@ export class SpatialIntelligence {
   /**
    * Compass direction (8-wind) from a horizontal (dx, dz) vector.
    * Uses Minecraft axes: +X = east, +Z = south.
-   * @returns {{ code: string, ru: string }}
+   * @returns {{ code: string, en: string }}
    */
   compassFromVector(dx, dz) {
     const codes = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'];
@@ -87,7 +87,7 @@ export class SpatialIntelligence {
 
   /**
    * Compass direction from bot position toward a target point.
-   * @returns {{ code: string, ru: string }}
+   * @returns {{ code: string, en: string }}
    */
   getCompassToTarget(botPos, targetPos) {
     if (!botPos || !targetPos) return { code: 'N', en: 'north' };
