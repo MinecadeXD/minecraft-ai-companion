@@ -4,14 +4,14 @@ import { HumanErrorEngine } from '../behavior/human-error-engine.js';
 const logger = createLogger('NATURAL_DIALOGUE');
 
 /**
- * Система естественных диалогов — никаких шаблонов, только контекстные реакции
+ * Natural dialogue system — no templates, only context-aware reactions.
  *
- * Принципы человечности:
- * 1. Молчание естественно — не комментируй каждое действие
- * 2. Контекст важнее шаблонов — помни что говорили недавно
- * 3. Неуверенность нормальна — "хз", "может", "не уверен"
- * 4. Опечатки случаются — иногда
- * 5. Эмоции через паузы и интонацию, не через "ахах лол"
+ * Principles of human-like conversation:
+ * 1. Silence is natural — do not comment on every action.
+ * 2. Context matters more than templates — remember what was said recently.
+ * 3. Uncertainty is normal — it is okay to say "I don't know", "maybe", or "not sure".
+ * 4. Typos happen sometimes.
+ * 5. Convey emotion through pauses and tone, not forced reactions like "haha, lol".
  */
 
 export class NaturalDialogue {
@@ -21,43 +21,43 @@ export class NaturalDialogue {
     this.socialGraph = socialGraph;
     this.emotions = emotionalState;
 
-    // История последних реплик (для контекста)
+    // Recent message history for context.
     this.recentMessages = [];
     this.lastSpokeTime = new Map(); // agentName -> timestamp
 
-    // Вероятность говорить вообще (большинство событий = молчание)
-    this.baseSpeakChance = 0.15; // 15% событий вызывают реакцию
+    // Base chance of speaking at all (most events should result in silence).
+    this.baseSpeakChance = 0.15; // 15% of events trigger a response.
   }
 
   /**
-   * Генерирует естественную реакцию на игровое событие
-   * Большинство событий НЕ вызывают реплику (как у реальных людей)
+   * Generate a natural reaction to an in-game event.
+   * Most events do NOT trigger a message, just as with real people.
    */
   async generateResponse(agentName, event, context = {}) {
     const now = Date.now();
     const lastSpoke = this.lastSpokeTime.get(agentName) || 0;
 
-    // Молчали недавно? Увеличиваем шанс заговорить
+    // Has the bot been silent for a while? Increase the chance of speaking.
     const timeSinceSpoke = now - lastSpoke;
     let speakChance = this.baseSpeakChance;
 
-    if (timeSinceSpoke > 300000) { // 5 минут молчания
+    if (timeSinceSpoke > 300000) { // 5 minutes of silence.
       speakChance = 0.4;
-    } else if (timeSinceSpoke < 20000) { // 20 секунд назад говорили
+    } else if (timeSinceSpoke < 20000) { // The bot spoke within the last 20 seconds.
       speakChance = 0.05;
     }
 
-    // Эмоциональное состояние влияет на разговорчивость
+    // Emotional state affects talkativeness.
     const mood = this.emotions?.getMood() || {};
     if (mood.excitement > 0.7) speakChance += 0.2;
     if (mood.stress > 0.7) speakChance -= 0.1;
 
-    // Случайность — основа естественности
+    // Randomness is essential for natural behavior.
     if (!HumanErrorEngine.chance(speakChance, mood)) {
-      return null; // Молчание
+      return null; // Stay silent.
     }
 
-    // Генерируем контекстную реплику через AI
+    // Generate a context-aware message through AI.
     const response = await this._generateContextualResponse(agentName, event, context);
 
     if (response) {
@@ -69,7 +69,7 @@ export class NaturalDialogue {
         timestamp: now
       });
 
-      // Храним только последние 20 сообщений
+      // Keep only the 20 most recent messages.
       if (this.recentMessages.length > 20) {
         this.recentMessages.shift();
       }
@@ -79,121 +79,121 @@ export class NaturalDialogue {
   }
 
   /**
-   * Генерирует реплику с учётом контекста, личности и истории
+   * Generate a message using context, personality, and conversation history.
    */
   async _generateContextualResponse(agentName, event, context) {
-    // Получаем контекст последних сообщений
+    // Get the context of recent messages.
     const recentContext = this.recentMessages
       .slice(-5)
       .map(m => `${m.agent}: ${m.message}`)
       .join('\n');
 
-    // Получаем личность агента
+    // Get the agent's personality.
     const personality = this._getPersonalityDescription(agentName);
 
-    // Получаем эмоциональное состояние
+    // Get the emotional state.
     const mood = this.emotions?.getMood() || {};
     const moodDesc = this._describeMood(mood);
 
-    const prompt = `Ты ${agentName} в Minecraft. ${personality}
+    const prompt = `You are ${agentName} in Minecraft. ${personality}
 
-Текущее настроение: ${moodDesc}
+Current mood: ${moodDesc}
 
-Что только что произошло: ${this._describeEvent(event, context)}
+What just happened: ${this._describeEvent(event, context)}
 
-Последние сообщения в чате:
-${recentContext || '(тишина)'}
+Recent chat messages:
+${recentContext || '(silence)'}
 
-Напиши ОДНУ короткую естественную фразу-реакцию (или вообще промолчи, если нечего сказать).
+Write ONE short, natural reaction (or stay silent if you have nothing to say).
 
-ВАЖНО:
-- Говори как обычный человек, не как персонаж
-- Никаких "ахах", "лол", "ща" — это неестественно
-- Можно: "хм", "не знаю", паузы, незавершённые мысли
-- Не комментируй очевидное ("нашёл дерево" когда рубишь дерево)
-- Говори только если есть что сказать или хочешь пообщаться
-- Опечатки редки, но бывают (1-2%)
-- Иногда можно не закончить мысль или отвлечься
+IMPORTANT:
+- Speak like an ordinary person, not a fictional character.
+- Avoid forced filler such as "haha", "lol", or "brb"; it sounds unnatural.
+- You can use "hmm", "I don't know", pauses, or unfinished thoughts.
+- Do not comment on the obvious (for example, saying "found a tree" while chopping one).
+- Speak only when you have something to say or want to chat.
+- Typos are rare, but they can happen (1–2%).
+- Sometimes you can leave a thought unfinished or get distracted.
 
-Ответь ТОЛЬКО текстом реплики, без пояснений. Или напиши "..." если лучше промолчать.`;
+Reply ONLY with the message text, without explanation. Or write "..." if it is better to stay silent.`;
 
     try {
       const response = await this.aiProvider.generateText(prompt, {
         maxTokens: 60,
-        temperature: 0.85, // Высокая креативность для естественности
-        stopSequences: ['\n', 'Ты:', agentName + ':']
+        temperature: 0.85, // High creativity for natural responses.
+        stopSequences: ['\n', 'You:', agentName + ':']
       });
 
       const text = response.trim();
 
-      // Если AI решил промолчать
+      // If the AI chose to stay silent.
       if (!text || text === '...' || text.length < 3) {
         return null;
       }
 
-      // Добавляем редкие естественные опечатки (2% шанс)
+      // Add rare, natural typos (2% chance).
       return this._addNaturalImperfections(text);
 
     } catch (error) {
-      logger.error(`Ошибка генерации реплики для ${agentName}: ${error.message}`);
+      logger.error(`Failed to generate a message for ${agentName}: ${error.message}`);
       return null;
     }
   }
 
   /**
-   * Описание события для промпта
+   * Describe the event for the prompt.
    */
   _describeEvent(event, context) {
     const descriptions = {
-      'find_ore': `Нашёл ${context.oreName || 'руду'}`,
-      'craft_item': `Скрафтил ${context.itemName || 'предмет'}`,
-      'night_approaching': 'Темнеет, скоро ночь',
-      'sunrise': 'Рассвет',
-      'kill_mob': `Убил ${context.mobType || 'моба'}`,
-      'take_damage': `Получил урон (${context.damage || '?'} HP)`,
-      'low_health': 'Мало здоровья',
-      'low_food': 'Голодный',
-      'player_nearby': `${context.playerName || 'Игрок'} рядом`,
-      'discovery': `Обнаружил ${context.what || 'что-то интересное'}`,
-      'build_progress': 'Работает над постройкой',
-      'idle_moment': 'Просто момент тишины',
-      'someone_spoke': `${context.speaker} сказал: "${context.message}"`,
+      'find_ore': `Found ${context.oreName || 'ore'}`, 
+      'craft_item': `Crafted ${context.itemName || 'item'}`, 
+      'night_approaching': 'It is getting dark; night is coming',
+      'sunrise': 'Sunrise',
+      'kill_mob': `Killed ${context.mobType || 'mob'}`, 
+      'take_damage': `Took damage (${context.damage || '?'} HP)`, 
+      'low_health': 'Low on health',
+      'low_food': 'Hungry',
+      'player_nearby': `${context.playerName || 'A player'} is nearby`, 
+      'discovery': `Discovered ${context.what || 'something interesting'}`, 
+      'build_progress': 'Working on a build',
+      'idle_moment': 'Just a quiet moment',
+      'someone_spoke': `${context.speaker} said: "${context.message}"`, 
     };
 
     return descriptions[event] || event;
   }
 
   /**
-   * Описание настроения
+   * Describe the mood.
    */
   _describeMood(mood) {
     const parts = [];
 
-    if (mood.stress > 0.6) parts.push('напряжён');
-    if (mood.excitement > 0.6) parts.push('взволнован');
-    if (mood.satisfaction > 0.7) parts.push('доволен');
-    if (mood.frustration > 0.6) parts.push('раздражён');
-    if (mood.curiosity > 0.7) parts.push('любопытен');
-    if (mood.trust > 0.8) parts.push('доверяет окружающим');
+    if (mood.stress > 0.6) parts.push('tense');
+    if (mood.excitement > 0.6) parts.push('excited');
+    if (mood.satisfaction > 0.7) parts.push('satisfied');
+    if (mood.frustration > 0.6) parts.push('frustrated');
+    if (mood.curiosity > 0.7) parts.push('curious');
+    if (mood.trust > 0.8) parts.push('trusts the people around them');
 
-    if (parts.length === 0) return 'спокойный';
+    if (parts.length === 0) return 'calm';
     return parts.join(', ');
   }
 
   /**
-   * Личность агента (НЕ стереотипы, а реальные черты)
+   * Agent personality (real traits, NOT stereotypes).
    */
   _getPersonalityDescription(name) {
     const personalities = {
-      Sam: 'Ты спокойный и наблюдательный. Замечаешь детали, но не спешишь делиться каждой мыслью. Иногда задумчив.',
-      Max: 'Ты методичный и собранный. Предпочитаешь факты эмоциям. Говоришь по делу, но не сухо.',
-      Jack: 'Ты легко увлекаешься и спонтанен. Но это не значит что постоянно кричишь. Просто живёшь моментом.',
-      Ryan: 'Ты трудолюбивый и терпеливый. Находишь удовлетворение в процессе. Немногословен, но тепло относишься к друзьям.',
-      Alex: 'Ты креативный и внимателен к деталям. Видишь красоту в мелочах. Говоришь когда вдохновлён или хочешь поделиться идеей.',
-      Leo: 'Ты надёжный и готов защищать. Но не агрессивный — просто уверенный. Ценишь прямоту.',
+      Sam: 'You are calm and observant. You notice details but do not rush to share every thought. You are sometimes thoughtful.',
+      Max: 'You are methodical and organized. You value facts over emotions. You stay on point without sounding cold.',
+      Jack: 'You get excited easily and are spontaneous. That does not mean you are always shouting; you simply live in the moment.',
+      Ryan: 'You are hardworking and patient. You find satisfaction in the process. You are not very talkative, but you are warm toward your friends.',
+      Alex: 'You are creative and attentive to detail. You notice beauty in small things. You speak when inspired or when you want to share an idea.',
+      Leo: 'You are reliable and ready to protect your friends. You are not aggressive, just confident. You value directness.',
     };
 
-    return personalities[name] || 'Ты обычный человек, играющий в Minecraft.';
+    return personalities[name] || 'You are an ordinary person playing Minecraft.';
   }
 
   /**
