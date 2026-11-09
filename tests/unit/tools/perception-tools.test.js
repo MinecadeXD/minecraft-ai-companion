@@ -28,27 +28,27 @@ describe('Perception world tools', () => {
     setup(makeMockBot({ heightFn: (x, z) => (z <= -12 ? 90 : 63) }));
     const res = await registry.execute('look_around', {});
     expect(res.success).toBe(true);
-    expect(res.data).toContain('Смотрю на');
+    expect(res.data).toContain('Facing');
     expect(res.scene).toBeTruthy();
   });
 
-  it('describe_direction answers a Russian direction query', async () => {
+  it('describe_direction answers an English direction query', async () => {
     setup(makeMockBot({ heightFn: (x, z) => (z <= -12 ? 90 : 63) }));
-    const res = await registry.execute('describe_direction', { direction: 'север' });
+    const res = await registry.execute('describe_direction', { direction: 'north' });
     expect(res.success).toBe(true);
-    expect(res.data).toMatch(/гора|холм/);
+    expect(res.data).toMatch(/mountain|hill/);
   });
 
   it('describe_direction accepts compass codes', async () => {
     setup(makeMockBot({ heightFn: () => 63 }));
     const res = await registry.execute('describe_direction', { direction: 'E' });
     expect(res.success).toBe(true);
-    expect(res.data).toContain('восток');
+    expect(res.data).toContain('east');
   });
 
   it('describe_direction rejects an unknown direction', async () => {
     setup(makeMockBot({ heightFn: () => 63 }));
-    const res = await registry.execute('describe_direction', { direction: 'вверх' });
+    const res = await registry.execute('describe_direction', { direction: 'up' });
     expect(res.success).toBe(false);
   });
 
@@ -56,8 +56,8 @@ describe('Perception world tools', () => {
     setup(makeMockBot({ yaw: 0 })); // facing north
     const res = await registry.execute('bearing_to', { x: 0, y: 64, z: -100 });
     expect(res.success).toBe(true);
-    expect(res.data).toContain('север'); // -Z is north
-    expect(res.data).toContain('впереди'); // and ahead when facing north
+    expect(res.data).toContain('north'); // -Z is north
+    expect(res.data).toContain('ahead'); // and ahead when facing north
   });
 
   it('look_around fails gracefully before spawn', async () => {
@@ -70,10 +70,10 @@ describe('Perception world tools', () => {
     // canvas / node-canvas-webgl are not installed in CI, so this exercises the
     // graceful fallback path rather than a real render.
     setup(makeMockBot({ heightFn: (x, z) => (z <= -12 ? 90 : 63) }));
-    const res = await registry.execute('capture_screenshot', { question: 'что вдали?' });
+    const res = await registry.execute('capture_screenshot', { question: 'what is in the distance?' });
     expect(res.success).toBe(true);
     expect(res.degraded).toBe(true);
-    expect(res.data).toMatch(/символьному зрению|недоступен/);
+    expect(res.data).toMatch(/symbolic vision|unavailable/);
   });
 
   it('capture_screenshot fails gracefully before spawn', async () => {
