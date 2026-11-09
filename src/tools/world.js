@@ -138,9 +138,9 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
         const scene = sceneObserver.observe(bot);
-        if (!scene) return { success: false, error: 'Не удалось осмотреться.' };
+        if (!scene) return { success: false, error: 'Could not observe the surroundings.' };
 
         const raw = String(args.direction || '').toLowerCase().trim();
         const alias = {
@@ -203,7 +203,7 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
         const question = args.question || 'What is visible in the image: terrain, structures, villages, mobs, and anything notable in the distance?';
 
         const available = await frameCapture.isAvailable();
@@ -221,7 +221,7 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
         const png = await frameCapture.capture(bot);
         if (!png) {
           const scene = sceneObserver.observe(bot);
-          const symbolic = scene ? sceneObserver.describe(scene) : 'вид недоступен';
+          const symbolic = scene ? sceneObserver.describe(scene) : 'view unavailable';
           return { success: true, degraded: true, data: `Could not render the frame. Symbolic vision reports: ${symbolic}` };
         }
 
