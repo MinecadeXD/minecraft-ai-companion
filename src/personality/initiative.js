@@ -21,7 +21,7 @@ export class InitiativeController {
     this.timer = null;
     this.lastGearCheck = 0;
     this.lastIdleActivity = 0;
-    this.idleActivityCooldownMs = 20000; // не суетиться: не чаще раза в 20с
+    this.idleActivityCooldownMs = 20000; // Stay calm: no more than once every 20 seconds.
     this.caveNav = new CaveNavigation({
       bot: this.bot,
       agentName: config?.minecraft?.username || 'Bot',
@@ -30,11 +30,11 @@ export class InitiativeController {
 
   start() {
     if (this.level === 'passive') {
-      logger.info('Режим инициативы: PASSIVE (бот действует только по командам)');
+      logger.info('Initiative mode: PASSIVE (the bot acts only when commanded)');
       return;
     }
 
-    logger.info(`Режим инициативы: ${this.level.toUpperCase()} (Бесшумное авто-лечение, тактический бой, факелы и следование)`);
+    logger.info(`Initiative mode: ${this.level.toUpperCase()} (silent auto-healing, tactical combat, torches, and following)`);
     this.stop();
     this.timer = setInterval(() => this.evaluateSituation(), this.checkInterval);
   }
@@ -56,7 +56,7 @@ export class InitiativeController {
       const now = Date.now();
       this.caveNav.bot = this.bot;
 
-      // 1. БЕСШУМНОЕ АВТО-ЛЕЧЕНИЕ И ПИТАНИЕ (Никакого спама в чат!)
+      // 1. SILENT AUTO-HEALING AND EATING (no chat spam).
       if (this.bot.food < 18 || this.bot.health < 18) {
         if (this.bot.autoEat && typeof this.bot.autoEat.eat === 'function') {
           this.bot.autoEat.eat().catch(() => {});
@@ -79,7 +79,7 @@ export class InitiativeController {
         }
       }
 
-      // 2. АВТО-ПОДДЕРЖАНИЕ СНАРЯЖЕНИЯ (Щит во второй руке, лучшая броня)
+      // 2. AUTOMATIC GEAR MANAGEMENT (off-hand shield and best available armor).
       if (now - this.lastGearCheck > 12000) {
         this.lastGearCheck = now;
         try {
@@ -87,10 +87,10 @@ export class InitiativeController {
         } catch (_) {}
       }
 
-      // 3. АВТОНОМНЫЙ ТАКТИЧЕСКИЙ БОЙ С ВРАЖДЕБНЫМИ МОБАМИ
+      // 3. AUTONOMOUS TACTICAL COMBAT AGAINST HOSTILE MOBS.
       const hostile = combatAI.findHostileTarget(this.bot, 12);
       if (hostile) {
-        logger.info(`[${this.bot.username || 'Bot'}] Обнаружен враг [${hostile.name || hostile.type}], вступаю в бой!`);
+        logger.info(`[${this.bot.username || 'Bot'}] Hostile detected [${hostile.name || hostile.type}]; engaging!`);
         await combatAI.equipBestGear(this.bot);
         if (this.bot.pvp && typeof this.bot.pvp.attack === 'function') {
           this.bot.pvp.attack(hostile);
@@ -99,25 +99,25 @@ export class InitiativeController {
         }
         return;
       } else if (combatAI.inCombat) {
-        // Когда враги побеждены или ушли, сбрасываем бой и кнопки
+        // Reset combat and control states when enemies are defeated or leave.
         combatAI.stopCombat(this.bot);
       }
 
-      // 4. ПЕЩЕРЫ И ТЕМНОТА: УСТАНОВКА ФАКЕЛОВ И ОСТОРОЖНОСТЬ
+      // 4. CAVES AND DARKNESS: PLACE TORCHES AND MOVE CAUTIOUSLY.
       const env = this.caveNav.checkEnvironment(this.bot);
       if (env.isDark || env.inCave) {
-        // Пробуем поставить факел при необходимости
+        // Try to place a torch when needed.
         if (this.caveNav.shouldPlaceTorch(this.bot)) {
           await this.caveNav.placeTorch(this.bot);
         }
-        // Включаем человеческую осторожность если темно и нет света
+        // Enable human-like caution when it is dark and there is no light.
         this.caveNav.handleDarknessCaution(this.bot, this.movementController);
       } else if (this.movementController?.isDarkCaution) {
         this.movementController.setDarkCaution(false);
       }
 
-      // 5. ПОВЕДЕНИЕ КОМПАНЬОНА: ДЕРЖАТЬСЯ РЯДОМ С ХОЗЯИНОМ
-      // Если бот находится в режиме ожидания ('waiting') по приказу хозяина — не срываемся с места!
+      // 5. COMPANION BEHAVIOR: STAY NEAR THE OWNER.
+      // If the owner has put the bot in 'waiting' mode, do not move away!
       if (this.movementController && (this.movementController.mode === 'waiting' || this.movementController.isPaused)) {
         return;
       }
@@ -129,7 +129,7 @@ export class InitiativeController {
       if (ownerEntity && !this.bot.pathfinder?.isMoving?.()) {
         const dist = this.bot.entity.position.distanceTo(ownerEntity.position);
         if (dist > 12 && dist < 45) {
-          logger.debug(`[${this.bot.username}] Хозяин отошёл (${Math.round(dist)}м), подхожу ближе`);
+          logger.debug(`[${this.bot.username}] Owner moved away (${Math.round(dist)} blocks); moving closer.`);
           if (this.movementController) {
             this.movementController.followPlayer(ownerPlayer.username || ownerUsername, 3);
           } else if (this.bot.pathfinder) {
@@ -140,16 +140,16 @@ export class InitiativeController {
             } catch (_) {}
           }
         } else if (dist <= 12) {
-          // Периодически смотрим на хозяина
+          // Occasionally look toward the owner.
           try {
             this.bot.lookAt(ownerEntity.position.offset(0, 1.6, 0), true);
           } catch (_) {}
         }
       }
 
-      // 6. ТИХИЕ ПОЛЕЗНЫЕ ДЕЛА В ПРОСТОЕ (короткие, безопасные — не походы)
-      // Только когда всё спокойно: не в бою, не движемся, не темно/пещера,
-      // хозяина нет рядом (или он далеко). Максимум одно короткое действие.
+      // 6. QUIET, USEFUL IDLE ACTIVITIES (short and safe, not expeditions).
+      // Only when everything is calm: not in combat, not moving, and not in darkness or a cave;
+      // the owner is not nearby (or is far away). Perform at most one short action.
       const idleSafe = !combatAI.inCombat
         && !this.bot.pathfinder?.isMoving?.()
         && this.bot.health >= 18
@@ -159,18 +159,18 @@ export class InitiativeController {
         await this._doIdleActivity(now);
       }
 
-      // 7. ПРОВЕРКА АВТОНОМНЫХ ЦЕЛЕЙ (бот сам решает чем заняться)
+      // 7. CHECK AUTONOMOUS GOALS (the bot decides what to do on its own).
       if (this.autonomousGoals && idleSafe && !ownerClose) {
         if (this.autonomousGoals.shouldConsiderNewGoal()) {
           const goal = this.autonomousGoals.selectNewGoal();
           if (goal) {
-            logger.info(`[${this.bot.username}] Автономная цель выбрана: ${goal.name}`);
+            logger.info(`[${this.bot.username}] Autonomous goal selected: ${goal.name}`);
             await this.autonomousGoals.announceGoal(goal);
           }
         }
       }
     } catch (err) {
-      logger.debug(`Ошибка при оценке инициативы: ${err.message}`);
+      logger.debug(`Failed to evaluate initiative: ${err.message}`);
     }
   }
 
@@ -182,7 +182,7 @@ export class InitiativeController {
   async _doIdleActivity(now) {
     this.lastIdleActivity = now;
     try {
-      // a) Подобрать выпавший рядом лут (в пределах пары шагов).
+      // a) Pick up dropped loot nearby (within a few steps).
       const drop = Object.values(this.bot.entities || {})
         .find(e => e && e.position && e.name === 'item'
           && this.bot.entity.position.distanceTo(e.position) <= 6);
@@ -191,11 +191,11 @@ export class InitiativeController {
         const { goals } = pathfinderPkg.default || pathfinderPkg;
         const p = drop.position;
         this.bot.pathfinder.setGoal(new goals.GoalNear(p.x, p.y, p.z, 1));
-        logger.debug(`[idle] подбираю лут рядом`);
+        logger.debug(`[idle] picking up nearby loot`);
         return;
       }
 
-      // b) Заметить деревню поблизости и тихо запомнить (без похода к ней).
+      // b) Notice a nearby village and quietly remember it without walking over to it.
       if (this.memoryManager?.pois?.addPOI) {
         const detection = structureDetector.detectVillage(this.bot, 48);
         if (detection) {
@@ -203,17 +203,17 @@ export class InitiativeController {
             .some(v => Math.hypot(v.x - detection.center.x, v.y - detection.center.y, v.z - detection.center.z) < 24);
           if (!known) {
             this.memoryManager.pois.addPOI(
-              `Деревня (${detection.direction.ru})`,
+              `Village (${detection.direction.en})`,
               POITypes.VILLAGE,
               detection.center,
-              `Заметил в простое: уверенность ${detection.confidence}`,
+              `Noticed while idle: confidence ${detection.confidence}`, 
             );
-            logger.debug(`[idle] запомнил деревню на ${detection.direction.ru}`);
+            logger.debug(`[idle] remembered a village to the ${detection.direction.en}`);
           }
         }
       }
     } catch (err) {
-      logger.debug(`[idle] активность не удалась: ${err.message}`);
+      logger.debug(`[idle] activity failed: ${err.message}`);
     }
   }
 }
