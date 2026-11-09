@@ -29,17 +29,17 @@ describe('SceneObserver', () => {
     expect(scene.biome).toBe('forest');
   });
 
-  it('detects a mountain in a specific compass direction ("за горой")', () => {
+  it('detects a mountain in a specific compass direction ("beyond the mountain")', () => {
     // Flat everywhere except a big rise to the north.
     const heightFn = (x, z) => (z <= -12 ? 90 : 63);
     const bot = makeMockBot({ heightFn });
     const scene = new SceneObserver().observe(bot);
     const north = scene.horizon.find(h => h.code === 'N');
     expect(north.rise).toBeGreaterThanOrEqual(12);
-    expect(north.features).toContain('высокая гора');
+    expect(north.features).toContain('high mountain');
     // Other flat directions should not claim a mountain.
     const south = scene.horizon.find(h => h.code === 'S');
-    expect(south.features).toContain('ровная местность');
+    expect(south.features).toContain('flat terrain');
   });
 
   it('detects water and trees on the horizon', () => {
@@ -53,8 +53,8 @@ describe('SceneObserver', () => {
     const scene = new SceneObserver().observe(bot);
     const east = scene.horizon.find(h => h.code === 'E');
     const west = scene.horizon.find(h => h.code === 'W');
-    expect(east.features).toContain('вода');
-    expect(west.features).toContain('деревья/лес');
+    expect(east.features).toContain('water');
+    expect(west.features).toContain('trees / forest');
   });
 
   it('places nearby entities on the correct side and distance', () => {
@@ -69,16 +69,16 @@ describe('SceneObserver', () => {
     expect(cow.name).toBe('cow');
     expect(cow.side).toBe('ahead'); // -Z is ahead when facing north
     expect(cow.distance).toBeCloseTo(8, 0);
-    expect(cow.compass).toBe('север'); // -Z is geographic north
+    expect(cow.compass).toBe('north'); // -Z is geographic north
   });
 
-  it('describe() produces a readable Russian narration', () => {
+  it('describe() produces readable English narration', () => {
     const heightFn = (x, z) => (z <= -12 ? 90 : 63);
     const bot = makeMockBot({ yaw: 0, heightFn });
     const observer = new SceneObserver();
     const text = observer.describe(observer.observe(bot));
-    expect(text).toContain('Смотрю на');
-    expect(text).toMatch(/гора|холм/);
+    expect(text).toContain('Facing');
+    expect(text).toMatch(/mountain|hill/);
   });
 
   it('returns null for an unspawned bot', () => {
@@ -115,8 +115,8 @@ describe('SceneObserver', () => {
     bot.entity.velocity = { x: 0, y: 0, z: 0 };
     bot.entity.onGround = true;
     const scene = new SceneObserver().observe(bot);
-    expect(scene.status).toContain('горю');
-    expect(scene.status.some(s => s.includes('мало здоровья'))).toBe(true);
+    expect(scene.status).toContain('on fire');
+    expect(scene.status.some(s => s.includes('low on health'))).toBe(true);
   });
 
   it('detects taking damage via HP drop between observes', () => {
@@ -126,7 +126,7 @@ describe('SceneObserver', () => {
     observer.observe(bot); // establishes baseline
     bot.health = 14;       // took 6 damage
     const scene = observer.observe(bot);
-    expect(scene.status.some(s => s.includes('урон'))).toBe(true);
+    expect(scene.status.some(s => s.includes('taking damage'))).toBe(true);
   });
 
   it('observes light levels, celestial time/weather, metabolism and player attention', () => {
@@ -154,17 +154,17 @@ describe('SceneObserver', () => {
 
     const scene = observer.observe(bot);
     expect(scene.light.blockLight).toBe(0);
-    expect(scene.celestial.timeDesc).toContain('закат');
+    expect(scene.celestial.timeDesc).toContain('sunset');
     expect(scene.celestial.isThundering).toBe(true);
     expect(scene.metabolism.food).toBe(4);
 
     const desc = observer.describe(scene);
-    expect(desc).toContain('полная тьма');
-    expect(desc).toContain('гроза с молниями');
-    expect(desc).toContain('закат');
-    expect(desc).toContain('Критический голод');
+    expect(desc).toContain('complete darkness');
+    expect(desc).toContain('thunderstorm with lightning');
+    expect(desc).toContain('sunset');
+    expect(desc).toContain('Critical hunger');
     expect(desc).toContain('kustash01');
     expect(desc).toContain('diamond_sword');
-    expect(desc).toContain('приседает');
+    expect(desc).toContain('sneaking');
   });
 });
