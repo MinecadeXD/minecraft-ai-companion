@@ -145,19 +145,19 @@ Reply ONLY with the message text, without explanation. Or write "..." if it is b
    */
   _describeEvent(event, context) {
     const descriptions = {
-      'find_ore': `Found ${context.oreName || 'ore'}`, 
-      'craft_item': `Crafted ${context.itemName || 'item'}`, 
+      'find_ore': `Found ${context.oreName || 'ore'}`,
+      'craft_item': `Crafted ${context.itemName || 'item'}`,
       'night_approaching': 'It is getting dark; night is coming',
       'sunrise': 'Sunrise',
-      'kill_mob': `Killed ${context.mobType || 'mob'}`, 
-      'take_damage': `Took damage (${context.damage || '?'} HP)`, 
+      'kill_mob': `Killed ${context.mobType || 'mob'}`,
+      'take_damage': `Took damage (${context.damage || '?'} HP)`,
       'low_health': 'Low on health',
       'low_food': 'Hungry',
-      'player_nearby': `${context.playerName || 'A player'} is nearby`, 
-      'discovery': `Discovered ${context.what || 'something interesting'}`, 
+      'player_nearby': `${context.playerName || 'A player'} is nearby`,
+      'discovery': `Discovered ${context.what || 'something interesting'}`,
       'build_progress': 'Working on a build',
       'idle_moment': 'Just a quiet moment',
-      'someone_spoke': `${context.speaker} said: "${context.message}"`, 
+      'someone_spoke': `${context.speaker} said: "${context.message}"`,
     };
 
     return descriptions[event] || event;
@@ -197,29 +197,29 @@ Reply ONLY with the message text, without explanation. Or write "..." if it is b
   }
 
   /**
-   * Добавляет естественные несовершенства
+   * Add natural imperfections.
    */
   _addNaturalImperfections(text) {
-    // 2% шанс на опечатку
+    // 2% chance of a typo.
     if (HumanErrorEngine.chance(0.02)) {
       const typos = {
-        'что': 'чт',
-        'это': 'эт',
-        'может': 'може',
-        'здесь': 'здес',
-        'сейчас': 'щас',
-        'хорошо': 'хорошь',
+        'the': 'teh',
+        'you': 'yuo',
+        'because': 'becuase',
+        'friend': 'freind',
+        'really': 'realy',
+        'going': 'goign',
       };
 
       for (const [correct, typo] of Object.entries(typos)) {
         if (text.includes(correct) && HumanErrorEngine.chance(0.5)) {
           text = text.replace(correct, typo);
-          break; // Только одна опечатка
+          break; // Only one typo.
         }
       }
     }
 
-    // 5% шанс на незаконченную мысль
+    // 5% chance of leaving a thought unfinished.
     if (HumanErrorEngine.chance(0.05) && text.length > 15) {
       const words = text.split(' ');
       if (words.length > 3) {
@@ -231,35 +231,35 @@ Reply ONLY with the message text, without explanation. Or write "..." if it is b
   }
 
   /**
-   * Реакция на сообщение другого игрока/агента
+   * React to a message from another player or agent.
    */
   async respondToMessage(agentName, speaker, message, context = {}) {
     const now = Date.now();
     const lastSpoke = this.lastSpokeTime.get(agentName) || 0;
 
-    // Прямое упоминание имени?
+    // Was the agent's name mentioned directly?
     const mentioned = message.toLowerCase().includes(agentName.toLowerCase());
 
-    // Вопрос?
+    // Is this a question?
     const isQuestion = message.includes('?') ||
-                      message.match(/как|что|где|когда|почему|куда|кто|зачем/i);
+                      message.match(/\b(?:how|what|where|when|why|which|who|whose|whom)\b/i);
 
-    // Обращение к группе?
+    // Is the question addressed to the group?
     const toGroup = isQuestion && !mentioned;
 
     let respondChance = 0;
 
     if (mentioned) {
-      respondChance = 0.95; // Почти всегда отвечаем на прямое обращение
+      respondChance = 0.95; // Almost always respond to a direct mention.
     } else if (isQuestion) {
-      respondChance = 0.25; // Иногда отвечаем на групповые вопросы
-    } else if (now - lastSpoke > 120000) { // 2 минуты молчания
-      respondChance = 0.15; // Можем поддержать беседу
+      respondChance = 0.25; // Sometimes respond to questions addressed to the group.
+    } else if (now - lastSpoke > 120000) { // 2 minutes of silence.
+      respondChance = 0.15; // We may join the conversation.
     } else {
-      respondChance = 0.05; // Редко вмешиваемся в чужой разговор
+      respondChance = 0.05; // Rarely interrupt someone else's conversation.
     }
 
-    // Отношения с говорящим
+    // Relationship with the person speaking.
     const relationship = this.socialGraph?.getRelationship(agentName, speaker);
     if (relationship) {
       if (relationship.friendship > 0.7) respondChance += 0.15;
@@ -270,7 +270,7 @@ Reply ONLY with the message text, without explanation. Or write "..." if it is b
       return null;
     }
 
-    // Генерируем ответ
+    // Generate the response.
     const response = await this._generateContextualResponse(
       agentName,
       'someone_spoke',
@@ -281,25 +281,25 @@ Reply ONLY with the message text, without explanation. Or write "..." if it is b
   }
 
   /**
-   * Инициатива — начать разговор самому
+   * Initiative — start a conversation yourself.
    */
   shouldInitiateConversation(agentName) {
     const now = Date.now();
     const lastSpoke = this.lastSpokeTime.get(agentName) || 0;
     const silenceDuration = now - lastSpoke;
 
-    // Меньше 2 минут молчания — не начинаем
+    // Do not initiate if there has been less than 2 minutes of silence.
     if (silenceDuration < 120000) return false;
 
-    // 2-10 минут — очень низкий шанс (0.5%)
+    // After 2–10 minutes, use a very low chance (0.5%).
     if (silenceDuration < 600000) return HumanErrorEngine.chance(0.005);
 
-    // Больше 10 минут — низкий шанс (2%)
+    // After more than 10 minutes, use a low chance (2%).
     return HumanErrorEngine.chance(0.02);
   }
 
   /**
-   * Генерирует начало разговора
+   * Generate an opening for a conversation.
    */
   async initiateConversation(agentName, context = {}) {
     const recentContext = this.recentMessages
@@ -311,19 +311,19 @@ Reply ONLY with the message text, without explanation. Or write "..." if it is b
     const mood = this.emotions?.getMood() || {};
     const moodDesc = this._describeMood(mood);
 
-    const prompt = `Ты ${agentName} в Minecraft. ${personality}
+    const prompt = `You are ${agentName} in Minecraft. ${personality}
 
-Настроение: ${moodDesc}
+Mood: ${moodDesc}
 
-Вы давно молчали. Что ты сейчас делаешь: ${context.currentActivity || 'отдыхаешь'}
+You have been quiet for a while. What are you doing right now: ${context.currentActivity || 'relaxing'}
 
-Последнее в чате:
-${recentContext || '(давно никто не говорил)'}
+Latest chat:
+${recentContext || '(no one has spoken in a while)'}
 
-Ты можешь начать разговор — задать вопрос, поделиться мыслью, предложить что-то.
-Или просто промолчать, если нечего сказать.
+You can start a conversation — ask a question, share a thought, or suggest something.
+Or simply stay silent if you have nothing to say.
 
-Напиши ОДНУ естественную фразу. Или "..." если лучше помолчать.`;
+Write ONE natural sentence. Or write "..." if silence is better.`;
 
     try {
       const response = await this.aiProvider.generateText(prompt, {
@@ -338,16 +338,16 @@ ${recentContext || '(давно никто не говорил)'}
       return this._addNaturalImperfections(text);
 
     } catch (error) {
-      logger.error(`Ошибка инициативы ${agentName}: ${error.message}`);
+      logger.error(`Conversation initiation failed for ${agentName}: ${error.message}`);
       return null;
     }
   }
 
   /**
-   * Очистка старой истории
+   * Clean up old history.
    */
   cleanup() {
-    const cutoff = Date.now() - 600000; // 10 минут
+    const cutoff = Date.now() - 600000; // 10 minutes.
     this.recentMessages = this.recentMessages.filter(m => m.timestamp > cutoff);
   }
 }
