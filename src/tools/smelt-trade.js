@@ -41,17 +41,17 @@ export function registerSmeltTradeTools(registry, { bot }) {
     handler: async (args) => {
       let furnace = null;
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
         const data = mc();
         const inputType = data.itemsByName[args.itemName];
-        if (!inputType) return { success: false, error: `Неизвестный предмет: ${args.itemName}` };
+        if (!inputType) return { success: false, error: `Unknown item: ${args.itemName}` };
 
         const inputItem = bot.inventory?.items()?.find(i => i.type === inputType.id);
-        if (!inputItem) return { success: false, error: `Нечего плавить: нет ${args.itemName} в инвентаре.` };
+        if (!inputItem) return { success: false, error: `Nothing to smelt: ${args.itemName} is not in the inventory.` };
 
         const furnaceIds = [data.blocksByName?.furnace?.id, data.blocksByName?.blast_furnace?.id, data.blocksByName?.smoker?.id].filter(v => v != null);
         const furnaceBlock = bot.findBlock ? bot.findBlock({ matching: furnaceIds, maxDistance: 24 }) : null;
-        if (!furnaceBlock) return { success: false, error: 'Печи рядом не нашёл.' };
+        if (!furnaceBlock) return { success: false, error: 'No furnace found nearby.' };
 
         await walkTo(furnaceBlock.position);
         furnace = await bot.openFurnace(furnaceBlock);
@@ -66,7 +66,7 @@ export function registerSmeltTradeTools(registry, { bot }) {
               if (fuelItem) break;
             }
           }
-          if (!fuelItem) return { success: false, error: 'Нет топлива (уголь/доски/палки).' };
+          if (!fuelItem) return { success: false, error: 'No fuel available (coal, planks, or sticks). ' };
           await furnace.putFuel(fuelItem.type, null, Math.min(fuelItem.count, 8));
         }
 
@@ -86,7 +86,7 @@ export function registerSmeltTradeTools(registry, { bot }) {
         // Grab any final output.
         try { if (furnace.outputItem()) { await furnace.takeOutput(); took++; } } catch (_) {}
 
-        return { success: true, data: `Переплавил ${args.itemName} (получил партий: ${took}). Забери результат из инвентаря.` };
+        return { success: true, data: `Smelted ${args.itemName} (collected ${took} output batches). The result is in the inventory.` };
       } catch (err) {
         return { success: false, error: err.message };
       } finally {
@@ -103,15 +103,15 @@ export function registerSmeltTradeTools(registry, { bot }) {
       let villager = null;
       try {
         const target = bot.nearestEntity ? bot.nearestEntity(e => e && e.name === 'villager') : null;
-        if (!target) return { success: false, error: 'Жителей рядом нет.' };
+        if (!target) return { success: false, error: 'No villagers are nearby.' };
         await walkTo(target.position);
         villager = await bot.openVillager(target);
         const trades = (villager.trades || []).map((t, idx) => {
           const inputs = [t.inputItem1, t.inputItem2].filter(Boolean).map(i => `${i.count}x ${i.name || i.type}`);
           const out = t.outputItem ? `${t.outputItem.count}x ${t.outputItem.name || t.outputItem.type}` : '?';
-          return `#${idx}: ${inputs.join(' + ')} -> ${out}${t.tradeDisabled ? ' (недоступно)' : ''}`;
+          return `#${idx}: ${inputs.join(' + ')} -> ${out}${t.tradeDisabled ? ' (unavailable)' : ''}`;
         });
-        return { success: true, data: trades.length ? trades.join('; ') : 'У жителя нет сделок.', trades: villager.trades };
+        return { success: true, data: trades.length ? trades.join('; ') : 'This villager has no trades.', trades: villager.trades };
       } catch (err) {
         return { success: false, error: err.message };
       } finally {
@@ -135,18 +135,18 @@ export function registerSmeltTradeTools(registry, { bot }) {
       let villager = null;
       try {
         const target = bot.nearestEntity ? bot.nearestEntity(e => e && e.name === 'villager') : null;
-        if (!target) return { success: false, error: 'Жителей рядом нет.' };
+        if (!target) return { success: false, error: 'No villagers are nearby.' };
         await walkTo(target.position);
         villager = await bot.openVillager(target);
 
         const trades = villager.trades || [];
         const idx = args.index;
-        if (idx == null || !trades[idx]) return { success: false, error: `Нет сделки с номером ${idx}. Сначала list_trades.` };
-        if (trades[idx].tradeDisabled) return { success: false, error: `Сделка #${idx} сейчас недоступна.` };
+        if (idx == null || !trades[idx]) return { success: false, error: `No trade exists at index ${idx}. Run list_trades first.` };
+        if (trades[idx].tradeDisabled) return { success: false, error: `Trade #${idx} is currently unavailable.` };
 
         const count = Math.max(1, Math.min(args.count || 1, 12));
         await bot.trade(villager, idx, count);
-        return { success: true, data: `Сторговал по сделке #${idx} (x${count}).` };
+        return { success: true, data: `Completed trade #${idx} (${count} times).` };
       } catch (err) {
         return { success: false, error: err.message };
       } finally {
