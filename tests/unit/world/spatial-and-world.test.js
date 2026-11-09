@@ -40,15 +40,15 @@ describe('SpatialIntelligence', () => {
     const botPos = { x: 0, y: 64, z: 0 };
     // Village to the north-west
     expect(spatial.getCompassToTarget(botPos, { x: -50, y: 64, z: -50 }).code).toBe('NW');
-    expect(spatial.getCompassToTarget(botPos, { x: 0, y: 64, z: 120 }).ru).toBe('юг');
+    expect(spatial.getCompassToTarget(botPos, { x: 0, y: 64, z: 120 }).en).toBe('south');
   });
 
   it('describeTarget produces a human phrase with compass + relative side', () => {
     const botPos = { x: 0, y: 64, z: 0 };
-    const phrase = spatial.describeTarget(botPos, 0, { x: 0, y: 64, z: 120 }, 'деревня');
-    expect(phrase).toContain('деревня');
-    expect(phrase).toContain('юг');
-    expect(phrase).toContain('м)');
+    const phrase = spatial.describeTarget(botPos, 0, { x: 0, y: 64, z: 120 }, 'village');
+    expect(phrase).toContain('village');
+    expect(phrase).toContain('south');
+    expect(phrase).toContain('blocks away');
   });
 });
 
@@ -60,9 +60,9 @@ describe('WorldMapEngine', () => {
 
   it('should register chunks and landmarks', () => {
     mapEngine.recordChunk(100, 200, { biome: 'forest', structure: 'village' });
-    mapEngine.addLandmark('Старый дуб', { x: 105, y: 64, z: 210 }, 'Ориентир у базы');
+    mapEngine.addLandmark('Old Oak', { x: 105, y: 64, z: 210 }, 'Landmark near the base');
 
-    const lm = mapEngine.getLandmark('старый дуб');
+    const lm = mapEngine.getLandmark('old oak');
     expect(lm).not.toBeNull();
     expect(lm.coords.x).toBe(105);
   });
@@ -90,7 +90,7 @@ describe('LongTermProjectManager', () => {
   });
 
   it('should calculate missing project materials', () => {
-    pm.createProject('house_1', 'Уютный дом', 'medieval', {
+    pm.createProject('house_1', 'Cozy House', 'medieval', {
       oak_planks: 100,
       cobblestone: 50,
     });
