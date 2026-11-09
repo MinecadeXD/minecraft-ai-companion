@@ -30,10 +30,10 @@ export function registerCraftingTools(registry, { bot }) {
         let placedTable = false;
         let tablePos = null;
 
-        // Если рецепт не доступен в 2х2 сетке, проверяем верстак
+        // If the recipe is not available in the 2×2 grid, check for a crafting table.
         if (!recipe) {
           if (!craftingTable) {
-            // Проверяем, есть ли верстак в инвентаре для временной установки
+            // Check whether a crafting table is available in the inventory for temporary placement.
             const tableItem = bot.inventory?.items()?.find(i => i.name === 'crafting_table');
             if (tableItem && typeof bot.placeBlock === 'function' && bot.entity?.position) {
               const placeBase = bot.blockAt(bot.entity.position.offset(1, -1, 0)) || bot.blockAt(bot.entity.position.offset(0, -1, 1));
@@ -67,7 +67,7 @@ export function registerCraftingTools(registry, { bot }) {
 
         await bot.craft(recipe, args.count || 1, recipe.requiresTable ? craftingTable : null);
 
-        // Если мы сами ставили верстак — забираем его обратно
+        // If we placed the crafting table, pick it back up.
         if (placedTable && tablePos) {
           try {
             const placedBlock = bot.blockAt(tablePos);
@@ -101,7 +101,7 @@ export function registerCraftingTools(registry, { bot }) {
 
         const invItems = bot.inventory?.items() || [];
         if (invItems.length === 0) {
-          return { success: true, data: 'Инвентарь пуст, крафтить не из чего.' };
+          return { success: true, data: 'The inventory is empty; there is nothing to craft with.' };
         }
 
         const craftable = [];
@@ -122,13 +122,13 @@ export function registerCraftingTools(registry, { bot }) {
         if (craftable.length === 0) {
           return {
             success: true,
-            data: 'С текущими ресурсами ничего нельзя скрафтить' + (craftingTable ? ' (верстак рядом).' : ' (верстака рядом нет).')
+            data: 'Nothing can be crafted with the current materials' + (craftingTable ? ' (crafting table nearby).' : ' (no crafting table nearby).')
           };
         }
 
         return {
           success: true,
-          data: `Доступно для крафта (${craftable.length}): ${craftable.join(', ')}`
+          data: `Available to craft (${craftable.length}): ${craftable.join(', ')}`
         };
       } catch (err) {
         return { success: false, error: err.message };
