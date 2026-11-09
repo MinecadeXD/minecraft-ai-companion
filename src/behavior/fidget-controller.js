@@ -5,12 +5,12 @@ import { HumanErrorEngine } from './human-error-engine.js';
 const logger = createLogger('FIDGET_CONTROLLER');
 
 /**
- * FidgetController — контроллер живого присутствия и микродвижений во время задержек AI (Anti-AFK Latency Fidgeting):
- * Пока Gemini обдумывает ответ или вызывает инструменты (1-2 сек):
- * 1. Живой взгляд на говорящего игрока (если он в поле зрения <8 блоков)
- * 2. Естественные микро-смещения взгляда (±2-3 градуса, дыхание/рука на коврике)
- * 3. Легкий перенос веса тела (одиночный шифт-тап), если ожидание затягивается
- * 4. Моментальная передача управления скрипту при окончании размышления
+ * FidgetController — maintains a sense of presence through small movements during AI delays (anti-AFK latency fidgeting):
+ * While Gemini thinks about a response or calls tools (1–2 seconds):
+ * 1. Naturally look toward the speaking player if they are within 8 blocks.
+ * 2. Make tiny, natural gaze adjustments (±2–3 degrees, like breathing or a hand resting on a mouse pad).
+ * 3. Make a small weight shift (a single sneak tap) if the wait becomes prolonged.
+ * 4. Immediately return control to the script when thinking finishes.
  */
 export class FidgetController {
   constructor(options = {}) {
@@ -54,7 +54,7 @@ export class FidgetController {
       const now = Date.now();
       const elapsed = now - this.thinkingStartTime;
 
-      // 1. Ищем ближайшего живого игрока в радиусе 8 блоков
+      // 1. Find the nearest live player within 8 blocks.
       let nearestPlayer = null;
       let minDistance = 8.0;
 
@@ -71,11 +71,11 @@ export class FidgetController {
       }
 
       if (nearestPlayer) {
-        // Плавно переводим взгляд на голову игрока
+        // Smoothly turn the view toward the player's head.
         const headPos = nearestPlayer.position.offset(0, nearestPlayer.height || 1.6, 0);
         await adaptiveCamera.calmLookAt(this.bot, headPos);
       } else {
-        // Микро-движение взгляда (дыхание / живая рука)
+        // Make a tiny gaze movement (like breathing or a relaxed hand movement).
         const currentYaw = this.bot.entity.yaw ?? 0;
         const currentPitch = this.bot.entity.pitch ?? 0;
         const dYaw = HumanErrorEngine.jitter(0.025, this.bot);
@@ -85,7 +85,7 @@ export class FidgetController {
         }
       }
 
-      // 2. Если размышление затянулось (>1800ms) — одиночный микро-сдвиг веса (sneak-tap)
+      // 2. If thinking takes longer than 1,800 ms, make one small weight shift (sneak tap).
       if (elapsed > 1800 && elapsed < 2500 && HumanErrorEngine.chance(0.35, this.bot)) {
         if (typeof this.bot.setControlState === 'function') {
           this.bot.setControlState('sneak', true);
