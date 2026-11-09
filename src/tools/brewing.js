@@ -57,26 +57,26 @@ export function registerBrewingTools(registry, { bot }) {
     handler: async (args) => {
       let win = null;
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
         const data = mc();
         const standId = data.blocksByName?.brewing_stand?.id;
-        if (standId == null) return { success: false, error: 'Эта версия не знает варочную стойку.' };
+        if (standId == null) return { success: false, error: 'This Minecraft version does not support brewing stands.' };
 
         const items = () => bot.inventory?.items() || [];
         const bottleName = args.bottleName || 'water_bottle';
         const hasIngredient = items().some(i => i.name === args.ingredientName);
-        if (!hasIngredient) return { success: false, error: `Нет ингредиента ${args.ingredientName}.` };
+        if (!hasIngredient) return { success: false, error: `Ingredient not found: ${args.ingredientName}.` };
         const hasBottles = items().some(i => i.name === bottleName || i.name === 'potion' || i.name === 'water_bottle');
-        if (!hasBottles) return { success: false, error: `Нет бутылок (${bottleName}).` };
+        if (!hasBottles) return { success: false, error: `No bottles found (${bottleName}).` };
         const hasFuel = items().some(i => i.name === 'blaze_powder');
-        if (!hasFuel) return { success: false, error: 'Нет топлива — нужен blaze_powder.' };
+        if (!hasFuel) return { success: false, error: 'No fuel available — blaze_powder is required.' };
 
         const standBlock = bot.findBlock ? bot.findBlock({ matching: standId, maxDistance: 16 }) : null;
-        if (!standBlock) return { success: false, error: 'Варочной стойки рядом не нашёл.' };
+        if (!standBlock) return { success: false, error: 'No brewing stand found nearby.' };
 
         await walkTo(standBlock.position);
         win = await bot.openBlock(standBlock);
-        if (!win) return { success: false, error: 'Не смог открыть варочную стойку.' };
+        if (!win) return { success: false, error: 'Could not open the brewing stand.' };
 
         // Load fuel, bottles, then ingredient (order helps the stand start).
         await shiftIn(win, 'blaze_powder', 1);
@@ -84,7 +84,7 @@ export function registerBrewingTools(registry, { bot }) {
         await shiftIn(win, args.ingredientName, 1);
 
         if (!bottlesMoved) {
-          return { success: false, error: 'Не удалось поставить бутылки в стойку.' };
+          return { success: false, error: 'Could not place bottles in the brewing stand.' };
         }
 
         // Brewing takes ~20s; poll bounded.
@@ -102,7 +102,7 @@ export function registerBrewingTools(registry, { bot }) {
           }
         }
 
-        return { success: true, data: `Сварил зелья с ${args.ingredientName} (забрал из стойки).` };
+        return { success: true, data: `Brewed potions using ${args.ingredientName} and collected them from the stand.` };
       } catch (err) {
         return { success: false, error: err.message };
       } finally {
