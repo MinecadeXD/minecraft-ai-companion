@@ -46,7 +46,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.pathfinder) return { success: false, error: 'Pathfinder не инициализирован.' };
+        if (!bot.pathfinder) return { success: false, error: 'Pathfinder is not initialized.' };
         const player = bot.players[args.playerName]
           || Object.entries(bot.players || {}).find(([name]) => name.toLowerCase() === args.playerName.toLowerCase())?.[1];
         if (!player || !player.entity) {
@@ -99,7 +99,7 @@ export function registerMovementTools(registry, { bot, worldState, mcBot }) {
     handler: async () => {
       if (!homePosition) return { success: false, error: 'Home is not set. Use set_home first.' };
       try {
-        if (!bot.pathfinder) return { success: false, error: 'Pathfinder не инициализирован.' };
+        if (!bot.pathfinder) return { success: false, error: 'Pathfinder is not initialized.' };
         const goal = new goals.GoalNear(homePosition.x, homePosition.y, homePosition.z, 1);
         bot.pathfinder.setGoal(goal);
         return { success: true, data: `Returning home: ${homePosition.x}, ${homePosition.y}, ${homePosition.z}` };
