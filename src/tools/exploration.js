@@ -117,7 +117,7 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
 
   registry.register({
     name: 'remember_place',
-    description: 'Save the current spot (or given coordinates) as a named place to remember (e.g. "home", "village", "mine"). Use when a player points out a location.' ,
+    description: 'Save the current spot (or given coordinates) as a named place to remember (e.g. "home", "village", "mine"). Use when a player points out a location.',
     parameters: {
       type: 'object',
       properties: {
@@ -155,7 +155,7 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
 
   registry.register({
     name: 'scout_direction',
-    description: 'Walk a short distance in a compass direction to look around (e.g. "go see what is beyond the mountain to the north"). Scan for a village along the way and report what you find. This is a short, bounded trip, not a long expedition.' ,
+    description: 'Walk a short distance in a compass direction to look around (e.g. "go see what is beyond the mountain to the north"). Scan for a village along the way and report what you find. This is a short, bounded trip, not a long expedition.',
     parameters: {
       type: 'object',
       properties: {
