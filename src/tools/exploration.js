@@ -15,9 +15,14 @@ const DIRECTION_VECTORS = {
 };
 
 const DIRECTION_ALIASES = {
-  n: 'N', 'север': 'N', s: 'S', 'юг': 'S', e: 'E', 'восток': 'E', w: 'W', 'запад': 'W',
-  ne: 'NE', 'северо-восток': 'NE', nw: 'NW', 'северо-запад': 'NW',
-  se: 'SE', 'юго-восток': 'SE', sw: 'SW', 'юго-запад': 'SW',
+  n: 'N', north: 'N',
+  s: 'S', south: 'S',
+  e: 'E', east: 'E',
+  w: 'W', west: 'W',
+  ne: 'NE', northeast: 'NE',
+  nw: 'NW', northwest: 'NW',
+  se: 'SE', southeast: 'SE',
+  sw: 'SW', southwest: 'SW',
 };
 
 function normalizeDirection(raw) {
@@ -48,12 +53,12 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
         const maxDistance = Math.min(128, Math.max(16, args.maxDistance || 64));
         const detection = structureDetector.detectVillage(bot, maxDistance);
 
         if (!detection) {
-          return { success: true, data: 'Деревни в этом радиусе не вижу. Возможно, надо подойти ближе или осмотреться с высоты.' };
+          return { success: true, data: 'I do not see a village within this radius. Try moving closer or looking from higher ground.' };
         }
 
         // Remember it as a POI (flows into AI memory context automatically).
@@ -61,20 +66,20 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
         if (memoryManager?.pois?.addPOI && !alreadyKnown(detection.center)) {
           try {
             memoryManager.pois.addPOI(
-              `Деревня (${detection.direction.ru})`,
+              `Village (${detection.direction.en})`,
               POITypes.VILLAGE,
               detection.center,
-              `Замечена: жителей ~${detection.villagerCount}, кроватей ~${detection.bedCount}, уверенность ${detection.confidence}`,
+              `Observed: about ${detection.villagerCount} villagers, about ${detection.bedCount} beds, confidence ${detection.confidence}`,
             );
             saved = true;
           } catch (err) {
-            logger.debug(`Не удалось сохранить деревню в POI: ${err.message}`);
+            logger.debug(`Could not save village POI: ${err.message}`);
           }
         }
 
         return {
           success: true,
-          data: structureDetector.describeVillage(detection) + (saved ? ' (запомнил)' : ''),
+          data: structureDetector.describeVillage(detection) + (saved ? ' (remembered)' : ''),
           detection,
         };
       } catch (err) {
@@ -94,11 +99,11 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
     },
     handler: async (args) => {
       try {
-        if (!memoryManager?.pois?.getPOIs) return { success: true, data: 'Память о местах пока пуста.' };
+        if (!memoryManager?.pois?.getPOIs) return { success: true, data: 'No places have been saved yet.' };
         const type = args.type ? String(args.type).toLowerCase() : null;
         const pois = memoryManager.pois.getPOIs(type) || [];
         if (pois.length === 0) {
-          return { success: true, data: type ? `Мест типа "${type}" пока не знаю.` : 'Пока не знаю ни одного примечательного места.' };
+          return { success: true, data: type ? `I do not know any places of type "${type}" yet.` : 'I do not know any notable places yet.' };
         }
         const list = pois.slice(0, 12).map(p =>
           `${p.name} (${p.type}): [${Math.round(p.x)}, ${Math.round(p.y)}, ${Math.round(p.z)}]`
@@ -112,7 +117,7 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
 
   registry.register({
     name: 'remember_place',
-    description: 'Save the current spot (or given coordinates) as a named place to remember (e.g. "дом", "деревня", "шахта"). Use when a player points out a location.',
+    description: 'Save the current spot (or given coordinates) as a named place to remember (e.g. "home", "village", "mine"). Use when a player points out a location.' ,
     parameters: {
       type: 'object',
       properties: {
@@ -127,7 +132,7 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
     },
     handler: async (args) => {
       try {
-        if (!memoryManager?.pois?.addPOI) return { success: false, error: 'Память недоступна.' };
+        if (!memoryManager?.pois?.addPOI) return { success: false, error: 'Memory is unavailable.' };
         let coords;
         if (args.x !== undefined && args.z !== undefined) {
           coords = { x: args.x, y: args.y ?? (bot.entity?.position?.y ?? 64), z: args.z };
@@ -135,13 +140,13 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
           const p = bot.entity.position;
           coords = { x: Math.round(p.x), y: Math.round(p.y), z: Math.round(p.z) };
         } else {
-          return { success: false, error: 'Нет координат и бот не заспавнился.' };
+          return { success: false, error: 'No coordinates are available and the bot has not spawned.' };
         }
 
         const validTypes = Object.values(POITypes);
         const type = validTypes.includes(args.type) ? args.type : POITypes.OTHER;
         memoryManager.pois.addPOI(args.name, type, coords, args.notes || '');
-        return { success: true, data: `Запомнил: ${args.name} на [${coords.x}, ${coords.y}, ${coords.z}].` };
+        return { success: true, data: `Remembered: ${args.name} at [${coords.x}, ${coords.y}, ${coords.z}].` };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -150,35 +155,35 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
 
   registry.register({
     name: 'scout_direction',
-    description: 'Walk a short distance in a compass direction to look around (e.g. "сходи посмотри что за горой на севере"). Scans for a village along the way and reports what was found. Bounded, short trip — not a long expedition.',
+    description: 'Walk a short distance in a compass direction to look around (e.g. "go see what is beyond the mountain to the north"). Scan for a village along the way and report what you find. This is a short, bounded trip, not a long expedition.' ,
     parameters: {
       type: 'object',
       properties: {
-        direction: { type: 'string', description: 'Compass direction: N/S/E/W/NE/NW/SE/SW or Russian (север, юг...)' },
+        direction: { type: 'string', description: 'Compass direction: N/S/E/W/NE/NW/SE/SW or north/south/east/west and their diagonal forms.' },
         distance: { type: 'number', description: 'How far to scout in blocks (default 40, max 80)' }
       },
       required: ['direction']
     },
     handler: async (args) => {
       try {
-        if (!bot.entity?.position) return { success: false, error: 'Бот ещё не заспавнился.' };
-        if (!bot.pathfinder) return { success: false, error: 'Pathfinder не инициализирован.' };
+        if (!bot.entity?.position) return { success: false, error: 'The bot has not spawned yet.' };
+        if (!bot.pathfinder) return { success: false, error: 'Pathfinder is not initialized.' };
 
         const code = normalizeDirection(args.direction);
         const vec = DIRECTION_VECTORS[code];
-        if (!vec) return { success: false, error: `Неизвестное направление: ${args.direction}. Используй N/S/E/W/NE/NW/SE/SW.` };
+        if (!vec) return { success: false, error: `Unknown direction: ${args.direction}. Use N/S/E/W/NE/NW/SE/SW or full English direction names.` };
 
         const distance = Math.min(80, Math.max(10, args.distance || 40));
         const start = bot.entity.position;
         const targetX = Math.floor(start.x + vec.dx * distance);
         const targetZ = Math.floor(start.z + vec.dz * distance);
-        const dirRu = spatialIntelligence.compassFromVector(vec.dx, vec.dz).ru;
+        const dirEn = spatialIntelligence.compassFromVector(vec.dx, vec.dz).en;
 
         // Check before we even move — village might already be in range.
         const preScan = structureDetector.detectVillage(bot, 64);
         if (preScan && preScan.distance <= 48) {
           saveVillageIfNew(preScan);
-          return { success: true, data: `Даже идти далеко не надо — ${structureDetector.describeVillage(preScan)}`, detection: preScan };
+          return { success: true, data: `No need to go far — ${structureDetector.describeVillage(preScan)}`, detection: preScan };
         }
 
         // GoalNearXZ walks toward the XZ target without demanding an exact Y.
@@ -203,12 +208,12 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
 
         if (found) {
           saveVillageIfNew(found);
-          return { success: true, data: `Сходил на ${dirRu}: ${structureDetector.describeVillage(found)}`, detection: found };
+          return { success: true, data: `Went ${dirEn}: ${structureDetector.describeVillage(found)}`, detection: found };
         }
 
         const now = bot.entity?.position;
-        const posStr = now ? `[${Math.round(now.x)}, ${Math.round(now.y)}, ${Math.round(now.z)}]` : 'неизвестно';
-        return { success: true, data: `Сходил на ${dirRu} (сейчас ${posStr}), деревни не заметил. Может, дальше или в другой стороне.` };
+        const posStr = now ? `[${Math.round(now.x)}, ${Math.round(now.y)}, ${Math.round(now.z)}]` : 'unknown';
+        return { success: true, data: `Went ${dirEn} (current position: ${posStr}) but did not spot a village. It may be farther away or in another direction.` };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -219,14 +224,14 @@ export function registerExplorationTools(registry, { bot, memoryManager }) {
     if (!detection || !memoryManager?.pois?.addPOI || alreadyKnown(detection.center)) return false;
     try {
       memoryManager.pois.addPOI(
-        `Деревня (${detection.direction.ru})`,
+        `Village (${detection.direction.en})`,
         POITypes.VILLAGE,
         detection.center,
-        `Найдена в разведке: жителей ~${detection.villagerCount}, уверенность ${detection.confidence}`,
+        `Found while scouting: about ${detection.villagerCount} villagers, confidence ${detection.confidence}`,
       );
       return true;
     } catch (err) {
-      logger.debug(`Не удалось сохранить деревню из разведки: ${err.message}`);
+      logger.debug(`Could not save village found while scouting: ${err.message}`);
       return false;
     }
   }
