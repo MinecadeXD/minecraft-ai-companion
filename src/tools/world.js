@@ -47,7 +47,7 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
           maxDistance: args.maxDistance || 64,
           count: args.count || 1
         });
-        
+
         if (blocks.length === 0) return { success: true, data: 'No blocks found.' };
         return { success: true, data: blocks };
       } catch (err) {
@@ -108,16 +108,16 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
     }
   });
 
-  // Осмотреться вокруг — что видно, рельеф, стороны света, ближайшие объекты.
+  // Look around: describe visible details, terrain, compass directions, and nearby objects.
   registry.register({
     name: 'look_around',
     description: 'Look around and describe everything the bot perceives right now: what is happening to it (taking damage, on fire, drowning, falling, low HP), facing direction, biome, terrain in each compass direction, the block it is aiming at, nearby ores, hazards (lava/fire), useful stations (crafting table, furnace, chest, bed, anvil...), and nearby entities with side and distance. Use to understand the full situation before acting.',
     parameters: { type: 'object', properties: {} },
     handler: async () => {
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
         const scene = sceneObserver.observe(bot);
-        if (!scene) return { success: false, error: 'Не удалось осмотреться.' };
+        if (!scene) return { success: false, error: 'Could not observe the surroundings.' };
         return { success: true, data: sceneObserver.describe(scene), scene };
       } catch (err) {
         return { success: false, error: err.message };
@@ -125,14 +125,14 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
     }
   });
 
-  // Что находится в конкретной стороне света (север/юг/восток/запад).
+  // Describe what is in a specific compass direction.
   registry.register({
     name: 'describe_direction',
     description: 'Describe what is in a specific compass direction (north/south/east/west/etc). Answers questions like "what is to the north" or "is there a mountain that way".',
     parameters: {
       type: 'object',
       properties: {
-        direction: { type: 'string', description: 'Compass direction: N, S, E, W, NE, NW, SE, SW (or Russian: север, юг, восток, запад)' }
+        direction: { type: 'string', description: 'Compass direction: N, S, E, W, NE, NW, SE, SW, or the full English direction names.' }
       },
       required: ['direction']
     },
@@ -144,17 +144,17 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
 
         const raw = String(args.direction || '').toLowerCase().trim();
         const alias = {
-          n: 'N', 'север': 'N', s: 'S', 'юг': 'S', e: 'E', 'восток': 'E', w: 'W', 'запад': 'W',
-          ne: 'NE', 'северо-восток': 'NE', nw: 'NW', 'северо-запад': 'NW',
-          se: 'SE', 'юго-восток': 'SE', sw: 'SW', 'юго-запад': 'SW',
+          n: 'N', north: 'N', s: 'S', south: 'S', e: 'E', east: 'E', w: 'W', west: 'W',
+          ne: 'NE', northeast: 'NE', nw: 'NW', northwest: 'NW',
+          se: 'SE', southeast: 'SE', sw: 'SW', southwest: 'SW',
         };
         const code = alias[raw] || raw.toUpperCase();
         const dir = scene.horizon.find(h => h.code === code);
-        if (!dir) return { success: false, error: `Неизвестное направление: ${args.direction}. Используй N/S/E/W/NE/NW/SE/SW.` };
+        if (!dir) return { success: false, error: `Unknown direction: ${args.direction}. Use N/S/E/W/NE/NW/SE/SW or full English direction names.` };
 
         return {
           success: true,
-          data: `На ${dir.ru}: ${dir.features.join(', ')}${dir.rise >= 5 ? ` (подъём ~${dir.rise} блоков)` : ''}${dir.drop <= -8 ? ` (спуск ~${Math.abs(dir.drop)} блоков)` : ''}.`,
+          data: `To the ${dir.en}: ${dir.features.join(', ')}${dir.rise >= 5 ? ` (about ${dir.rise} blocks uphill)` : ''}${dir.drop <= -8 ? ` (about ${Math.abs(dir.drop)} blocks downhill)` : ''}.`,
           direction: dir,
         };
       } catch (err) {
@@ -163,7 +163,7 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
     }
   });
 
-  // Направление и расстояние до заданной точки/координат.
+  // Direction and distance to a target point or coordinates.
   registry.register({
     name: 'bearing_to',
     description: 'Given target coordinates, tells the compass direction, distance, and whether it is ahead/left/right/behind the bot right now. Use to orient toward a known location (e.g. a village a player mentioned).',
@@ -178,11 +178,11 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.entity?.position) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity?.position) return { success: false, error: 'The bot has not spawned yet.' };
         const p = bot.entity.position;
         const botPos = { x: p.x, y: p.y, z: p.z };
         const target = { x: args.x, y: args.y ?? p.y, z: args.z };
-        const phrase = spatialIntelligence.describeTarget(botPos, bot.entity.yaw || 0, target, 'точка');
+        const phrase = spatialIntelligence.describeTarget(botPos, bot.entity.yaw || 0, target, 'target');
         return { success: true, data: phrase };
       } catch (err) {
         return { success: false, error: err.message };
@@ -190,31 +190,31 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
     }
   });
 
-  // Внимательно всмотреться: реальный скриншот кадра + разбор мультимодальной моделью.
-  // Дорогой инструмент — только когда символьного зрения мало ("вглядись", "что там вдали").
+  // Inspect carefully: capture a real screenshot and analyse it with a multimodal model.
+  // This is an expensive tool; use it only when symbolic vision is insufficient (for example, "look closely" or "what is that in the distance?").
   registry.register({
     name: 'capture_screenshot',
     description: 'Take a real screenshot of what the bot sees and analyse it with vision AI for a detailed answer (distant structures, subtle details). Heavier than look_around — use only when the symbolic scene is not enough. Falls back to a symbolic description if screenshot rendering is unavailable on this machine.',
     parameters: {
       type: 'object',
       properties: {
-        question: { type: 'string', description: 'What to look for (e.g. "есть ли деревня вдали", "что это за постройка")' }
+        question: { type: 'string', description: 'What to look for (e.g. "is there a village in the distance?", "what is that structure?")' }
       }
     },
     handler: async (args) => {
       try {
         if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
-        const question = args.question || 'Что видно на кадре: рельеф, постройки, деревни, мобы, что примечательного вдали?';
+        const question = args.question || 'What is visible in the image: terrain, structures, villages, mobs, and anything notable in the distance?';
 
         const available = await frameCapture.isAvailable();
         if (!available) {
           // Graceful fallback: use symbolic scene instead of crashing.
           const scene = sceneObserver.observe(bot);
-          const symbolic = scene ? sceneObserver.describe(scene) : 'вид недоступен';
+          const symbolic = scene ? sceneObserver.describe(scene) : 'view unavailable';
           return {
             success: true,
             degraded: true,
-            data: `Реальный скриншот недоступен на этом сервере (нужен модуль canvas/node-canvas-webgl). Опишу по символьному зрению: ${symbolic}`,
+            data: `A real screenshot is unavailable on this server (the canvas/node-canvas-webgl module is required). Here is a description based on symbolic vision: ${symbolic}`,
           };
         }
 
@@ -222,15 +222,15 @@ export function registerWorldTools(registry, { bot, worldState, aiProvider }) {
         if (!png) {
           const scene = sceneObserver.observe(bot);
           const symbolic = scene ? sceneObserver.describe(scene) : 'вид недоступен';
-          return { success: true, degraded: true, data: `Кадр не удалось отрисовать. По символьному зрению: ${symbolic}` };
+          return { success: true, degraded: true, data: `Could not render the frame. Symbolic vision reports: ${symbolic}` };
         }
 
         if (!aiProvider || typeof aiProvider.describeImage !== 'function') {
-          return { success: true, degraded: true, data: 'Скриншот сделан, но модель зрения не подключена для его разбора.' };
+          return { success: true, degraded: true, data: 'The screenshot was captured, but no vision model is connected to analyse it.' };
         }
 
         const description = await aiProvider.describeImage(png, question, { maxTokens: 300 });
-        return { success: true, data: description || 'Не смог разобрать кадр.' };
+        return { success: true, data: description || 'Could not analyse the frame.' };
       } catch (err) {
         return { success: false, error: err.message };
       }
