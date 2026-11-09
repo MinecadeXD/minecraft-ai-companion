@@ -63,7 +63,7 @@ export class ResponseGenerator {
     const { personality, mood, health, busy, currentTask, recentResponses } = context;
     
     const moodStr = mood ? `Mood: ${mood}. ` : '';
-    const healthStr = health < 10 ? 'Health is low.  ' : '';
+    const healthStr = health < 10 ? 'Health is low. ' : '';
     const busyStr = busy ? `Busy: ${currentTask}. ` : '';
     
     let intentDesc = '';
@@ -103,7 +103,7 @@ ${intentDesc}.
 
 Reply with ONE short, natural sentence (5–7 words maximum), without using a template. 
 Do NOT use these phrases: ${avoidPhrases}
-Write like a real person in game chat:`;
+Write like a real person in in-game chat:`;
   }
 
   /**
@@ -138,7 +138,7 @@ Write like a real person in game chat:`;
   async _getFallback(intent, playerMessage = '', context = {}) {
     if (this.aiBrain?.generateQuickResponse) {
       try {
-        const name = this.profile?.name || 'you';
+        const name = this.profile?.name || 'a player';
         const prompt = `You are ${name}, playing Minecraft with friends. Someone wrote: "${playerMessage}". Reply in ONE natural, short phrase (1–4 words), in your own words, using lowercase and no period:`;
         const res = await this.aiBrain.generateQuickResponse(prompt, {
           maxTokens: 16,
