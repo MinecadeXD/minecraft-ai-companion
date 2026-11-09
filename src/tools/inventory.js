@@ -21,7 +21,7 @@ export function registerInventoryTools(registry, { bot, worldState }) {
     parameters: { type: 'object', properties: {} },
     handler: async () => {
       try {
-        if (!bot.inventory) return { success: false, error: 'Инвентарь недоступен (бот не заспавнился).' };
+        if (!bot.inventory) return { success: false, error: 'Inventory is unavailable (the bot has not spawned).' };
         const slots = bot.inventory.slots || [];
         const brief = (item) => item ? { name: item.name, count: item.count } : null;
 
@@ -97,7 +97,7 @@ export function registerInventoryTools(registry, { bot, worldState }) {
         const item = bot.inventory.items().find(i => i.type === itemType.id || i.name === args.itemName);
         if (!item) return { success: false, error: `Do not have item: ${args.itemName}` };
 
-        // Нормализация слота назначения
+        // Normalize the destination slot.
         let dest = (args.destination || 'hand').toLowerCase();
         if (dest === 'offhand' || dest === 'left_hand' || dest === 'shield') dest = 'off-hand';
         else if (dest === 'helmet' || dest === 'cap' || dest === 'head') dest = 'head';
@@ -224,11 +224,11 @@ export function registerInventoryTools(registry, { bot, worldState }) {
     parameters: { type: 'object', properties: {} },
     handler: async () => {
       try {
-        // Слот 45 — оффхенд
+        // Slot 45 is the off-hand slot.
         const currentHeld = bot.heldItem;
         const currentOffhand = bot.inventory.slots[45];
 
-        // Используем moveSlotItem или swap
+        // Use moveSlotItem or swap.
         if (typeof bot.moveSlotItem === 'function') {
           const quickBarSlot = 36 + (bot.quickBarSlot || 0);
           await bot.moveSlotItem(quickBarSlot, 45);
