@@ -148,7 +148,7 @@ People speak simply and naturally, without forced slang.`,
         lowerExpression.includes('character') ||
         lowerExpression.includes('response') ||
         lowerExpression.includes('generat') ||
-        /\\b(?:llm|ai)\\b/.test(lowerExpression) ||
+        /\b(?:llm|ai)\b/.test(lowerExpression) ||
         lowerExpression.includes('silence')
       ) {
         return null;
