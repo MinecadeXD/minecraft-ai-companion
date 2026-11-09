@@ -21,11 +21,11 @@ export class ActionCommitmentManager {
     this.interruptCount = 0;
     this.pendingInterrupts = [];
     
-    logger.info(`Инициализирован ActionCommitmentManager для ${agentName}`);
+    logger.info(`ActionCommitmentManager initialized for ${agentName}`);
   }
 
   /**
-   * Принимает обязательство по выполнению действия
+   * Commit to performing an action.
    * @param {Object} action
    * @param {string} action.type
    * @param {string} action.description
@@ -44,11 +44,11 @@ export class ActionCommitmentManager {
       progress: 0.0
     };
     
-    logger.debug(`[${this.agentName}] Начато действие: ${this.currentAction.description} (Приоритет: ${this.currentAction.priority})`);
+    logger.debug(`[${this.agentName}] Action started: ${this.currentAction.description} (priority: ${this.currentAction.priority})`);
   }
 
   /**
-   * Проверяет, можно ли прервать текущее действие
+   * Check whether the current action can be interrupted.
    * @param {Object} newEvent
    * @param {number} newEvent.priority
    * @param {boolean} [newEvent.isEmergency=false]
@@ -79,7 +79,7 @@ export class ActionCommitmentManager {
   }
 
   /**
-   * Принудительно прерывает текущее действие
+   * Forcefully interrupt the current action.
    * @param {string} reason
    */
   interrupt(reason) {
@@ -88,12 +88,12 @@ export class ActionCommitmentManager {
     this.interruptCount++;
     this._recordToHistory('INTERRUPTED', reason);
     
-    logger.debug(`[${this.agentName}] Действие прервано: ${this.currentAction.description}. Причина: ${reason}`);
+    logger.debug(`[${this.agentName}] Action interrupted: ${this.currentAction.description}. Reason: ${reason}`);
     this.currentAction = null;
   }
 
   /**
-   * Завершает текущее действие
+   * Complete the current action.
    * @param {string} outcome
    */
   complete(outcome) {
@@ -102,12 +102,12 @@ export class ActionCommitmentManager {
     this.currentAction.progress = 1.0;
     this._recordToHistory('COMPLETED', outcome);
     
-    logger.debug(`[${this.agentName}] Действие завершено: ${this.currentAction.description}. Итог: ${outcome}`);
+    logger.debug(`[${this.agentName}] Action completed: ${this.currentAction.description}. Outcome: ${outcome}`);
     this.currentAction = null;
   }
 
   /**
-   * Внутренний метод для записи истории
+   * Internal method for recording action history.
    * @private
    */
   _recordToHistory(status, reasonOrOutcome) {
@@ -118,7 +118,7 @@ export class ActionCommitmentManager {
       endedAt: Date.now()
     });
 
-    // Оставляем только последние 20
+    // Keep only the 20 most recent entries.
     if (this.actionHistory.length > 20) {
       this.actionHistory.pop();
     }
@@ -134,10 +134,10 @@ export class ActionCommitmentManager {
     const timeSpent = Date.now() - this.currentAction.startedAt;
     const estDuration = this.currentAction.estimatedDuration || 10000;
     
-    // Чем дольше делаем, тем сильнее приверженность
+    // Commitment grows the longer the action continues.
     let strength = Math.min(timeSpent / estDuration, 1.0);
     
-    // В самом начале (первые 3 сек) приверженность искусственно высокая, чтобы не было дёрганий
+    // Commitment is artificially high during the first 3 seconds to prevent twitchy interruptions.
     if (timeSpent < 3000) {
       strength = Math.max(strength, 0.8);
     }
@@ -146,7 +146,7 @@ export class ActionCommitmentManager {
   }
 
   /**
-   * Возвращает отложенные прерывания
+   * Return pending interruptions.
    * @returns {Array<Object>}
    */
   getPendingInterrupts() {
@@ -154,7 +154,7 @@ export class ActionCommitmentManager {
   }
 
   /**
-   * Возвращает состояние для дашборда
+   * Return the state used by the dashboard.
    * @returns {Object}
    */
   getState() {
