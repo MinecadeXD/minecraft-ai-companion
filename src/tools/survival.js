@@ -21,17 +21,17 @@ export function registerSurvivalTools(registry, { bot }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.entity) return { success: false, error: 'Бот ещё не заспавнился.' };
+        if (!bot.entity) return { success: false, error: 'The bot has not spawned yet.' };
         const mc = minecraftData(bot.version || '1.20.4');
         const bedIds = Object.values(mc.blocksByName)
           .filter(b => b && b.name.endsWith('_bed'))
           .map(b => b.id);
 
         const bedPos = bot.findBlock ? bot.findBlock({ matching: bedIds, maxDistance: args.maxDistance || 16 }) : null;
-        if (!bedPos) return { success: false, error: 'Кровати рядом не нашёл.' };
+        if (!bedPos) return { success: false, error: 'No bed found nearby.' };
 
         const bedBlock = bot.blockAt(bedPos.position || bedPos);
-        if (!bedBlock) return { success: false, error: 'Не смог считать кровать.' };
+        if (!bedBlock) return { success: false, error: 'Could not read the bed block.' };
 
         // Walk up to the bed if pathfinder is available and we are far.
         if (bot.pathfinder && bot.entity.position.distanceTo(bedBlock.position) > 3) {
@@ -42,14 +42,14 @@ export function registerSurvivalTools(registry, { bot }) {
 
         try {
           await bot.sleep(bedBlock);
-          return { success: true, data: 'Лёг спать, скоро утро.' };
+          return { success: true, data: 'Went to sleep; morning will come soon.' };
         } catch (err) {
           const msg = err.message || String(err);
           if (/can only sleep at night|thunderstorm|now/i.test(msg)) {
-            return { success: false, error: 'Спать можно только ночью или в грозу.' };
+            return { success: false, error: 'You can only sleep at night or during a thunderstorm.' };
           }
           if (/monsters|too far|occupied/i.test(msg)) {
-            return { success: false, error: `Не получилось лечь: ${msg}` };
+            return { success: false, error: `Could not go to sleep: ${msg}` };
           }
           return { success: false, error: msg };
         }
@@ -67,9 +67,9 @@ export function registerSurvivalTools(registry, { bot }) {
       try {
         if (typeof bot.wake === 'function') {
           await bot.wake();
-          return { success: true, data: 'Встал.' };
+          return { success: true, data: 'Got out of bed.' };
         }
-        return { success: false, error: 'Не в кровати.' };
+        return { success: false, error: 'The bot is not in a bed.' };
       } catch (err) {
         return { success: false, error: err.message };
       }
@@ -87,8 +87,8 @@ export function registerSurvivalTools(registry, { bot }) {
     },
     handler: async (args) => {
       try {
-        if (!bot.entity?.position) return { success: false, error: 'Бот ещё не заспавнился.' };
-        if (!bot.pathfinder) return { success: false, error: 'Pathfinder не инициализирован.' };
+        if (!bot.entity?.position) return { success: false, error: 'The bot has not spawned yet.' };
+        if (!bot.pathfinder) return { success: false, error: 'Pathfinder is not initialized.' };
 
         const maxDistance = Math.min(32, Math.max(2, args.maxDistance || 16));
         const isDrop = (e) => e && (e.name === 'item' || e.objectType === 'Item' || e.displayName === 'Item' || e.entityType != null && e.name === 'item');
@@ -99,7 +99,7 @@ export function registerSurvivalTools(registry, { bot }) {
           .filter(x => x.dist <= maxDistance)
           .sort((a, b) => a.dist - b.dist);
 
-        if (drops.length === 0) return { success: true, data: 'Предметов на земле рядом нет.' };
+        if (drops.length === 0) return { success: true, data: 'There are no dropped items nearby.' };
 
         let collected = 0;
         const deadline = Date.now() + 15000;
@@ -118,7 +118,7 @@ export function registerSurvivalTools(registry, { bot }) {
         }
         try { bot.pathfinder.setGoal(null); } catch (_) {}
 
-        return { success: true, data: `Подобрал предметы (${collected} из ${drops.length} замеченных).` };
+        return { success: true, data: `Collected ${collected} of ${drops.length} spotted items.` };
       } catch (err) {
         return { success: false, error: err.message };
       }
