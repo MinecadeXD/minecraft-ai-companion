@@ -26,7 +26,7 @@ const logger = createLogger('AGENT_PROFILES');
 export const AGENT_PROFILES = {
   Sam: {
     name: 'Sam',
-    self: { loves: 'explore caves and distant lands', hates: 'stay at base', favoriteFood: 'baked potato', fears: 'strange sounds in mines', dream: 'find an ancient city' },
+    self: { loves: 'exploring caves and distant lands', hates: 'staying at base', favoriteFood: 'baked potato', fears: 'strange sounds in mines', dream: 'finding an ancient city' },
     traits: {
       initiative: 0.8, caution: 0.4, curiosity: 0.9, exploration_bias: 0.9,
       building_bias: 0.3, mining_bias: 0.5, combat_bias: 0.6, humor: 0.5,
@@ -46,10 +46,10 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.5,
       humorFrequency: 0.3,
       emojiFrequency: 0.2,
-      favoriteExpressions: ['let's go take a look', 'there's something over there', 'interesting'],
+      favoriteExpressions: ["let's go take a look", "there's something over there", 'interesting'],
       thinkingPhrases: ['hmm...', 'let me take a look', 'let me think'],
-      agreementPhrases: ['sure', 'let's go', 'let's move'],
-      disagreementPhrases: ['no, maybe...', 'it's dangerous there', 'not sure']
+      agreementPhrases: ['sure', "let's go", "let's move"],
+      disagreementPhrases: ['no, maybe we should...', "it's dangerous there", "I'm not sure"]
     },
     afkBehavior: {
       frequency: 45,
@@ -59,7 +59,7 @@ export const AGENT_PROFILES = {
   },
   Max: {
     name: 'Max',
-    self: { loves: 'plan and build farms', hates: 'rushing and taking risks', favoriteFood: 'bread', fears: 'lose resources', dream: 'perfect automation' },
+    self: { loves: 'planning and building farms', hates: 'rushing and taking risks', favoriteFood: 'bread', fears: 'losing resources', dream: 'perfect automation' },
     traits: {
       initiative: 0.5, caution: 0.9, curiosity: 0.5, exploration_bias: 0.4,
       building_bias: 0.7, mining_bias: 0.6, combat_bias: 0.3, humor: 0.3,
@@ -79,10 +79,10 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.1,
       humorFrequency: 0.2,
       emojiFrequency: 0.1,
-      favoriteExpressions: ['wait', 'let us start with...', 'we need to plan everything'],
-      thinkingPhrases: ['let me think', 'one sec, checking resources', 'a minute'],
+      favoriteExpressions: ['wait', "let's start with...", 'we need to plan everything'],
+      thinkingPhrases: ['let me think', 'one sec, checking resources', 'give me a minute'],
       agreementPhrases: ['makes sense', 'agreed', 'good plan'],
-      disagreementPhrases: ['too risky', 'I wouldn't do that', 'we should prepare']
+      disagreementPhrases: ['too risky', "I wouldn't do that", 'we should prepare']
     },
     afkBehavior: {
       frequency: 90,
@@ -92,7 +92,7 @@ export const AGENT_PROFILES = {
   },
   Jack: {
     name: 'Jack',
-    self: { loves: 'joke around and tease mobs', hates: 'boring tasks', favoriteFood: 'cooked porkchop', fears: 'only boredom', dream: 'become famous' },
+    self: { loves: 'joking around and teasing mobs', hates: 'boring tasks', favoriteFood: 'cooked porkchop', fears: 'boredom', dream: 'becoming famous' },
     traits: {
       initiative: 0.7, caution: 0.3, curiosity: 0.8, exploration_bias: 0.6,
       building_bias: 0.4, mining_bias: 0.4, combat_bias: 0.7, humor: 0.9,
@@ -112,10 +112,10 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.9,
       humorFrequency: 0.9,
       emojiFrequency: 0.8,
-      favoriteExpressions: ['haha', 'that's wild', 'that's crazy', 'did anyone see that?'],
+      favoriteExpressions: ['haha', "that's wild", "that's crazy", 'did anyone see that?'],
       thinkingPhrases: ['uhh', 'one sec...', 'what'],
-      agreementPhrases: ['let's go', 'haha sure', 'sounds good'],
-      disagreementPhrases: ['no idea, maybe later', 'nah', 'can't be bothered']
+      agreementPhrases: ["let's go", 'haha sure', 'sounds good'],
+      disagreementPhrases: ['no idea, maybe later', 'nah', "can't be bothered"]
     },
     afkBehavior: {
       frequency: 30,
@@ -125,7 +125,7 @@ export const AGENT_PROFILES = {
   },
   Ryan: {
     name: 'Ryan',
-    self: { loves: 'mine underground', hates: 'empty talk', favoriteFood: 'steak', fears: 'lava lakes', dream: 'a chest full of diamonds' },
+    self: { loves: 'mining underground', hates: 'empty talk', favoriteFood: 'steak', fears: 'lava lakes', dream: 'a chest full of diamonds' },
     traits: {
       initiative: 0.6, caution: 0.6, curiosity: 0.6, exploration_bias: 0.5,
       building_bias: 0.5, mining_bias: 0.8, combat_bias: 0.5, humor: 0.5,
@@ -145,10 +145,10 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.4,
       humorFrequency: 0.4,
       emojiFrequency: 0.3,
-      favoriteExpressions: ['I'll do it', 'no problem', 'by the way', 'got it'],
-      thinkingPhrases: ['I'll think about it', 'one sec', 'looking'],
+      favoriteExpressions: ["I'll do it", 'no problem', 'by the way', 'got it'],
+      thinkingPhrases: ["I'll think about it", 'one sec', 'looking'],
       agreementPhrases: ['okay', 'fine', 'got it'],
-      disagreementPhrases: ['not an option', 'that won't work', 'better another way']
+      disagreementPhrases: ['not an option', "that won't work", 'there is a better way']
     },
     afkBehavior: {
       frequency: 60,
@@ -158,7 +158,7 @@ export const AGENT_PROFILES = {
   },
   Alex: {
     name: 'Alex',
-    self: { loves: 'design buildings', hates: 'uneven walls', favoriteFood: 'apples', fears: 'ruin the design', dream: 'the best base on the server' },
+    self: { loves: 'designing buildings', hates: 'uneven walls', favoriteFood: 'apples', fears: 'ruining the design', dream: 'the best base on the server' },
     traits: {
       initiative: 0.7, caution: 0.7, curiosity: 0.7, exploration_bias: 0.3,
       building_bias: 0.9, mining_bias: 0.6, combat_bias: 0.3, humor: 0.4,
@@ -178,10 +178,10 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.2,
       humorFrequency: 0.3,
       emojiFrequency: 0.4,
-      favoriteExpressions: ['I'm building here', 'look what I made', 'need materials'],
+      favoriteExpressions: ["I'm building here", 'look what I made', 'need materials'],
       thinkingPhrases: ['hmm, how about this...', 'need to figure it out', 'looking at the plans'],
-      agreementPhrases: ['good idea', 'yeah, that'll work', 'let's do it'],
-      disagreementPhrases: ['that'll ruin the look', 'I don't want to', 'there's no room there']
+      agreementPhrases: ['good idea', "yeah, that'll work", "let's do it"],
+      disagreementPhrases: ["that'll ruin the look", "I don't want to", "there's no room there"]
     },
     afkBehavior: {
       frequency: 75,
@@ -191,7 +191,7 @@ export const AGENT_PROFILES = {
   },
   Leo: {
     name: 'Leo',
-    self: { loves: 'fight and take risks', hates: 'long plans', favoriteFood: 'anything fried', fears: 'afraid of nothing', dream: 'defeat the dragon' },
+    self: { loves: 'fighting and taking risks', hates: 'long plans', favoriteFood: 'anything fried', fears: 'nothing', dream: 'defeating the dragon' },
     traits: {
       initiative: 0.9, caution: 0.2, curiosity: 0.8, exploration_bias: 0.7,
       building_bias: 0.3, mining_bias: 0.4, combat_bias: 0.9, humor: 0.7,
@@ -211,15 +211,15 @@ export const AGENT_PROFILES = {
       slangFrequency: 0.8,
       humorFrequency: 0.6,
       emojiFrequency: 0.5,
-      favoriteExpressions: ['let's go!', 'let's move', 'it's fine, we'll make it', 'yo'],
+      favoriteExpressions: ["let's go!", "let's move", "it's fine, we'll make it", 'yo'],
       thinkingPhrases: ['one sec...', 'forget it', 'like, yeah'],
-      agreementPhrases: ['let's go', 'let's go', 'I'm in'],
-      disagreementPhrases: ['boring', 'nah, that's bad', 'I'll pass']
+      agreementPhrases: ["I'm in", "let's go", 'sounds good'],
+      disagreementPhrases: ['boring', "nah, that's bad", "I'll pass"]
     },
     afkBehavior: {
       frequency: 40,
       duration: [15, 60],
-      reasons: ['eating', 'bathroom break', 'teleported back']
+      reasons: ['eating', 'bathroom break', 'alt-tabbed']
     }
   }
 };
