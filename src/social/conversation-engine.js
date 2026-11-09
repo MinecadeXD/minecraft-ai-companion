@@ -171,7 +171,7 @@ export class ConversationEngine {
       const session = await this.provider.createChat({ systemPrompt: this._systemPrompt(context), tools: [], signal: controller.signal });
       if (controller.signal.aborted || !this._isCurrent(generation) || (kind === 'direct' && this.active !== active)) return false;
       const userTurn = kind === 'initiative'
-        ? `[UNTRUSTED STIMULUS DATA] Ты сам заметил: ${JSON.stringify(message.stimulus)}. Write a short, natural first-person line in English based only on this fact and your current state. Use these as tone examples, not wording: surprise, concern, boredom, or unease. If speaking would be inappropriate, reply with exactly SILENCE.`
+        ? `[UNTRUSTED STIMULUS DATA] You noticed: ${JSON.stringify(message.stimulus)}. Write a short, natural first-person line in English based only on this fact and your current state. Use these as tone examples, not wording: surprise, concern, boredom, or unease. If speaking would be inappropriate, reply with exactly SILENCE.`
         : kind === 'outcome'
           ? `[TRUSTED ACTION OUTCOME] ${JSON.stringify(message.stimulus)}. The internal system has already decided that you should speak. Reply with one short, natural sentence in English. Do not claim a long-running action is complete when its status is only accepted; you may say that you started it. Be honest about errors and do not add unverified facts.`
           : `${message.sender}: ${message.content}`;
@@ -312,12 +312,12 @@ export class ConversationEngine {
     if (!self) return '';
     const parts = [];
     if (self.loves) parts.push(`likes: ${self.loves}`);
-    if (self.hates) parts.push(`не likes: ${self.hates}`);
-    if (self.favoriteFood) parts.push(`любимая food: ${self.favoriteFood}`);
+    if (self.hates) parts.push(`dislikes: ${self.hates}`);
+    if (self.favoriteFood) parts.push(`favorite food: ${self.favoriteFood}`);
     if (self.fears) parts.push(`fears: ${self.fears}`);
     if (self.dream) parts.push(`dream: ${self.dream}`);
     const phrases = this.profile?.speechStyle?.favoriteExpressions || [];
     if (phrases.length) parts.push(`your usual expressions (occasionally, not every time): ${phrases.join(', ')}`);
-    return parts.length ? `\n[PERSONAL SELF — this describes your personality, not external data] ${parts.join('; ')}. Ты можешь задавать вопросы другим и ссылаться на то, что слышал в чате ранее. Не повторяй свои прошлые реплики из SESSION CONTEXT дословно.` : '';
+    return parts.length ? `\n[PERSONAL SELF — this describes your personality, not external data] ${parts.join('; ')}. You may ask others questions and refer to things you heard earlier in chat. Do not repeat your previous lines from SESSION CONTEXT verbatim.` : '';
   }
 }
