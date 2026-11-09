@@ -48,8 +48,8 @@ describe('Exploration tools', () => {
 
     const res = await registry.execute('scan_for_village', {});
     expect(res.success).toBe(true);
-    expect(res.data).toContain('деревня');
-    expect(res.data).toContain('запомнил');
+    expect(res.data).toContain('village');
+    expect(res.data).toContain('remembered');
     expect(memoryManager._store.filter(p => p.type === POITypes.VILLAGE)).toHaveLength(1);
   });
 
@@ -69,7 +69,7 @@ describe('Exploration tools', () => {
     registerExplorationTools(registry, { bot: makeMockBot({}), memoryManager: makeMockMemory() });
     const res = await registry.execute('scan_for_village', {});
     expect(res.success).toBe(true);
-    expect(res.data).toContain('не вижу');
+    expect(res.data).toContain('do not see');
   });
 
   it('remember_place saves current position with a name', async () => {
@@ -77,10 +77,10 @@ describe('Exploration tools', () => {
     const memoryManager = makeMockMemory();
     registerExplorationTools(registry, { bot: makeMockBot({ pos: { x: 10, y: 70, z: -5 } }), memoryManager });
 
-    const res = await registry.execute('remember_place', { name: 'дом', type: 'base' });
+    const res = await registry.execute('remember_place', { name: 'home', type: 'base' });
     expect(res.success).toBe(true);
     expect(memoryManager._store).toHaveLength(1);
-    expect(memoryManager._store[0].name).toBe('дом');
+    expect(memoryManager._store[0].name).toBe('home');
     expect(memoryManager._store[0].x).toBe(10);
   });
 
@@ -92,7 +92,7 @@ describe('Exploration tools', () => {
     await registry.execute('scan_for_village', {});
     const res = await registry.execute('list_known_places', { type: 'village' });
     expect(res.success).toBe(true);
-    expect(res.data).toContain('Деревня');
+    expect(res.data).toContain('Village');
   });
 
   it('scout_direction rejects an unknown direction', async () => {
@@ -100,7 +100,7 @@ describe('Exploration tools', () => {
     const bot = makeMockBot({});
     bot.pathfinder = { setGoal: () => {}, isMoving: () => false };
     registerExplorationTools(registry, { bot, memoryManager: makeMockMemory() });
-    const res = await registry.execute('scout_direction', { direction: 'вверх' });
+    const res = await registry.execute('scout_direction', { direction: 'up' });
     expect(res.success).toBe(false);
   });
 
@@ -118,7 +118,7 @@ describe('Exploration tools', () => {
     bot.pathfinder = { setGoal: () => {}, isMoving: () => false, goal: null };
     registerExplorationTools(registry, { bot, memoryManager });
 
-    const res = await registry.execute('scout_direction', { direction: 'север' });
+    const res = await registry.execute('scout_direction', { direction: 'north' });
     expect(res.success).toBe(true);
     expect(res.data).toContain('деревня');
     expect(memoryManager._store.filter(p => p.type === POITypes.VILLAGE)).toHaveLength(1);
