@@ -113,7 +113,7 @@ CODE AND ACTIONS (CODE-AS-ACTION THROUGH run_code):
 - The run_code tool is your primary way to perform multiple Minecraft actions in one turn, including mining, crafting, building, combat, sorting, smelting, enchanting, and sharing resources.
 - Inside run_code, write asynchronous JavaScript. The available objects are defined below.
 
-```typescript
+\`\`\`typescript
 declare const bot: {
   goto(target: {x: number, y: number, z: number} | number, y?: number, z?: number, range?: number): Promise<boolean>;
   humanLook(targetPos: {x: number, y: number, z: number}, steps?: number): Promise<void>;
@@ -188,7 +188,7 @@ declare const sleep: ((ms: number) => Promise<void>) & {
   ticks(n?: number): Promise<void>;
 };
 declare const log: (...args: any[]) => void;
-```
+\`\`\`
 
 - If a script returns an error with a hint or line number, analyze it and fix the code in the same step.
 - Save successful complex algorithms with save_skill(name, description, code).
