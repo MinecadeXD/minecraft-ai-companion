@@ -4,41 +4,10 @@ import { HumanErrorEngine } from './human-error-engine.js';
 const logger = createLogger('HUMAN_CHAT');
 
 /**
- * Раскладки соседних клавиш для естественных опечаток пальцев
+ * Adjacent keyboard keys used to simulate natural typing mistakes.
  */
 const KEYBOARD_ADJACENT = {
-  // ЙЦУКЕН (русская раскладка)
-  'й': ['ц', 'ф', 'я'],
-  'ц': ['й', 'у', 'ы', 'в'],
-  'у': ['ц', 'к', 'в', 'а'],
-  'к': ['у', 'е', 'а', 'п'],
-  'е': ['к', 'н', 'п', 'р'],
-  'н': ['е', 'г', 'р', 'о'],
-  'г': ['н', 'ш', 'о', 'л'],
-  'ш': ['г', 'щ', 'л', 'д'],
-  'щ': ['ш', 'з', 'д', 'ж'],
-  'з': ['щ', 'х', 'ж', 'э'],
-  'х': ['з', 'ъ', 'э'],
-  'ф': ['й', 'ы', 'я'],
-  'ы': ['ц', 'ф', 'в', 'ч'],
-  'в': ['у', 'ы', 'а', 'с'],
-  'а': ['к', 'в', 'п', 'м'],
-  'п': ['е', 'а', 'р', 'и'],
-  'р': ['н', 'п', 'о', 'т'],
-  'о': ['г', 'р', 'л', 'ь'],
-  'л': ['ш', 'о', 'д', 'б'],
-  'д': ['щ', 'л', 'ж', 'ю'],
-  'я': ['ф', 'ч'],
-  'ч': ['я', 'ы', 'с'],
-  'с': ['ч', 'в', 'м'],
-  'м': ['с', 'а', 'и'],
-  'и': ['м', 'п', 'т'],
-  'т': ['и', 'р', 'ь'],
-  'ь': ['т', 'о', 'б'],
-  'б': ['ь', 'л', 'ю'],
-  'ю': ['б', 'д'],
-
-  // QWERTY (английская раскладка)
+  // QWERTY keyboard layout.
   'q': ['w', 'a', 's'],
   'w': ['q', 'e', 's', 'd'],
   'e': ['w', 'r', 'd', 'f'],
@@ -68,22 +37,22 @@ const KEYBOARD_ADJACENT = {
 };
 
 /**
- * HumanChatFlow — симуляция физической печати живого игрока:
- * 1. Остановка персонажа / sneak на время набора в чат (руки на клавиатуре).
- * 2. Задержка набора 200-350 знаков/мин с нормальным распределением.
- * 3. Естественные случайные опечатки по соседним клавишам.
- * 4. ВАЖНО: в 65% случаев опечатка НЕ исправляется (понятно по смыслу),
- *    и только в 35% отправляется быстрое исправление (*приду).
- * 5. Разбивка длинных реплик на 2 короткие фразы в чате.
+ * HumanChatFlow — simulates the physical typing behavior of a real player:
+ * 1. Stop the character or sneak while typing in chat (hands on the keyboard).
+ * 2. Use a normally distributed typing delay of 200–350 characters per minute.
+ * 3. Introduce natural, random typos using adjacent keys.
+ * 4. IMPORTANT: in 65% of cases, the typo is NOT corrected if the meaning is clear,
+ *    and a quick correction is sent only 35% of the time (for example, *coming).
+ * 5. Split long messages into two shorter chat messages.
  */
 export class HumanChatFlow {
   /**
-   * Генерация опечатки в слове
+   * Generate a typo in a word.
    */
   static injectTypo(word) {
     if (!word || word.length < 4) return { typoWord: word, hasTypo: false, originalWord: word };
 
-    // Выбираем букву ближе к середине или концу слова
+    // Choose a character closer to the middle or end of the word.
     const charIndex = Math.max(1, Math.min(word.length - 2, Math.round(HumanErrorEngine.range(1, word.length - 2))));
     const char = word[charIndex].toLowerCase();
     const adjacent = KEYBOARD_ADJACENT[char];
@@ -105,7 +74,7 @@ export class HumanChatFlow {
   }
 
   /**
-   * Подготовка текста к отправке с реалистичной обработкой опечаток
+   * Prepare text for sending with realistic typo handling.
    * @param {string} text
    * @param {object} bot
    * @returns {{ messages: string[], correction: string | null }}
@@ -116,16 +85,16 @@ export class HumanChatFlow {
     const clean = text.trim();
     if (clean.length === 0) return { messages: [], correction: null };
 
-    // Проверяем психофизиологический стресс / усталость для шанса опечатки
+    // Check psychophysiological stress and fatigue when calculating the typo chance.
     const state = HumanErrorEngine.getPsychophysiologicalState(bot);
-    // Базовый шанс опечатки 4%, растет при стрессе/усталости до 14%
+    // The base typo chance is 4%; stress and fatigue can raise it to 14%.
     const typoProbability = 0.04 + state.stress * 0.06 + state.fatigue * 0.04;
 
     const words = clean.split(' ');
     let madeTypo = null;
 
     for (let i = 0; i < words.length; i++) {
-      // Опечатываемся максимум 1 раз за сообщение
+      // Allow at most one typo per message.
       if (!madeTypo && words[i].length >= 4 && HumanErrorEngine.chance(typoProbability, bot)) {
         const res = this.injectTypo(words[i]);
         if (res.hasTypo) {
@@ -137,18 +106,18 @@ export class HumanChatFlow {
 
     const processedText = words.join(' ');
 
-    // Решаем: исправлять ли опечатку?
-    // В 65% случаев реальный игрок НЕ исправляет опечатку, если слово и так читаемо!
+    // Decide whether to correct the typo.
+    // A real player leaves a readable typo uncorrected 65% of the time.
     let correction = null;
     if (madeTypo) {
-      const shouldCorrect = HumanErrorEngine.gaussian(0, 1) > 0.4; // ~35% шанс исправления
+      const shouldCorrect = HumanErrorEngine.gaussian(0, 1) > 0.4; // About a 35% chance of correction.
       if (shouldCorrect) {
         correction = `*${madeTypo.originalWord}`;
       }
     }
 
-    // Разбивка на 2 коротких сообщения, если есть логическое разделение (точка, запятая, союз)
-    // и длина > 40 символов
+    // Split into two short messages when there is a logical separator (period, comma, or conjunction)
+    // and the message is longer than 40 characters.
     const messages = [];
     if (processedText.length > 40 && HumanErrorEngine.chance(0.45, bot)) {
       const splitIndex = processedText.search(/[.,!?]\s+/);
@@ -166,10 +135,10 @@ export class HumanChatFlow {
   }
 
   /**
-   * Физическая симуляция набора сообщения персонажем в чат
+   * Physically simulate the character typing a message in chat.
    * @param {object} bot - Mineflayer bot
-   * @param {string} text - Текст сообщения
-   * @param {Function} [chatFn] - Функция отправки в чат
+   * @param {string} text - Message text.
+   * @param {Function} [chatFn] - Function used to send chat messages.
    */
   static async typeAndSend(bot, text, chatFn = null) {
     if (!text) return;
@@ -182,39 +151,39 @@ export class HumanChatFlow {
     for (let m = 0; m < messages.length; m++) {
       const msg = messages[m];
 
-      // 1. Физическая остановка: игрок нажимает 'T' и печатает руками
+      // 1. Stop moving physically: the player presses 'T' and types.
       if (bot && typeof bot.setControlState === 'function') {
         try {
           bot.setControlState('forward', false);
           bot.setControlState('sprint', false);
-          // В 30% случаев присаживается на шифт во время набора
+          // In 30% of cases, sneak while typing by holding Shift.
           if (HumanErrorEngine.chance(0.3, bot)) bot.setControlState('sneak', true);
         } catch (_) {}
       }
 
-      // 2. Расчет реалистичной задержки набора (240-340 CPM)
+      // 2. Calculate a realistic typing delay (240–340 characters per minute).
       const cpm = Math.max(180, Math.min(380, Math.round(HumanErrorEngine.gaussian(260, 35))));
       const msPerChar = 60000 / cpm;
       const typingTimeMs = Math.max(250, Math.min(2200, Math.round(msg.length * msPerChar)));
 
       await new Promise(r => setTimeout(r, typingTimeMs));
 
-      // 3. Отправка сообщения
+      // 3. Send the message.
       send(msg);
 
-      // Снимаем шифт
+      // Release Shift.
       if (bot && typeof bot.setControlState === 'function') {
         try { bot.setControlState('sneak', false); } catch (_) {}
       }
 
-      // Пауза между раздельными фразами (если было разбито)
+      // Pause between separate messages if the original was split.
       if (m < messages.length - 1) {
         const splitPause = Math.round(HumanErrorEngine.range(400, 700, bot));
         await new Promise(r => setTimeout(r, splitPause));
       }
     }
 
-    // 4. Если было решено исправить опечатку — шлем исправление через 600-1100мс
+    // 4. If the typo should be corrected, send the correction after 600–1100 ms.
     if (correction) {
       const correctionDelay = Math.round(HumanErrorEngine.range(650, 1100, bot));
       await new Promise(r => setTimeout(r, correctionDelay));
