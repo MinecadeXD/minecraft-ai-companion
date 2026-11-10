@@ -6,16 +6,16 @@ import { HumanErrorEngine } from './human-error-engine.js';
 const logger = createLogger('BUDDY_DYNAMICS');
 
 /**
- * BuddyDynamics — кооперативный этикет, взаимовыручка и забота о напарнике:
- * 1. shareLoot — делёж едой, слитками и инструментом с напарником.
- * 2. checkEmergencyHeal — спасение тиммейта при <8 HP / голоде (скидывает стейки).
- * 3. synchronousSleep — синхронный сон (ставит кровать рядом, говорит "го спать").
- * 4. yieldHallway — уступка дороги в узких проходах 1x1 (шаг назад / в сторону).
- * 5. celebrateVictory — победный танец (шифт-спам и прыжки) при алмазах / победе.
+ * BuddyDynamics — cooperative etiquette, mutual support, and looking after teammates:
+ * 1. shareLoot — share food, ingots, and tools with a teammate.
+ * 2. checkEmergencyHeal — help a teammate with low health (<8 HP) or hunger by dropping food.
+ * 3. synchronousSleep — coordinate sleep (places a nearby bed and suggests going to sleep).
+ * 4. yieldHallway — yield in narrow 1x1 passages by stepping back or aside.
+ * 5. celebrateVictory — celebrate a shared win or diamond discovery with a brief crouch-and-jump dance.
  */
 export class BuddyDynamics {
   /**
-   * Найти сущность напарника
+   * Find a teammate entity
    */
   static findBuddy(bot, playerName = null) {
     if (!bot?.entities) return null;
@@ -32,22 +32,22 @@ export class BuddyDynamics {
   }
 
   /**
-   * Поделиться ресурсами или запасным инструментом с напарником
+   * Share resources or a spare tool with a teammate
    */
   static async shareLoot(bot, playerName, itemName, count = 1) {
     const buddy = this.findBuddy(bot, playerName);
-    if (!buddy) throw new Error(`Напарник ${playerName || 'игрок'} не найден рядом`);
+    if (!buddy) throw new Error(`Teammate ${playerName || 'player'} was not found nearby`);
 
     const item = (bot.inventory?.items() || []).find(i => i.name === itemName || i.name.includes(itemName));
-    if (!item) throw new Error(`Нет предмета ${itemName} в инвентаре для передачи`);
+    if (!item) throw new Error(`Item ${itemName} is not available in the inventory to share`);
 
-    // Поиск предмета в инвентаре с естественной человеческой задержкой
+    // Search the inventory with a natural human-like delay
     const searchDelay = Math.round(HumanErrorEngine.range(50, 120, bot));
     if (searchDelay > 100 && process.env.NODE_ENV !== 'test') {
       await new Promise(r => setTimeout(r, searchDelay));
     }
 
-    // Подходим на 2.5 метра
+    // Move within 2.5 blocks
     if (typeof bot.lookAt === 'function') {
       await HumanMotor.smoothLook(bot, buddy.position.offset(0, buddy.height || 1.6, 0), 4);
     }
@@ -58,10 +58,10 @@ export class BuddyDynamics {
 
     if (typeof bot.toss === 'function') {
       await bot.toss(item.type, null, Math.min(count, item.count));
-      logger.info(`[BUDDY] 🤝 Скинул напарнику ${buddy.username || 'другу'} предмет ${item.name} (${count} шт)`);
+      logger.info(`[BUDDY] 🤝 Dropped ${item.name} (${count}) for teammate ${buddy.username || 'friend'}`);
     }
 
-    // Дружеский шифт-тап в знак уважения
+    // A friendly crouch tap as a sign of respect
     if (typeof bot.setControlState === 'function') {
       bot.setControlState('sneak', true);
       const tapDuration = Math.round(HumanErrorEngine.range(100, 140, bot));
@@ -72,20 +72,20 @@ export class BuddyDynamics {
   }
 
   /**
-   * Экстренная помощь едой, если здоровье напарника критическое (<8 HP) или он голоден
+   * Emergency food support when a teammate's health is critical (<8 HP) or they are hungry
    */
   static async checkEmergencyHeal(bot, playerName = null) {
     const buddy = this.findBuddy(bot, playerName);
     if (!buddy) return false;
 
-    // В условиях боевой паники или перегрузки внимания проверяем вероятность заметить бедствие
+    // Account for the chance of noticing a teammate in distress when attention is overloaded
     const noticed = HumanErrorEngine.chance(0.96, bot);
     if (!noticed) {
-      logger.debug(`[BUDDY] Из-за когнитивной загрузки не сразу заметил низкое здоровье напарника`);
+      logger.debug(`[BUDDY] Did not immediately notice the teammate's low health due to cognitive load`);
       return false;
     }
 
-    // Ищем еду в инвентаре
+    // Look for food in the inventory
     const food = (bot.inventory?.items() || []).find(i =>
       ['cooked_beef', 'cooked_porkchop', 'bread', 'baked_potato', 'golden_apple', 'apple'].includes(i.name)
     );
@@ -94,7 +94,7 @@ export class BuddyDynamics {
     const dist = bot.entity.position.distanceTo(buddy.position);
     if (dist <= 6) {
       if (typeof bot.chat === 'function') {
-        bot.chat('на поешь, щас откиснешь');
+        bot.chat('Here, eat this before you pass out');
       }
       return this.shareLoot(bot, buddy.username, food.name, Math.min(4, food.count));
     }
@@ -102,7 +102,7 @@ export class BuddyDynamics {
   }
 
   /**
-   * Синхронный сон в кровати
+   * Coordinated bed sleep
    */
   static async synchronousSleep(bot, bedBlock = null) {
     if (!bot) return false;
@@ -115,7 +115,7 @@ export class BuddyDynamics {
       });
     }
 
-    // Если кровати нет поблизости, но есть в инвентаре — ставим рядом
+    // If there is no nearby bed but one is in the inventory, place it nearby
     if (!bed) {
       const bedItem = (bot.inventory?.items() || []).find(i => i.name.includes('_bed'));
       if (bedItem && bot.entity?.position && typeof bot.placeBlock === 'function') {
@@ -132,21 +132,21 @@ export class BuddyDynamics {
 
     if (bed && typeof bot.sleep === 'function') {
       if (typeof bot.chat === 'function') {
-        bot.chat('го спать, ночь на дворе');
+        bot.chat('Let's get some sleep; it's nighttime');
       }
       try {
         await bot.sleep(bed);
-        logger.info(`[BUDDY] 🛏️ Лёг спать в кровать`);
+        logger.info(`[BUDDY] 🛏️ Went to sleep in a bed`);
         return true;
       } catch (err) {
-        logger.debug(`Не удалось лечь спать: ${err.message}`);
+        logger.debug(`Could not get into bed: ${err.message}`);
       }
     }
     return false;
   }
 
   /**
-   * Уступка прохода в узком тоннеле 1x1 при приближении напарника
+   * Yield the way in a narrow 1x1 tunnel when a teammate approaches
    */
   static async yieldHallway(bot, playerName = null) {
     const buddy = this.findBuddy(bot, playerName);
@@ -154,12 +154,12 @@ export class BuddyDynamics {
 
     const dist = bot.entity.position.distanceTo(buddy.position);
     if (dist < 2.5) {
-      // Человеческая пауза замешательства перед уступкой дороги (150-250мс)
+      // A natural hesitation before yielding (150–250 ms)
       const hesitation = Math.round(HumanErrorEngine.range(150, 250, bot));
       if (process.env.NODE_ENV !== 'test') {
         await new Promise(r => setTimeout(r, hesitation));
       }
-      // Отходим назад на 1 блок
+      // Step back one block
       if (typeof bot.setControlState === 'function') {
         bot.setControlState('back', true);
         bot.setControlState('sneak', true);
@@ -167,7 +167,7 @@ export class BuddyDynamics {
         await new Promise(r => setTimeout(r, backDuration));
         bot.setControlState('back', false);
         bot.setControlState('sneak', false);
-        logger.info(`[BUDDY] 🚶 Уступил проход напарнику в узком коридоре`);
+        logger.info(`[BUDDY] 🚶 Yielded the narrow passage to a teammate`);
         return true;
       }
     }
@@ -175,12 +175,12 @@ export class BuddyDynamics {
   }
 
   /**
-   * Победный танец (шифт-спам и прыжки) при совместной победе или нахождении алмазов
+   * Celebration dance (crouching and jumping) after a shared victory or diamond discovery
    */
   static async celebrateVictory(bot) {
     if (!bot || typeof bot.setControlState !== 'function') return;
 
-    logger.info(`[BUDDY] 🎉 Победное празднование!`);
+    logger.info(`[BUDDY] 🎉 Celebrating a victory!`);
     const crouches = Math.max(2, Math.min(5, Math.round(HumanErrorEngine.range(2.6, 3.8, bot))));
     for (let i = 0; i < crouches; i++) {
       bot.setControlState('sneak', true);
