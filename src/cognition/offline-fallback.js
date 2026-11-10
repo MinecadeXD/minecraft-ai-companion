@@ -63,17 +63,17 @@ export class OfflineFallbackEngine {
 
     // Safety is deliberately non-negotiable and preserves the original contract.
     if (Number(state.health ?? 20) <= 10) {
-      return this._decision('eat_food', 'Оффлайн-режим: здоровье критически низкое', factors, 'safety');
+      return this._decision('eat_food', 'Offline mode: health is critically low', factors, 'safety');
     }
 
     // A person may recover a loss instead of avoiding the place forever.
     const loss = this._recentLoss(errors);
     if (loss && (goal.recovery || this._routeForRecovery(routes, goal))) {
       if (recoveryDrive >= 0.65 && (risk >= 0.45 || thrillSeeking >= 0.75)) {
-        return this._decision('retry_with_adaptation', 'Оффлайн-режим: вернуть потерянное, изменив подход', factors, 'recovery');
+        return this._decision('retry_with_adaptation', 'Offline mode: recover what was lost using a different approach', factors, 'recovery');
       }
       if (lossAversion >= 0.7 || risk < 0.35) {
-        return this._decision('prepare_and_return', 'Оффлайн-режим: подготовиться и вернуться к незавершённой задаче', factors, 'recovery');
+        return this._decision('prepare_and_return', 'Offline mode: prepare and return to the unfinished task', factors, 'recovery');
       }
     }
 
@@ -83,35 +83,35 @@ export class OfflineFallbackEngine {
     const stayOutAtNight = Boolean(habits.stayOutAtNight || habits.continueAtNight || goal.urgent)
       && risk >= 0.65 && Number(state.health ?? 20) > 14;
     if (night && !stayOutAtNight && habits.returnHomeAtNight !== false) {
-      return this._decision('go_home', 'Оффлайн-режим: ночь, возвращаюсь в безопасное место', factors, 'safety');
+      return this._decision('go_home', 'Offline mode: night has fallen; returning to a safe place', factors, 'safety');
     }
     if (plannedAction) {
-      return this._decision(plannedAction, 'Оффлайн-режим: продолжаю незавершённый план', factors, 'goal');
+      return this._decision(plannedAction, 'Offline mode: continuing the unfinished plan', factors, 'goal');
     }
 
     // Hunger matters, but should not erase a clearly urgent, well-prepared goal.
     if (Number(state.food ?? 20) <= 6 && hasFood && (!goal.urgent || Number(state.food ?? 20) <= 3)) {
-      return this._decision('eat_food', 'Оффлайн-режим: пополнить еду перед дальнейшими действиями', factors, 'need');
+      return this._decision('eat_food', 'Offline mode: replenish food before continuing', factors, 'need');
     }
 
     if (goal.text) {
       const route = this._routeForGoal(routes, goal);
-      if (route) return this._decision('follow_saved_route', 'Оффлайн-режим: использую сохранённый маршрут для текущей цели', { ...factors, route }, 'goal');
+      if (route) return this._decision('follow_saved_route', 'Offline mode: using the saved route for the current goal', { ...factors, route }, 'goal');
       if (goal.kind === 'build' && (habits.prepareMaterials || extra.missingMaterials)) {
-        return this._decision('prepare_for_goal', 'Оффлайн-режим: сначала готовлю материалы по привычному плану', factors, 'goal');
+        return this._decision('prepare_for_goal', 'Offline mode: preparing materials first using the usual plan', factors, 'goal');
       }
       if (goal.kind === 'mine' || goal.kind === 'explore' || goal.kind === 'recover') {
         const action = risk >= 0.65 || thrillSeeking >= 0.8 ? 'continue_carefully' : 'prepare_and_return';
-        return this._decision(action, 'Оффлайн-режим: держу фокус на личной цели', factors, 'goal');
+        return this._decision(action, 'Offline mode: staying focused on the personal goal', factors, 'goal');
       }
-      return this._decision('resume_goal', 'Оффлайн-режим: возвращаюсь к текущей цели', factors, 'goal');
+      return this._decision('resume_goal', 'Offline mode: returning to the current goal', factors, 'goal');
     }
 
     if (state.nearbyPlayer || extra.nearbyPlayer || habits.followPlayer) {
-      return this._decision('follow_player', 'Оффлайн-режим: держусь рядом с игроком', factors, 'social');
+      return this._decision('follow_player', 'Offline mode: staying near the player', factors, 'social');
     }
     // Keep the historical default: without a goal, stay with the player.
-    return this._decision('follow_player', 'Оффлайн-режим: следование за игроком', factors, 'social');
+    return this._decision('follow_player', 'Offline mode: following the player', factors, 'social');
   }
 
   _decision(action, reason, factors, priority) {
@@ -122,14 +122,14 @@ export class OfflineFallbackEngine {
     if (!raw) return { text: '', kind: null, urgent: false, recovery: false };
     const text = textOf(raw);
     const lower = text.toLowerCase();
-    const kind = raw?.kind || raw?.type || (/(шахт|копа|руд|mine|diamond|алмаз)/i.test(lower) ? 'mine'
-      : /(стро|build|ферм|farm)/i.test(lower) ? 'build'
-        : /(исслед|explor|путеше|найти|recover|вернуть|вещи)/i.test(lower) ? 'explore' : null);
+    const kind = raw?.kind || raw?.type || (/(mine|mining|ore|diamond)/i.test(lower) ? 'mine'
+      : /(build|farm)/i.test(lower) ? 'build'
+        : /(explor|travel|find|recover|return|items)/i.test(lower) ? 'explore' : null);
     return {
       text,
       kind,
       urgent: Boolean(raw?.urgent || raw?.priority === 'urgent' || raw?.priority >= 0.9),
-      recovery: Boolean(raw?.recovery || /(потерян|умер|вещи|recover|death|lost)/i.test(lower)),
+      recovery: Boolean(raw?.recovery || /(lost|died|items|recover|death)/i.test(lower)),
       nextAction: raw?.nextAction || raw?.action || null,
     };
   }
@@ -152,18 +152,18 @@ export class OfflineFallbackEngine {
   }
 
   _routeForRecovery(routes, goal) {
-    return routes.some((route) => route?.purpose === 'recovery' || /recover|потерян|смерт|вещи/i.test(textOf(route))) || goal.recovery;
+    return routes.some((route) => route?.purpose === 'recovery' || /recover|lost|death|items/i.test(textOf(route))) || goal.recovery;
   }
 
   _recentLoss(errors) {
-    return errors.find((error) => /death|умер|погиб|lost|потер|убил|вещи/i.test(textOf(error)));
+    return errors.find((error) => /death|died|lost|killed|items/i.test(textOf(error)));
   }
 
   _hasFood(state, extra) {
     if (extra.hasFood !== undefined) return Boolean(extra.hasFood);
     const inventory = state.inventory || extra.inventory || [];
-    if (Array.isArray(inventory)) return inventory.some((item) => /bread|beef|pork|potato|apple|еда|хлеб|мяс|карто|яблок/i.test(textOf(item)) && Number(item.count ?? 1) > 0);
-    return Boolean(state.inventorySummary && /bread|beef|pork|potato|apple|еда|хлеб|мяс|карто|яблок/i.test(state.inventorySummary));
+    if (Array.isArray(inventory)) return inventory.some((item) => /bread|beef|pork|potato|apple/i.test(textOf(item)) && Number(item.count ?? 1) > 0);
+    return Boolean(state.inventorySummary && /bread|beef|pork|potato|apple/i.test(state.inventorySummary));
   }
 
   _isNight(timeOfDay) {
