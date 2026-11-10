@@ -4,16 +4,16 @@ import { sceneObserver } from '../perception/scene-observer.js';
 const logger = createLogger('CONSCIOUSNESS');
 
 /**
- * StreamOfConsciousness — непрерывный поток сознания и свободная воля бота.
+ * StreamOfConsciousness — the bot's continuous stream of consciousness and free will.
  *
- * Вместо шаблонных триггеров и ограниченных if/else сценариев, эта система
- * периодически или при заметных событиях мира (смерть тиммейта, закат, праздность)
- * формирует целостный срез органов чувств и воспоминаний, и задаёт Gemini
- * открытый вопрос:
- * "Что происходит? О чём ты думаешь? Чего ты хочешь прямо сейчас?"
+ * Instead of canned triggers and limited if/else scenarios, this system
+ * periodically or when notable world events occur (a teammate's death, sunset, or inactivity)
+ * builds a combined snapshot of sensory input and memories, then asks Gemini
+ * an open-ended question:
+ * "What's happening? What are you thinking about? What do you want right now?"
  *
- * Бот свободен: он может сказать что-то в чат, написать любой код через run_code,
- * зафиксировать мысль в памяти или просто продолжить заниматься своими делами.
+ * The bot is free to say something in chat, write code through run_code,
+ * record a thought in memory, or simply continue with its current activities.
  */
 export class StreamOfConsciousness {
   constructor({
@@ -30,7 +30,7 @@ export class StreamOfConsciousness {
     this.config = config;
 
     this.checkIntervalMs = config.consciousnessCheckIntervalMs ?? 5000;
-    this.minThoughtIntervalMs = config.minThoughtIntervalMs ?? 30000; // не чаще раза в 30с
+    this.minThoughtIntervalMs = config.minThoughtIntervalMs ?? 30000; // no more than once every 30 seconds
     this.lastThoughtTime = 0;
     this.lastActivityTime = Date.now();
     this.lastSeenSunsetTime = 0;
@@ -56,7 +56,7 @@ export class StreamOfConsciousness {
       this._pulse();
     }, this.checkIntervalMs);
 
-    logger.info('[CONSCIOUSNESS] Поток сознания запущен');
+    logger.info('[CONSCIOUSNESS] Stream of consciousness started');
   }
 
   stop() {
@@ -66,7 +66,7 @@ export class StreamOfConsciousness {
       this.timer = null;
     }
     this._detachBotEvents();
-    logger.info('[CONSCIOUSNESS] Поток сознания остановлен');
+    logger.info('[CONSCIOUSNESS] Stream of consciousness stopped');
   }
 
   markActivity() {
@@ -77,13 +77,13 @@ export class StreamOfConsciousness {
     this._detachBotEvents();
     if (!this.bot?.on) return;
 
-    // Смерть игрока рядом
+    // A nearby player dies
     const onEntityDead = (entity) => {
       if (entity?.type === 'player' && entity.username && entity.username !== this.bot?.username) {
-        const pos = entity.position ? `[${Math.round(entity.position.x)}, ${Math.round(entity.position.y)}, ${Math.round(entity.position.z)}]` : 'неизвестно';
+        const pos = entity.position ? `[${Math.round(entity.position.x)}, ${Math.round(entity.position.y)}, ${Math.round(entity.position.z)}]` : 'unknown';
         this.triggerImpulse({
           type: 'teammate_death',
-          eventDesc: `Твой напарник ${entity.username} погиб на координатах ${pos}! Его вещи пропадут через 5 минут.`,
+          eventDesc: `Your teammate ${entity.username} died at ${pos}! Their items will disappear in 5 minutes.`,
           priority: 'high',
         });
       }
@@ -110,26 +110,26 @@ export class StreamOfConsciousness {
 
     const now = Date.now();
 
-    // 1. Проверка заката / наступления ночи
+    // 1. Check for sunset / nightfall
     const timeOfDay = this.bot.time?.timeOfDay;
     if (typeof timeOfDay === 'number' && timeOfDay >= 12000 && timeOfDay <= 13500) {
-      if (now - this.lastSeenSunsetTime > 600000) { // раз в игровой день
+      if (now - this.lastSeenSunsetTime > 600000) { // once per in-game day
         this.lastSeenSunsetTime = now;
         await this.triggerImpulse({
           type: 'sunset',
-          eventDesc: 'Солнце заходит за горизонт, наступает ночь. Скоро в темноте начнут спавниться мобы.',
+          eventDesc: 'The sun is setting and night is approaching. Mobs will soon begin spawning in the dark.',
         });
         return;
       }
     }
 
-    // 2. Проверка праздности / свободного времени (Idle)
+    // 2. Check for inactivity / free time (idle)
     const idleDuration = now - this.lastActivityTime;
     const isMoving = this.bot.pathfinder?.isMoving?.();
     if (!isMoving && idleDuration >= 45000 && (now - this.lastThoughtTime >= this.minThoughtIntervalMs)) {
       await this.triggerImpulse({
         type: 'idle_curiosity',
-        eventDesc: `Ты стоишь без дела уже ${Math.round(idleDuration / 1000)}с.`,
+        eventDesc: `You've been idle for ${Math.round(idleDuration / 1000)} seconds.`,
       });
     }
   }
@@ -145,14 +145,14 @@ export class StreamOfConsciousness {
     this.lastThoughtTime = now;
     this.lastActivityTime = now;
 
-    // Собираем полное сенсорное восприятие
+    // Gather a complete sensory snapshot
     let sensory = '';
     try {
       const scene = sceneObserver.observe(this.bot);
       if (scene) sensory = sceneObserver.describe(scene);
     } catch (_) {}
 
-    // Собираем актуальные воспоминания и заметки
+    // Gather current memories and notes
     let memories = '';
     try {
       if (this.memoryManager?.getMemoryContext) {
@@ -161,22 +161,22 @@ export class StreamOfConsciousness {
     } catch (_) {}
 
     const prompt = [
-      `[ВНУТРЕННИЙ ПОТОК СОЗНАНИЯ]`,
-      eventDesc ? `Что произошло: ${eventDesc}` : null,
-      sensory ? `Окружение: ${sensory}` : null,
-      memories ? `Твоя память и мысли:\n${memories}` : null,
-      `Чего ты хочешь прямо сейчас? Ты обладаешь полной свободой воли: можешь написать код через run_code (пойти исследовать, строить, собирать ресурсы, защищаться), ответить тиммейту в чат, зафиксировать мысль в memory.remember(...), или просто отдохнуть. Решать тебе.`
+      `[INTERNAL STREAM OF CONSCIOUSNESS]`,
+      eventDesc ? `What happened: ${eventDesc}` : null,
+      sensory ? `Surroundings: ${sensory}` : null,
+      memories ? `Your memories and thoughts:\n${memories}` : null,
+      `What do you want to do right now? You have full autonomy: you can write code through run_code (explore, build, gather resources, or defend yourself), reply to a teammate in chat, save a thought with memory.remember(...), or simply take a break. The choice is yours.`
     ].filter(Boolean).join('\n\n');
 
     try {
-      logger.info(`[CONSCIOUSNESS] Импульс мысли (${type}): "${eventDesc || type}"`);
+      logger.info(`[CONSCIOUSNESS] Thought impulse (${type}): "${eventDesc || type}"`);
       const reply = await this.aiBrain.processMessage(prompt, this.worldState);
       if (reply && this.bot?.chat && typeof this.bot.chat === 'function') {
         this.bot.chat(reply);
       }
       return reply;
     } catch (err) {
-      logger.debug(`[CONSCIOUSNESS] Ошибка обработки потока сознания: ${err.message}`);
+      logger.debug(`[CONSCIOUSNESS] Error processing stream of consciousness: ${err.message}`);
       return null;
     }
   }
