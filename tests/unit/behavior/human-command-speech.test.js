@@ -12,14 +12,14 @@ describe('Mature Zero-Template Speech & Command Handling', () => {
 
     const situationDesc = speech._describeSituation('player_command', {
       speaker: 'kustash01',
-      message: 'стой тут крипер',
+      message: 'stop here creeper',
       intent: 'STOP',
       commandAction: 'stop',
     });
 
-    expect(situationDesc).toContain('kustash01 скомандовал');
-    expect(situationDesc).toContain('стой тут крипер');
-    expect(situationDesc).toContain('ты встал на месте');
+    expect(situationDesc).toContain('kustash01 gave a command');
+    expect(situationDesc).toContain('stop here creeper');
+    expect(situationDesc).toContain('you are standing still');
   });
 
   it('AdvancedNaturalSpeech post-processes responses: strips brackets and trailing dots for short replies', () => {
@@ -28,11 +28,11 @@ describe('Mature Zero-Template Speech & Command Handling', () => {
       agentName: 'GeminiBot',
     });
 
-    const processedWithBrackets = speech._processResponse('стою))', { mentalFatigue: 0 });
-    expect(processedWithBrackets).toBe('стою');
+    const processedWithBrackets = speech._processResponse('I am stopping))', { mentalFatigue: 0 });
+    expect(processedWithBrackets).toBe('I am stopping');
 
-    const processedWithDot = speech._processResponse('ща подойду.', { mentalFatigue: 0 });
-    expect(processedWithDot).toBe('ща подойду');
+    const processedWithDot = speech._processResponse('coming right over.', { mentalFatigue: 0 });
+    expect(processedWithDot).toBe('coming right over');
   });
 
   it('AdvancedNaturalSpeech _getNaturalFallback never contains bracket smiles and responds contextually', () => {
@@ -43,19 +43,19 @@ describe('Mature Zero-Template Speech & Command Handling', () => {
 
     // Test multiple iterations to cover random choices
     for (let i = 0; i < 20; i++) {
-      const stopFallback = speech._getNaturalFallback({ message: 'стой!', intent: 'STOP' });
+      const stopFallback = speech._getNaturalFallback({ message: 'stop!', intent: 'STOP' });
       expect(stopFallback).not.toContain(')');
       expect(stopFallback).not.toContain('(');
 
-      const waitFallback = speech._getNaturalFallback({ message: 'подожди секунду', intent: 'WAIT' });
+      const waitFallback = speech._getNaturalFallback({ message: 'wait a second', intent: 'WAIT' });
       expect(waitFallback).not.toContain(')');
 
-      const followFallback = speech._getNaturalFallback({ message: 'за мной', intent: 'FOLLOW' });
+      const followFallback = speech._getNaturalFallback({ message: 'follow me', intent: 'FOLLOW' });
       expect(followFallback).not.toContain(')');
 
-      const greetingFallback = speech._getNaturalFallback({ message: 'привет' });
+      const greetingFallback = speech._getNaturalFallback({ message: 'hello' });
       expect(greetingFallback).not.toContain(')');
-      expect(greetingFallback).not.toContain('куку');
+      expect(greetingFallback).not.toContain('hello there');
     }
   });
 
@@ -73,7 +73,7 @@ describe('Mature Zero-Template Speech & Command Handling', () => {
     };
 
     const mockHumanController = {
-      generateResponse: vi.fn().mockResolvedValue('стою'),
+      generateResponse: vi.fn().mockResolvedValue('I am stopping'),
       processEvent: vi.fn(),
     };
 
@@ -116,7 +116,7 @@ describe('Mature Zero-Template Speech & Command Handling', () => {
 
     // Call chat handler via registered event
     expect(chatCallback).toBeTypeOf('function');
-    await chatCallback('kustash01', 'стой');
+    await chatCallback('kustash01', 'stop');
 
     // Verify local stop was executed
     expect(mockMovementController.stop).toHaveBeenCalled();
@@ -129,13 +129,13 @@ describe('Mature Zero-Template Speech & Command Handling', () => {
       'player_command',
       expect.objectContaining({
         speaker: 'kustash01',
-        message: 'стой',
+        message: 'stop',
         intent: PlayerIntents.STOP,
         isOwner: true,
       })
     );
 
     // Verify bot spoke the generated response
-    expect(mockBot.chat).toHaveBeenCalledWith('стою');
+    expect(mockBot.chat).toHaveBeenCalledWith('I am stopping');
   });
 });
