@@ -10,7 +10,7 @@ import { SkillSystem, SkillNames } from '../../src/behavior/player-simulation/sk
 describe('End-to-End Human-Like Scenarios A through H', () => {
   it('Scenario A: Collaborative building & missing material calculation', () => {
     const pm = new LongTermProjectManager();
-    pm.createProject('cozy_base', 'Уютная база', 'medieval', { oak_planks: 64, cobblestone: 32 });
+    pm.createProject('cozy_base', 'Cozy Base', 'medieval', { oak_planks: 64, cobblestone: 32 });
 
     const currentInventory = [{ name: 'oak_planks', count: 20 }, { name: 'cobblestone', count: 32 }];
     const missing = pm.calculateMissingMaterials('cozy_base', currentInventory);
@@ -34,19 +34,19 @@ describe('End-to-End Human-Like Scenarios A through H', () => {
   it('Scenario D: Contextual reference resolution for base and player position', () => {
     const dm = new DialogueManager();
     const mockMemory = { getPOI: () => ({ x: 100, y: 64, z: 200 }) };
-    const resolved = dm.resolveReferences('Пойдём домой на нашу базу', {}, mockMemory);
-    expect(resolved).toContain('координаты базы X:100 Y:64 Z:200');
+    const resolved = dm.resolveReferences('Let us go home to our base', {}, mockMemory);
+    expect(resolved).toContain('base coordinates X:100 Y:64 Z:200');
   });
 
   it('Scenario F: Session restart and context reconstruction', () => {
     const sm = new SessionManager();
     const mockMemory = {
       getPOI: () => ({ x: 100, y: 64, z: 200 }),
-      episodic: { getRecentEpisodes: () => [{ description: 'Построили склад' }] },
+      episodic: { getRecentEpisodes: () => [{ description: 'Built a storage room' }] },
     };
     const ctx = sm.getReconstructedContext(mockMemory);
-    expect(ctx).toContain('Мы на базе');
-    expect(ctx).toContain('Построили склад');
+    expect(ctx).toContain('We are at the base');
+    expect(ctx).toContain('Built a storage room');
   });
 
   it('Scenario G & H: Offline fallback transition and recovery', () => {
