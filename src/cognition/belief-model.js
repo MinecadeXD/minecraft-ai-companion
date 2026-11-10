@@ -1,9 +1,9 @@
 import logger from '../utils/logger.js';
 
 export const ConfidenceTier = {
-  CERTAIN: 'certain',     // >= 0.85 ("Я точно знаю")
-  PROBABLE: 'probable',   // 0.50 - 0.84 ("Я предполагаю / скорее всего")
-  UNCERTAIN: 'uncertain', // < 0.50 ("Я не уверен, надо проверить")
+  CERTAIN: 'certain',     // >= 0.85 ("I know for certain")
+  PROBABLE: 'probable',   // 0.50 - 0.84 ("I assume / most likely")
+  UNCERTAIN: 'uncertain', // < 0.50 ("I am not sure; I need to check")
 };
 
 export class BeliefModel {
@@ -65,10 +65,10 @@ export class BeliefModel {
    */
   formatConfidencePrefix(key) {
     const b = this.getBelief(key);
-    if (!b) return 'Я точно не знаю, ';
-    if (b.tier === ConfidenceTier.CERTAIN) return 'Я знаю, что ';
-    if (b.tier === ConfidenceTier.PROBABLE) return 'Скорее всего, ';
-    return 'Не уверен на 100%, но кажется, ';
+    if (!b) return 'I do not know for certain, ';
+    if (b.tier === ConfidenceTier.CERTAIN) return 'I know that ';
+    if (b.tier === ConfidenceTier.PROBABLE) return 'Most likely, ';
+    return 'I am not 100% sure, but it seems that ';
   }
 
   /**
