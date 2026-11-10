@@ -13,7 +13,7 @@ describe('FidgetController (Anti-AFK Latency Fidgeting)', () => {
     fidget.stopThinking();
   });
 
-  it('запускает режим размышления и останавливает его', () => {
+  it('starts and stops the thinking mode', () => {
     const mockBot = {
       entity: { position: vec3(0, 64, 0), yaw: 0, pitch: 0 },
       look: vi.fn().mockResolvedValue(true),
@@ -27,7 +27,7 @@ describe('FidgetController (Anti-AFK Latency Fidgeting)', () => {
     expect(fidget.isThinking).toBe(false);
   });
 
-  it('смотрит в сторону игрока поблизости при размышлении', async () => {
+  it('looks toward a nearby player while thinking', async () => {
     const mockBot = {
       entity: { position: vec3(0, 64, 0), yaw: 0, pitch: 0 },
       entities: {
@@ -47,7 +47,7 @@ describe('FidgetController (Anti-AFK Latency Fidgeting)', () => {
     expect(mockBot.look).toHaveBeenCalled();
   });
 
-  it('делает естественные микроколебания камеры, если игроков рядом нет', async () => {
+  it('makes natural micro-movements with the camera when no players are nearby', async () => {
     const mockBot = {
       entity: { position: vec3(0, 64, 0), yaw: 1.2, pitch: 0.1 },
       entities: {},
