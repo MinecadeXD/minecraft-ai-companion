@@ -22,10 +22,10 @@ export class HumanErrorEngine {
     if (CoreHumanErrorEngine.chance(slipProb, context)) {
       this.lapseCount++;
       const lapses = [
-        { type: 'wrong_hotbar_slot', message: 'Ой, не тот слот достал!', recovery: 'swap_to_correct_slot' },
-        { type: 'straight_down_dig_hesitation', message: 'Стоп, чуть под себя не копнул!', recovery: 'step_back_to_2_wide' },
-        { type: 'forgot_to_eat_first', message: 'Стоп, надо же перекусить сначала.', recovery: 'eat_food' },
-        { type: 'fleeting_enderman_gaze', message: 'Чёрт, случайно на эндермена глянул!', recovery: 'panic_find_water' },
+        { type: 'wrong_hotbar_slot', message: 'Oops, selected the wrong slot!', recovery: 'swap_to_correct_slot' },
+        { type: 'straight_down_dig_hesitation', message: 'Wait, I almost dug the block beneath me!', recovery: 'step_back_to_2_wide' },
+        { type: 'forgot_to_eat_first', message: 'Wait, I should eat something first.', recovery: 'eat_food' },
+        { type: 'fleeting_enderman_gaze', message: 'Oops, I accidentally looked at an Enderman!', recovery: 'panic_find_water' },
       ];
 
       const selected = CoreHumanErrorEngine.choice(lapses);
