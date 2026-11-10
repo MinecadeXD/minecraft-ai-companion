@@ -86,7 +86,7 @@ export class FrameCapture {
       const buf = canvas.toBuffer ? canvas.toBuffer('image/png') : null;
       return buf;
     } catch (err) {
-      logger.warn(`Ошибка захвата кадра: ${err.message}`);
+      logger.warn(`Frame capture error: ${err.message}`);
       return null;
     } finally {
       try { renderer?.dispose?.(); } catch (_) {}
