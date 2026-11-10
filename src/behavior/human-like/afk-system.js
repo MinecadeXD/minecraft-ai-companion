@@ -4,55 +4,55 @@ import { HumanErrorEngine } from '../human-error-engine.js';
 const logger = createLogger('AFK_SYSTEM');
 
 /**
- * Система случайных AFK и перерывов.
- * Боты иногда отходят как настоящие люди.
+ * Random AFK and break system.
+ * Bots occasionally step away, just like real people.
  */
 export class AFKSystem {
   constructor(profile, aiBrain = null) {
     this.profile = profile;
     this.aiBrain = aiBrain;
 
-    // Статус AFK
+    // AFK status
     this.isAFK = false;
     this.afkStartTime = null;
     this.afkReason = null;
     this.plannedReturnTime = null;
 
-    // История AFK для реалистичности
+    // AFK history for realism
     this.afkHistory = [];
 
-    // Последний раз когда был AFK
+    // Last AFK time
     this.lastAFKTime = Date.now();
   }
 
   /**
-   * Проверяет должен ли бот уйти в AFK
+   * Check whether the bot should go AFK
    */
   async shouldGoAFK(context = {}) {
     const { tiredness, sessionDuration, boredom, lastAFKMinutesAgo } = context;
 
-    // Не уходим в AFK если только недавно вернулись
+    // Do not go AFK if the bot has only just returned
     if (lastAFKMinutesAgo < 20) {
       return { shouldAFK: false, reason: 'recently_returned' };
     }
 
-    // Базовая вероятность AFK
-    let afkChance = 0.02; // 2% базовый шанс (каждые ~50 проверок)
+    // Base AFK probability
+    let afkChance = 0.02; // 2% base chance (roughly once every 50 checks)
 
-    // Усталость увеличивает шанс AFK
+    // Fatigue increases the chance of going AFK
     if (tiredness > 0.8) {
       afkChance += 0.15;
     } else if (tiredness > 0.6) {
       afkChance += 0.08;
     }
 
-    // Долгая сессия - больше шанс отойти
+    // Longer sessions increase the chance of stepping away
     const sessionHours = sessionDuration / 60;
     if (sessionHours > 2) {
       afkChance += 0.05 * (sessionHours - 2);
     }
 
-    // Скука увеличивает шанс отойти
+    // Boredom increases the chance of stepping away
     if (boredom > 0.7) {
       afkChance += 0.08;
     }
@@ -72,22 +72,22 @@ export class AFKSystem {
   }
 
   /**
-   * Планирует детали AFK
+   * Plan AFK details
    */
   async _planAFK(tiredness, sessionDuration) {
-    // Причина AFK
+    // AFK reason
     const reasons = this._getAFKReasons(tiredness, sessionDuration);
     const reason = HumanErrorEngine.choice(reasons);
 
-    // Длительность AFK (минуты)
+    // AFK duration (minutes)
     let duration = this._getAFKDuration(reason, tiredness);
 
-    // Будет ли объявлять причину
+    // Whether to announce the reason
     const announceChance = this._getAnnounceChance(reason);
     const shouldAnnounce = HumanErrorEngine.chance(announceChance);
 
-    // Сообщение
-    const message = shouldAnnounce ? await this._getAFKMessage(reason) : 'афк';
+    // Message
+    const message = shouldAnnounce ? await this._getAFKMessage(reason) : 'afk';
 
     return {
       reason,
@@ -98,7 +98,7 @@ export class AFKSystem {
   }
 
   /**
-   * Возвращает возможные причины AFK
+   * Return possible AFK reasons
    */
   _getAFKReasons(tiredness, sessionDuration) {
     const reasons = [
@@ -112,12 +112,12 @@ export class AFKSystem {
       'rest'
     ];
     
-    // Если очень устал - больше шанс на отдых
+    // If very tired, increase the chance of taking a break
     if (tiredness > 0.8) {
       reasons.push('rest', 'rest', 'rest');
     }
     
-    // Если долго играет - больше физиологических причин
+    // Longer play sessions increase the chance of physical needs
     if (sessionDuration > 120) {
       reasons.push('bathroom', 'drink', 'food', 'stretch');
     }
@@ -126,24 +126,24 @@ export class AFKSystem {
   }
 
   /**
-   * Определяет длительность AFK
+   * Determine AFK duration
    */
   _getAFKDuration(reason, tiredness) {
     const durations = {
-      'bathroom': [2, 5],      // 2-5 минут
-      'drink': [1, 3],         // 1-3 минуты
-      'food': [5, 15],         // 5-15 минут
-      'phone': [3, 10],        // 3-10 минут
-      'door': [2, 5],          // 2-5 минут
-      'distraction': [5, 20],  // 5-20 минут (отвлекся на что-то)
-      'stretch': [2, 5],       // 2-5 минут
-      'rest': [10, 30]         // 10-30 минут
+      'bathroom': [2, 5],      // 2–5 minutes
+      'drink': [1, 3],         // 1–3 minutes
+      'food': [5, 15],         // 5–15 minutes
+      'phone': [3, 10],        // 3–10 minutes
+      'door': [2, 5],          // 2–5 minutes
+      'distraction': [5, 20],  // 5–20 minutes (got distracted by something)
+      'stretch': [2, 5],       // 2–5 minutes
+      'rest': [10, 30]         // 10–30 minutes
     };
     
     const [min, max] = durations[reason] || [2, 5];
     let duration = HumanErrorEngine.range(min, max);
     
-    // Усталость увеличивает длительность
+    // Fatigue increases the duration
     if (tiredness > 0.8) {
       duration *= 1.5;
     }
@@ -152,17 +152,17 @@ export class AFKSystem {
   }
 
   /**
-   * Вероятность объявить причину AFK
+   * Probability of announcing the AFK reason
    */
   _getAnnounceChance(reason) {
-    // Некоторые причины реже объявляют
+    // Some reasons are announced less often
     const announceChances = {
-      'bathroom': 0.3,      // Редко говорят "в туалет"
+      'bathroom': 0.3,      // Rarely say "going to the restroom"
       'drink': 0.6,
       'food': 0.7,
       'phone': 0.5,
-      'door': 0.8,          // Обычно говорят "дверь"
-      'distraction': 0.2,   // Редко признаются что отвлеклись
+      'door': 0.8,          // Usually mention the door
+      'distraction': 0.2,   // Rarely admit they got distracted
       'stretch': 0.4,
       'rest': 0.6
     };
@@ -171,25 +171,25 @@ export class AFKSystem {
   }
 
   /**
-   * Генерирует сообщение AFK — живыми словами через LLM, без шаблонов.
+   * Generate an AFK message in natural language through the LLM, without templates.
    */
   async _getAFKMessage(reason) {
     const situations = {
-      bathroom: 'тебе нужно отойти в туалет',
-      drink: 'ты хочешь отойти попить',
-      food: 'ты идёшь поесть',
-      phone: 'тебе звонят / отвлекли на телефон',
-      door: 'к тебе кто-то пришёл, звонят в дверь',
-      distraction: 'тебя отвлекли по жизни',
-      stretch: 'ты хочешь размяться',
-      rest: 'ты устал и хочешь передохнуть',
+      bathroom: 'you need to step away to use the restroom',
+      drink: 'you want to step away and get a drink',
+      food: 'you're going to get something to eat',
+      phone: 'you have a phone call / something came up on your phone',
+      door: 'someone is here and the doorbell is ringing',
+      distraction: 'something came up and distracted you',
+      stretch: 'you want to stretch',
+      rest: 'you're tired and want to take a break',
     };
-    const situation = situations[reason] || 'тебе нужно ненадолго отойти';
+    const situation = situations[reason] || 'you need to step away for a moment';
 
     if (this.aiBrain?.generateQuickResponse) {
       try {
-        const name = this.profile?.name || 'ты';
-        const prompt = `Ты ${name}, играешь в Minecraft с друзьями. Тебе нужно отойти от компьютера: ${situation}. Быстро черкни в чат что отходишь — своими словами, коротко (1-4 слова), строчными, без точки:`;
+        const name = this.profile?.name || 'you';
+        const prompt = `You are ${name}, playing Minecraft with friends. You need to step away from your computer: ${situation}. Quickly send a short chat message in your own words (1–4 words), lowercase, without a period:`;
         const res = await this.aiBrain.generateQuickResponse(prompt, {
           maxTokens: 14,
           temperature: 0.95,
@@ -200,12 +200,12 @@ export class AFKSystem {
       } catch (_) {}
     }
 
-    // «афк» — это реальное слово, которое люди буквально пишут; не шаблон реплики.
-    return 'афк';
+    // "AFK" is a real term that people actually type; it is not a canned line.
+    return 'afk';
   }
 
   /**
-   * Начинает AFK
+   * Start AFK
    */
   _startAFK(details) {
     this.isAFK = true;
@@ -213,7 +213,7 @@ export class AFKSystem {
     this.afkReason = details.reason;
     this.plannedReturnTime = Date.now() + details.duration * 60 * 1000;
     
-    logger.info(`[${this.profile.name}] AFK: ${details.reason} на ${details.duration} минут`);
+    logger.info(`[${this.profile.name}] AFK: ${details.reason} for ${details.duration} minutes`);
     
     this.afkHistory.push({
       reason: details.reason,
@@ -223,7 +223,7 @@ export class AFKSystem {
   }
 
   /**
-   * Проверяет должен ли вернуться из AFK
+   * Check whether the bot should return from AFK
    */
   checkReturn() {
     if (!this.isAFK) {
@@ -232,22 +232,22 @@ export class AFKSystem {
     
     const now = Date.now();
     
-    // Проверяем вернулся ли по плану
+    // Check whether the bot has returned as scheduled
     if (now >= this.plannedReturnTime) {
-      // Иногда возвращаются позже (20% шанс)
+      // Sometimes return later (20% chance)
       if (HumanErrorEngine.chance(0.2)) {
-        // Задерживаются на 2-10 минут
+        // Stay away for an extra 2–10 minutes
         const extraDelay = HumanErrorEngine.range(2, 10) * 60 * 1000;
         this.plannedReturnTime = now + extraDelay;
-        logger.debug(`[${this.profile.name}] Задержался AFK еще на ${(extraDelay / 60000).toFixed(1)} минут`);
+        logger.debug(`[${this.profile.name}] Stayed AFK for another ${(extraDelay / 60000).toFixed(1)} minutes`);
         return { shouldReturn: false };
       }
       
-      // Возвращается
+      // Return
       return this._returnFromAFK();
     }
     
-    // Иногда возвращаются раньше (10% шанс)
+    // Sometimes return earlier (10% chance)
     const timeInAFK = (now - this.afkStartTime) / (60 * 1000);
     if (timeInAFK > 1 && HumanErrorEngine.chance(0.1)) {
       return this._returnFromAFK();
@@ -257,7 +257,7 @@ export class AFKSystem {
   }
 
   /**
-   * Возвращается из AFK
+   * Return from AFK
    */
   _returnFromAFK() {
     const afkDuration = (Date.now() - this.afkStartTime) / (60 * 1000);
@@ -265,20 +265,20 @@ export class AFKSystem {
     this.isAFK = false;
     this.lastAFKTime = Date.now();
     
-    // Иногда объявляет возвращение (50% шанс)
+    // Sometimes announce the return (50% chance)
     const shouldAnnounce = HumanErrorEngine.chance(0.5);
     const message = shouldAnnounce ? this._getReturnMessage(afkDuration) : null;
     
-    logger.info(`[${this.profile.name}] Вернулся из AFK (был ${afkDuration.toFixed(1)} минут)`);
+    logger.info(`[${this.profile.name}] Returned from AFK (was away for ${afkDuration.toFixed(1)} minutes)`);
     
-    // Обновляем историю
+    // Update history
     const lastAFK = this.afkHistory[this.afkHistory.length - 1];
     if (lastAFK) {
       lastAFK.actualDuration = afkDuration;
       lastAFK.endTime = Date.now();
     }
     
-    // Очищаем старую историю (более 24 часов)
+    // Clear old history (older than 24 hours)
     this.afkHistory = this.afkHistory.filter(a => 
       Date.now() - a.startTime < 24 * 60 * 60 * 1000
     );
@@ -292,28 +292,28 @@ export class AFKSystem {
   }
 
   /**
-   * Генерирует сообщение о возвращении
+   * Generate a return message
    */
   _getReturnMessage(duration) {
     if (duration > 20) {
-      return HumanErrorEngine.choice(['вернулся', 'бэк', 'всем привет снова']);
+      return HumanErrorEngine.choice(['I'm back', 'back', 'hey everyone, I'm back']);
     } else if (duration > 10) {
-      return HumanErrorEngine.choice(['вернулся', 'бэк', 'я тут']);
+      return HumanErrorEngine.choice(['I'm back', 'back', 'I'm here']);
     } else {
-      // Короткий AFK - реже объявляют возвращение
-      return HumanErrorEngine.chance(0.3) ? 'бэк' : null;
+      // Short AFK periods are less likely to include a return announcement
+      return HumanErrorEngine.chance(0.3) ? 'back' : null;
     }
   }
 
   /**
-   * Проверяет может ли выполнять действия (не AFK)
+   * Check whether the bot can perform actions (not AFK)
    */
   canAct() {
     return !this.isAFK;
   }
 
   /**
-   * Получить статус
+   * Get status
    */
   getStatus() {
     if (!this.isAFK) {
@@ -332,11 +332,11 @@ export class AFKSystem {
   }
 
   /**
-   * Принудительное возвращение (например, при вызове игроком)
+   * Force a return (for example, when called by a player)
    */
   forceReturn() {
     if (this.isAFK) {
-      logger.info(`[${this.profile.name}] Принудительное возвращение из AFK`);
+      logger.info(`[${this.profile.name}] Forced return from AFK`);
       return this._returnFromAFK();
     }
     return { shouldReturn: false };
