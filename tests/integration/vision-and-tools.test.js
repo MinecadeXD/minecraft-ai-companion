@@ -52,37 +52,37 @@ describe('End-to-end: vision context + new tools through the brain', () => {
     contextManager = new ContextManager(testConfig);
     bot = makeMockBot();
     memory = { pois: { _s: [], addPOI(n, t, c) { this._s.push({ name: n, type: t, ...c }); }, getPOIs(t) { return t ? this._s.filter(p => p.type === t) : this._s; } } };
-    registerAllTools(registry, { bot, worldState: { getInventorySummary: () => 'пусто', getSummary: () => 'Test state' }, mcBot: { bot }, memoryManager: memory, planner: null, aiProvider: null });
+    registerAllTools(registry, { bot, worldState: { getInventorySummary: () => 'empty', getSummary: () => 'Test state' }, mcBot: { bot }, memoryManager: memory, planner: null, aiProvider: null });
     contextManager.setBot(bot); // give the brain "eyes"
     brain = new AIBrain(testConfig, registry, contextManager, provider);
   });
 
-  it('injects a live [ЧТО Я ВИЖУ] scene into the context', () => {
+  it('injects a live [WHAT I SEE] scene into the context', () => {
     const ctx = contextManager.buildContext({ getSummary: () => 'Test state' }, null);
-    expect(ctx).toContain('[ЧТО Я ВИЖУ]');
-    expect(ctx).toMatch(/север/); // facing north
-    expect(ctx).toMatch(/гора|холм/); // mountain to the north
+    expect(ctx).toContain('[WHAT I SEE]');
+    expect(ctx).toMatch(/north/); // facing north
+    expect(ctx).toMatch(/mountain|hill/); // mountain to the north
   });
 
   it('runs look_around through the full tool-calling loop', async () => {
     provider.addResponse({ text: '', toolCalls: [{ name: 'look_around', args: {} }], raw: {} });
-    provider.addResponse({ text: 'Вокруг вроде спокойно, на севере гора', toolCalls: [], raw: {} });
+    provider.addResponse({ text: 'It seems calm around here; there is a mountain to the north', toolCalls: [], raw: {} });
 
-    const reply = await brain.processMessage('[kustash01]: осмотрись', {
+    const reply = await brain.processMessage('[kustash01]: look around', {
       getSummary: () => 'Test state',
     });
-    expect(reply).toContain('север');
+    expect(reply).toContain('north');
     expect(provider.callLog.some(c => c.method === 'sendToolResults')).toBe(true);
   });
 
   it('finds and remembers a village via scan_for_village through the brain', async () => {
     provider.addResponse({ text: '', toolCalls: [{ name: 'scan_for_village', args: {} }], raw: {} });
-    provider.addResponse({ text: 'Ага, вижу деревню на севере!', toolCalls: [], raw: {} });
+    provider.addResponse({ text: 'Yeah, I see a village to the north!', toolCalls: [], raw: {} });
 
-    const reply = await brain.processMessage('[kustash01]: есть деревня рядом?', {
+    const reply = await brain.processMessage('[kustash01]: is there a village nearby?', {
       getSummary: () => 'Test state',
     });
-    expect(reply).toContain('деревню');
+    expect(reply).toContain('village');
     // The tool should have persisted the village to memory.
     expect(memory.pois.getPOIs('village').length).toBe(1);
   });
