@@ -55,35 +55,35 @@ describe('Full Companion System Scenarios', () => {
     worldState.forceUpdate(mockBot);
   });
 
-  it('Scenario 1: "следуй за мной" -> calls follow_player', async () => {
+  it('Scenario 1: "follow me" -> calls follow_player', async () => {
     provider.addResponse({
       text: '',
       toolCalls: [{ name: 'follow_player', args: { playerName: 'kustash01', distance: 3 } }],
       raw: {},
     });
     provider.addResponse({
-      text: 'Иду за тобой, держу дистанцию 3 блока!',
+      text: 'I am following you, keeping a 3-block distance!',
       toolCalls: [],
       raw: {},
     });
 
-    const reply = await aiBrain.processMessage('Следуй за мной', worldState);
-    expect(reply).toContain('Иду за тобой');
+    const reply = await aiBrain.processMessage('Follow me', worldState);
+    expect(reply).toContain('I am following you');
   });
 
-  it('Scenario 2: "построй дом" -> decomposes into plan with create_plan', async () => {
+  it('Scenario 2: "build a house" -> decomposes into plan with create_plan', async () => {
     provider.addResponse({
       text: '',
       toolCalls: [
         {
           name: 'create_plan',
           args: {
-            goal: 'Построить дом для нас',
+            goal: 'Build a house for us',
             steps: [
-              'Очистить площадку 6х6',
-              'Собрать 32 дубовых бревна',
-              'Построить стены из досок',
-              'Поставить крышу и дверь',
+              'Clear a 6x6 area',
+              'Gather 32 oak logs',
+              'Build the walls from planks',
+              'Add a roof and a door',
             ],
           },
         },
@@ -91,42 +91,42 @@ describe('Full Companion System Scenarios', () => {
       raw: {},
     });
     provider.addResponse({
-      text: 'Я составил отличный план стройки! Начинаю с первого шага.',
+      text: 'I made a great building plan! Starting with the first step.',
       toolCalls: [],
       raw: {},
     });
 
-    const reply = await aiBrain.processMessage('Давай построим нормальный дом', worldState);
-    expect(reply).toContain('план');
+    const reply = await aiBrain.processMessage('Let us build a proper house', worldState);
+    expect(reply).toContain('plan');
 
     const activePlan = planner.getActivePlan();
     expect(activePlan).toBeDefined();
-    expect(activePlan.goal).toBe('Построить дом для нас');
+    expect(activePlan.goal).toBe('Build a house for us');
     expect(activePlan.steps).toHaveLength(4);
   });
 
-  it('Scenario 3: "где база?" -> calls find_poi to recall base coordinates', async () => {
+  it('Scenario 3: "where is the base?" -> calls find_poi to recall base coordinates', async () => {
     // Preset base in memory
-    memoryManager.pois.addPOI('Наша база', POITypes.BASE, { x: 50, y: 70, z: -120 }, 'Главный сундук');
+    memoryManager.pois.addPOI('Our base', POITypes.BASE, { x: 50, y: 70, z: -120 }, 'Main chest');
 
     provider.addResponse({
       text: '',
-      toolCalls: [{ name: 'find_poi', args: { name: 'база' } }],
+      toolCalls: [{ name: 'find_poi', args: { name: 'base' } }],
       raw: {},
     });
     provider.addResponse({
-      text: 'Наша база находится на координатах X: 50, Y: 70, Z: -120.',
+      text: 'Our base is located at coordinates X: 50, Y: 70, Z: -120.',
       toolCalls: [],
       raw: {},
     });
 
-    const reply = await aiBrain.processMessage('Где находится наша база?', worldState);
+    const reply = await aiBrain.processMessage('Where is our base located?', worldState);
     expect(reply).toContain('50');
     expect(reply).toContain('-120');
   });
 
-  it('Scenario 4: "что мы делали вчера?" -> reads diary / episodic memory', async () => {
-    memoryManager.diary.logEntry(4, 'Поход в шахту', 'Мы нашли 8 алмазов и построили портал в Нижний мир.');
+  it('Scenario 4: "what did we do yesterday?" -> reads diary / episodic memory', async () => {
+    memoryManager.diary.logEntry(4, 'Mining trip', 'We found 8 diamonds and built a Nether portal.');
 
     provider.addResponse({
       text: '',
@@ -134,33 +134,33 @@ describe('Full Companion System Scenarios', () => {
       raw: {},
     });
     provider.addResponse({
-      text: 'Вчера мы ходили в шахту, нашли 8 алмазов и построили портал в Незер!',
+      text: 'Yesterday we went mining, found 8 diamonds, and built a Nether portal!',
       toolCalls: [],
       raw: {},
     });
 
-    const reply = await aiBrain.processMessage('Что мы делали вчера?', worldState);
-    expect(reply).toContain('алмазов');
+    const reply = await aiBrain.processMessage('What did we do yesterday?', worldState);
+    expect(reply).toContain('diamonds');
   });
 
-  it('Scenario 5: "сохрани это место как шахта" -> saves POI to SQLite', async () => {
+  it('Scenario 5: "save this place as a mine" -> saves POI to SQLite', async () => {
     provider.addResponse({
       text: '',
-      toolCalls: [{ name: 'save_poi', args: { name: 'Глубокая шахта', type: 'mine', notes: 'Много железа' } }],
+      toolCalls: [{ name: 'save_poi', args: { name: 'Deep Mine', type: 'mine', notes: 'Lots of iron' } }],
       raw: {},
     });
     provider.addResponse({
-      text: 'Запомнил это место как "Глубокая шахта" на текущих координатах!',
+      text: 'Saved this place as "Deep Mine" at the current coordinates!',
       toolCalls: [],
       raw: {},
     });
 
-    const reply = await aiBrain.processMessage('Запомни это место как шахта', worldState);
-    expect(reply).toContain('Запомнил');
+    const reply = await aiBrain.processMessage('Save this place as a mine', worldState);
+    expect(reply).toContain('Saved');
 
     const pois = memoryManager.pois.getPOIs(POITypes.MINE);
     expect(pois).toHaveLength(1);
-    expect(pois[0].name).toBe('Глубокая шахта');
+    expect(pois[0].name).toBe('Deep Mine');
     expect(pois[0].x).toBe(100);
   });
 });
