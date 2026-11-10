@@ -4,9 +4,9 @@ import { spatialIntelligence } from './spatial-intelligence.js';
 const logger = createLogger('LANDMARK_TOPOLOGY');
 
 /**
- * LandmarkTopology — человеческая пространственная память по ориентирам:
- * Человек не мыслит "пойти на x: 124, y: 64, z: -289".
- * Человек мыслит: "у старого дуба", "в сундуке справа от печи", "в шахте за рекой к северу".
+ * LandmarkTopology — human-like spatial memory based on landmarks:
+ * People do not think "go to x: 124, y: 64, z: -289."
+ * They think "by the old oak," "in the chest to the right of the furnace," or "in the mine beyond the river to the north."
  */
 export class LandmarkTopology {
   constructor() {
@@ -14,7 +14,7 @@ export class LandmarkTopology {
   }
 
   /**
-   * Запомнить ориентир
+   * Remember a landmark
    */
   remember(name, coords, description = '', landmarkType = 'landmark') {
     if (!name || !coords) return null;
@@ -31,12 +31,12 @@ export class LandmarkTopology {
       createdAt: Date.now(),
     };
     this.landmarks.set(cleanName.toLowerCase(), entry);
-    logger.info(`[LANDMARK] Запомнен ориентир: "${cleanName}" на [${entry.coords.x}, ${entry.coords.y}, ${entry.coords.z}] (${description})`);
+    logger.info(`[LANDMARK] Remembered landmark: "${cleanName}" at [${entry.coords.x}, ${entry.coords.y}, ${entry.coords.z}] (${description})`);
     return entry;
   }
 
   /**
-   * Найти ориентир по названию
+   * Find a landmark by name
    */
   get(name) {
     if (!name) return null;
@@ -44,7 +44,7 @@ export class LandmarkTopology {
   }
 
   /**
-   * Поиск ближайшего ориентира к заданной точке
+   * Find the nearest landmark to a given point
    */
   findNearest(pos, type = null) {
     if (!pos) return null;
@@ -63,26 +63,26 @@ export class LandmarkTopology {
   }
 
   /**
-   * Человеческое топологическое описание позиции относительно известных ориентиров
+   * Human-like topological description of a position relative to known landmarks
    */
   describeRelative(pos, botYaw = 0) {
-    if (!pos) return 'неизвестное место';
+    if (!pos) return 'unknown location';
     const nearest = this.findNearest(pos);
     if (!nearest) return `[${Math.round(pos.x)}, ${Math.round(pos.y)}, ${Math.round(pos.z)}]`;
 
     if (nearest.distance <= 3) {
-      return `прямо у ориентира "${nearest.name}"`;
+      return `right by the landmark "${nearest.name}"`;
     }
 
     const direction = spatialIntelligence?.describeRelativePosition
       ? spatialIntelligence.describeRelativePosition(nearest.coords, botYaw, pos)
-      : `${nearest.distance}м`;
+      : `${nearest.distance} m`;
 
-    return `около "${nearest.name}" (${direction})`;
+    return `near "${nearest.name}" (${direction})`;
   }
 
   /**
-   * Список всех активных ориентиров для контекста Gemini
+   * List all active landmarks for Gemini context
    */
   list() {
     return Array.from(this.landmarks.values());
