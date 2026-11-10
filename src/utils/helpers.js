@@ -1,10 +1,10 @@
 /**
- * Утилиты общего назначения.
+ * General-purpose utilities.
  */
 
 /**
- * Задержка выполнения.
- * @param {number} ms - миллисекунды
+ * Execution delay.
+ * @param {number} ms - milliseconds
  */
 export function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -21,7 +21,7 @@ function gaussianRandom(mean = 0, stdDev = 1) {
 }
 
 /**
- * Случайное число в диапазоне по нормальному распределению Гаусса.
+ * Random number within a range using a Gaussian distribution.
  */
 export function randomInt(min, max) {
   if (min >= max) return min;
@@ -32,7 +32,7 @@ export function randomInt(min, max) {
 }
 
 /**
- * Случайный элемент массива по распределению Гаусса.
+ * Random array element using a Gaussian distribution.
  */
 export function randomChoice(array) {
   if (!array || array.length === 0) return null;
@@ -44,7 +44,7 @@ export function randomChoice(array) {
 }
 
 /**
- * Ограничение значения в диапазон.
+ * Clamp a value to a range.
  */
 export function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
