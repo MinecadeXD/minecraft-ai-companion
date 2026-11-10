@@ -53,7 +53,7 @@ export class SignReaderEngine {
   }
 
   /**
-   * Find a chest or location associated with sign text query (e.g. 'склад', 'железо', 'дом').
+   * Find a chest or location associated with sign text query (e.g. 'storage', 'iron', 'home').
    */
   findSignByQuery(query) {
     const q = query.toLowerCase();
