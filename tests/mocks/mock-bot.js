@@ -1,5 +1,5 @@
 /**
- * Mock Minecraft Bot для тестирования.
+ * Mock Minecraft bot for testing.
  */
 export function createMockBot() {
   const entity = {
@@ -58,7 +58,7 @@ export function createMockBot() {
       },
     },
 
-    // Мок методы
+    // Mock methods
     chat: (msg) => {},
     whisper: (player, msg) => {},
     lookAt: async (pos) => {},
