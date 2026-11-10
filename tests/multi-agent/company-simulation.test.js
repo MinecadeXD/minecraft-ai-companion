@@ -129,10 +129,10 @@ describe('6-Agent Company Endurance Simulation', () => {
     expect(group.taskBoard[0].assignedTo).toBe('Ryan');
 
     // 4. Delegation
-    const delegation = sam.delegation.delegate('Ryan', 'Скрафти железную кирку');
+    const delegation = sam.delegation.delegate('Ryan', 'Craft an iron pickaxe');
     ryan.delegation.receiveRequest(delegation);
-    ryan.delegation.respondToRequest(delegation.id, 'Сделал', 'completed');
-    sam.delegation.complete(delegation.id, 'Получил кирку');
+    ryan.delegation.respondToRequest(delegation.id, 'Done', 'completed');
+    sam.delegation.complete(delegation.id, 'Got the pickaxe');
 
     expect(sam.delegation.getPendingOutgoing().length).toBe(0);
 
