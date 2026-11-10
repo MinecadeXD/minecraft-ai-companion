@@ -9,15 +9,15 @@ export function classifySocialMessage(message) {
   const lower = text.toLowerCase();
   let speechAct = 'casual';
   if (!text) speechAct = 'silence';
-  else if (/^(привет|здравствуй|хай|hello|hi|доброе утро|добрый вечер)(?:\b|[,!.])/i.test(lower)) speechAct = 'greeting';
-  else if (/\?$/.test(text) || /^(кто|что|где|когда|почему|как|можешь|можно)\b/i.test(lower)) speechAct = 'question';
-  else if (/(спасибо|благодарю|thanks|thx)/i.test(lower)) speechAct = 'thanks';
-  else if (/(извини|простите|сорри|прости)/i.test(lower)) speechAct = 'apology';
-  else if (/(помоги|помощь|выруч|help)/i.test(lower)) speechAct = 'request';
-  else if (/(не согласен|не,|нет,|не думаю|disagree)/i.test(lower)) speechAct = 'disagreement';
-  else if (/(согласен|давай|го|окей|ок|правильно)/i.test(lower)) speechAct = 'agreement';
-  else if (/(бесишь|заткнись|дурак|конфликт|ненавижу)/i.test(lower)) speechAct = 'conflict';
-  else if (/^(пока|до встречи|увидимся|бай)\b/i.test(lower)) speechAct = 'farewell';
+  else if (/^(hello|hi|hey|good morning|good afternoon|good evening)(?:\b|[,!.])/i.test(lower)) speechAct = 'greeting';
+  else if (/\?$/.test(text) || /^(who|what|where|when|why|how|can you|could you|may i)\b/i.test(lower)) speechAct = 'question';
+  else if (/(thanks|thank you|thx|appreciate it)/i.test(lower)) speechAct = 'thanks';
+  else if (/(sorry|my bad|apologies|forgive me)/i.test(lower)) speechAct = 'apology';
+  else if (/(help|assist|need a hand)/i.test(lower)) speechAct = 'request';
+  else if (/(i disagree|no,|not really|i don't think|disagree)/i.test(lower)) speechAct = 'disagreement';
+  else if (/(i agree|let's|okay|ok|right|sounds good)/i.test(lower)) speechAct = 'agreement';
+  else if (/(you're annoying|shut up|idiot|conflict|i hate)/i.test(lower)) speechAct = 'conflict';
+  else if (/^(bye|goodbye|see you|later)\b/i.test(lower)) speechAct = 'farewell';
   const domain = speechAct === 'question' ? 'information' : speechAct === 'request' ? 'assistance' : speechAct === 'conflict' ? 'conflict' : speechAct === 'silence' ? 'none' : 'social';
   const risk = speechAct === 'conflict' ? 'high' : speechAct === 'request' || speechAct === 'disagreement' ? 'medium' : speechAct === 'silence' ? 'none' : 'low';
   return Object.freeze({ speechAct: CATEGORY_SET.has(speechAct) ? speechAct : 'casual', domain, risk });
@@ -34,11 +34,11 @@ export function classifyTopic(message) {
   const lower = text.toLowerCase();
   let topic = 'social';
   if (!text) topic = 'unknown';
-  else if (/(темнеет|ночь|ночью|пора спать|спать| сон|луна)/i.test(lower)) topic = 'night';
-  else if (/(дождь|гроза|ливень|непогода| дожд)/i.test(lower)) topic = 'weather';
-  else if (/(осторожно|опасно|крипер|скелет|зомби|моб|смерть|убил)/i.test(lower)) topic = 'danger';
-  else if (/(нашел|нашла|нашли|нашёл|видел деревню|алмаз|железо|жилую|деревня|шахта)/i.test(lower)) topic = 'find';
-  else if (/(погиб|умер|умерла|скончался|respawn)/i.test(lower)) topic = 'death';
+  else if (/(getting dark|night|tonight|time to sleep|go to sleep|\bsleep\b|moon)/i.test(lower)) topic = 'night';
+  else if (/(rain|storm|downpour|bad weather)/i.test(lower)) topic = 'weather';
+  else if (/(careful|danger|creeper|skeleton|zombie|mob|death|killed)/i.test(lower)) topic = 'danger';
+  else if (/(found|saw a village|diamond|iron|ore|village|mining|mine)/i.test(lower)) topic = 'find';
+  else if (/(died|dead|passed away|respawn)/i.test(lower)) topic = 'death';
   return Object.freeze({ topic: TOPIC_SET.has(topic) ? topic : 'unknown' });
 }
 
