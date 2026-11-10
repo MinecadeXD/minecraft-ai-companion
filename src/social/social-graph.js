@@ -23,7 +23,7 @@ export class SocialGraph {
       }
     }
     
-    logger.info(`Инициализирован социальный граф для ${this.entities.length} сущностей.`);
+    logger.info(`Social graph initialized for ${this.entities.length} entities.`);
   }
 
   _createDefaultRelationship() {
@@ -43,7 +43,7 @@ export class SocialGraph {
   }
 
   /**
-   * Получить отношения от одной сущности к другой
+   * Get the relationship from one entity to another
    * @param {string} from 
    * @param {string} to 
    * @returns {Object|null}
@@ -55,7 +55,7 @@ export class SocialGraph {
   }
 
   /**
-   * Обновить параметры отношений (с ограничением от 0 до 1)
+   * Update relationship parameters (clamped between 0 and 1)
    * @param {string} from 
    * @param {string} to 
    * @param {Object} changes 
@@ -106,7 +106,7 @@ export class SocialGraph {
   }
 
   /**
-   * Записать событие и автоматически обновить метрики
+   * Record an event and automatically update metrics
    * @param {string} from 
    * @param {string} to 
    * @param {string|Object} event 
@@ -130,55 +130,55 @@ export class SocialGraph {
       case 'helped_in_combat':
         changes = { trust: 0.1, friendship: 0.05, gratitude: 0.15 };
         impact = 0.3;
-        description = eventDesc || 'Помог в бою';
+        description = eventDesc || 'Helped in combat';
         break;
       case 'shared_resources':
         changes = { trust: 0.05, friendship: 0.05, gratitude: 0.1 };
         impact = 0.2;
-        description = eventDesc || 'Поделился ресурсами';
+        description = eventDesc || 'Shared resources';
         break;
       case 'took_items_without_asking':
         changes = { trust: -0.15, irritation: 0.2 };
         impact = -0.3;
-        description = eventDesc || 'Взял вещи без спроса';
+        description = eventDesc || 'Took items without asking';
         break;
       case 'saved_from_death':
         changes = { trust: 0.2, friendship: 0.1, gratitude: 0.3 };
         impact = 0.6;
-        description = eventDesc || 'Спас от смерти';
+        description = eventDesc || 'Saved someone from death';
         break;
       case 'ignored_help_request':
         changes = { trust: -0.1, irritation: 0.1 };
         impact = -0.2;
-        description = eventDesc || 'Проигнорировал просьбу о помощи';
+        description = eventDesc || 'Ignored a request for help';
         break;
       case 'completed_task_together':
         changes = { trust: 0.05, familiarity: 0.1, cooperationTendency: 0.05 };
         impact = 0.2;
-        description = eventDesc || 'Вместе выполнили задачу';
+        description = eventDesc || 'Completed a task together';
         break;
       case 'made_joke':
         changes = { humorCompatibility: 0.05, friendship: 0.02 };
         impact = 0.1;
-        description = eventDesc || 'Пошутил';
+        description = eventDesc || 'Made a joke';
         break;
       case 'had_conflict':
         changes = { trust: -0.1, irritation: 0.15 };
         impact = -0.25;
-        description = eventDesc || 'Произошел конфликт';
+        description = eventDesc || 'Had a conflict';
         break;
       case 'apologized':
         changes = { irritation: -0.2, trust: 0.05 };
         impact = 0.25;
-        description = eventDesc || 'Извинился';
+        description = eventDesc || 'Apologized';
         break;
       case 'long_time_together':
         changes = { familiarity: 0.05 };
         impact = 0.05;
-        description = eventDesc || 'Долгое время вместе';
+        description = eventDesc || 'Spent a long time together';
         break;
       default:
-        description = eventDesc || eventType || 'Взаимодействие';
+        description = eventDesc || eventType || 'Interaction';
         break;
     }
 
@@ -197,7 +197,7 @@ export class SocialGraph {
   }
 
   /**
-   * Найти лучшего друга для указанного агента
+   * Find the best friend for a given agent
    * @param {string} agentName 
    * @returns {string|null}
    */
@@ -206,7 +206,7 @@ export class SocialGraph {
   }
 
   /**
-   * Найти того, кому агент доверяет больше всего
+   * Find the person the agent trusts most
    * @param {string} agentName 
    * @returns {string|null}
    */
@@ -215,7 +215,7 @@ export class SocialGraph {
   }
 
   /**
-   * Найти того, кто больше всего раздражает агента
+   * Find the person who irritates the agent most
    * @param {string} agentName 
    * @returns {string|null}
    */
@@ -240,7 +240,7 @@ export class SocialGraph {
   }
 
   /**
-   * Оценить совместимость группы от 0.0 до 1.0
+   * Evaluate group compatibility from 0.0 to 1.0
    * @param {string[]} agents 
    * @returns {number}
    */
@@ -255,7 +255,7 @@ export class SocialGraph {
         if (i === j) continue;
         const rel = this.getRelationship(agents[i], agents[j]);
         if (rel) {
-          // Вычисляем базовую совместимость пары
+          // Calculate the baseline compatibility of a pair
           const pairScore = (rel.trust + rel.cooperationTendency + rel.friendship + (1 - rel.irritation)) / 4;
           totalScore += pairScore;
           pairs++;
@@ -267,7 +267,7 @@ export class SocialGraph {
   }
 
   /**
-   * Постепенное снижение раздражения
+   * Gradually reduce irritation
    * @param {number} rate 
    */
   decayIrritation(rate) {
@@ -281,7 +281,7 @@ export class SocialGraph {
   }
 
   /**
-   * Постепенное снижение благодарности
+   * Gradually reduce gratitude
    * @param {number} rate 
    */
   decayGratitude(rate) {
@@ -295,36 +295,36 @@ export class SocialGraph {
   }
 
   /**
-   * Получить читабельное описание отношения
+   * Get a readable description of a relationship
    * @param {string} from 
    * @param {string} to 
    * @returns {string}
    */
   getRelationshipSummary(from, to) {
     const rel = this.getRelationship(from, to);
-    if (!rel) return 'Не знаком';
+    if (!rel) return 'Not acquainted';
 
     let summary = [];
     
-    if (rel.friendship > 0.8) summary.push('лучший друг');
-    else if (rel.friendship > 0.6) summary.push('хороший друг');
-    else if (rel.friendship > 0.4) summary.push('приятель');
+    if (rel.friendship > 0.8) summary.push('best friend');
+    else if (rel.friendship > 0.6) summary.push('good friend');
+    else if (rel.friendship > 0.4) summary.push('acquaintance');
     
-    if (rel.trust > 0.8) summary.push('полностью доверяет');
-    else if (rel.trust < 0.3) summary.push('не доверяет');
+    if (rel.trust > 0.8) summary.push('fully trusts');
+    else if (rel.trust < 0.3) summary.push('does not trust');
 
-    if (rel.irritation > 0.7) summary.push('сильно раздражён');
-    else if (rel.irritation > 0.4) summary.push('недолюбливает');
+    if (rel.irritation > 0.7) summary.push('highly irritated');
+    else if (rel.irritation > 0.4) summary.push('dislikes');
 
-    if (rel.gratitude > 0.6) summary.push('очень благодарен');
+    if (rel.gratitude > 0.6) summary.push('very grateful');
 
-    if (summary.length === 0) return 'нейтральные отношения';
+    if (summary.length === 0) return 'neutral relationship';
 
     return summary.join(', ');
   }
 
   /**
-   * Получить состояние для сохранения / дашборда
+   * Get the state for persistence / dashboard display
    * @returns {Object}
    */
   getState() {
