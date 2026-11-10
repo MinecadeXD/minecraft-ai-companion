@@ -3,9 +3,9 @@ import { createLogger } from '../utils/logger.js';
 const logger = createLogger('ENVIRONMENT_INFLUENCE');
 
 /**
- * ОЧЕНЬ МНОГО фишек - окружение ОЧЕНЬ влияет на ошибки!
+ * Many factors — the environment has a MAJOR effect on mistakes!
  *
- * Система отслеживает ВСЕ условия окружения и модифицирует вероятность ошибок.
+ * The system tracks ALL environmental conditions and adjusts the probability of mistakes.
  */
 export class EnvironmentInfluence {
   constructor() {
@@ -13,7 +13,7 @@ export class EnvironmentInfluence {
   }
 
   /**
-   * Анализирует окружение и возвращает множители ошибок
+   * Analyze the environment and return mistake multipliers
    */
   analyzeEnvironment(bot, worldState) {
     const multipliers = {
@@ -43,108 +43,108 @@ export class EnvironmentInfluence {
 
     if (!bot) return multipliers;
 
-    // 🌙 ТЕМНОТА - очень важна!
+    // 🌙 DARKNESS — very important!
     const light = this._getLightLevel(bot, worldState);
     if (light < 7) {
-      multipliers.darkness = 1 + (0.3 * ((7 - light) / 7)); // До +30% при полной темноте
+      multipliers.darkness = 1 + (0.3 * ((7 - light) / 7)); // Up to +30% in complete darkness
     }
 
-    // 🌧️ ПОГОДА
+    // 🌧️ WEATHER
     if (worldState?.isRaining) {
-      multipliers.weather = 1.15; // +15% при дожде
+      multipliers.weather = 1.15; // +15% in rain
     }
 
-    // 👹 ВРАГИ РЯДОМ
+    // 👹 NEARBY HOSTILES
     const nearbyHostiles = this._countNearbyHostiles(bot);
     if (nearbyHostiles > 0) {
-      multipliers.hostiles = 1 + (nearbyHostiles * 0.25); // +25% за каждого врага
+      multipliers.hostiles = 1 + (nearbyHostiles * 0.25); // +25% for each hostile
     }
 
-    // 📏 ВЫСОТА
+    // 📏 HEIGHT
     const height = bot.entity?.position?.y || 0;
     if (height > 100) {
-      multipliers.height = 1.3; // +30% на большой высоте
+      multipliers.height = 1.3; // +30% at high elevation
     } else if (height > 64) {
-      multipliers.height = 1.15; // +15% на средней высоте
+      multipliers.height = 1.15; // +15% at medium elevation
     }
 
-    // 💧 ВОДА
+    // 💧 WATER
     if (bot.entity?.isInWater) {
-      multipliers.water = 1.4; // +40% в воде
+      multipliers.water = 1.4; // +40% in water
     }
 
-    // 🔥 ЛАВА
+    // 🔥 LAVA
     if (bot.entity?.isInLava) {
-      multipliers.lava = 1.6; // +60% в лаве!
+      multipliers.lava = 1.6; // +60% in lava!
     }
 
-    // 🕳️ ПЕЩЕРЫ (темнота + враги)
+    // 🕳️ CAVES (darkness + hostiles)
     if (this._isInCave(bot)) {
-      multipliers.cave = 1.25; // +25% в пещерах
+      multipliers.cave = 1.25; // +25% in caves
     }
 
-    // 🤝 МНОГО СУЩНОСТЕЙ РЯДОМ (скученность)
+    // 🤝 MANY ENTITIES NEARBY (crowding)
     const nearbyEntities = this._countNearbyEntities(bot);
     if (nearbyEntities > 5) {
-      multipliers.crowded = 1.2; // +20% когда много кого-то рядом
+      multipliers.crowded = 1.2; // +20% when many entities are nearby
     }
 
-    // 😴 УСТАЛОСТЬ
+    // 😴 FATIGUE
     if (bot.food && bot.food < 6) {
-      multipliers.tired = 1.25; // +25% когда голоден
+      multipliers.tired = 1.25; // +25% when hungry
     }
 
-    // 💔 ПОВРЕЖДЕН
+    // 💔 DAMAGED
     if (bot.health && bot.health < 8) {
-      multipliers.damaged = 1.4; // +40% когда сильно поврежден
+      multipliers.damaged = 1.4; // +40% when heavily damaged
     }
 
-    // 📉 ПАДЕНИЕ
+    // 📉 FALLING
     if (!bot.entity?.onGround) {
-      multipliers.falling = 1.3; // +30% во время падения
+      multipliers.falling = 1.3; // +30% while falling
     }
 
-    // 🔥 ГОРИТ
+    // 🔥 ON FIRE
     if (bot.entity?.isOnFire) {
-      multipliers.fire = 1.5; // +50% когда горит!
+      multipliers.fire = 1.5; // +50% while on fire!
     }
 
-    // ☠️ ЯД
+    // ☠️ POISON
     if (this._hasEffect(bot, 'poison')) {
-      multipliers.poison = 1.25; // +25% под ядом
+      multipliers.poison = 1.25; // +25% while poisoned
     }
 
-    // 🐌 ЗАМЕДЛЕНИЕ
+    // 🐌 SLOWNESS
     if (this._hasEffect(bot, 'slowness')) {
-      multipliers.slowness = 1.2; // +20% при замедлении
+      multipliers.slowness = 1.2; // +20% while slowed
     }
 
-    // 👁️ СЛЕПОТА
+    // 👁️ BLINDNESS
     if (this._hasEffect(bot, 'blindness')) {
-      multipliers.blindness = 1.8; // +80% при слепоте!
+      multipliers.blindness = 1.8; // +80% while blinded!
     }
 
     // 🌀 CONFUSIO (confusion)
     if (this._hasEffect(bot, 'nausea')) {
-      multipliers.nausea = 1.6; // +60% при головокружении
+      multipliers.nausea = 1.6; // +60% while affected by nausea
     }
 
-    // 🌡️ ТЕМПЕРАТУРА (экстремальные условия)
+    // 🌡️ TEMPERATURE (extreme conditions)
     if (this._isInExtremeTemperature(bot)) {
-      multipliers.temperature = 1.3; // +30% в лесу адов или ледяных равнинах
+      multipliers.temperature = 1.3; // +30% in the Nether or icy plains
     }
 
-    // 🔊 ШУМ (если много мобов вокруг - психологический фактор)
+    // 🔊 NOISE (many nearby mobs — a psychological factor)
     if (nearbyHostiles > 3) {
-      multipliers.noise = 1.2; // +20% от шума боя
+      multipliers.noise = 1.2; // +20% from combat noise
     }
 
-    // 👥 ОДИНОЧЕСТВО (психологический)
+    // 👥 LONELINESS (psychological factor)
     if (nearbyEntities === 0 && nearbyHostiles === 0) {
-      multipliers.company = 1.1; // +10% когда совсем один
+      multipliers.company = 1.1; // +10% when completely alone
     }
 
-    // ИТОГОВЫЙ МНОЖИТЕЛЬ (все условия накапливаются)
+    // FINAL MULTIPLIER (all conditions accumulate)
     multipliers.total =
       multipliers.darkness *
       multipliers.weather *
@@ -168,8 +168,8 @@ export class EnvironmentInfluence {
       multipliers.noise *
       multipliers.company;
 
-    // Ограничиваем максимальный множитель
-    multipliers.total = Math.min(multipliers.total, 5.0); // Максимум 5x ошибок
+    // Limit the maximum multiplier
+    multipliers.total = Math.min(multipliers.total, 5.0); // Maximum 5x mistake rate
 
     this.currentConditions = multipliers;
     return multipliers;
@@ -222,7 +222,7 @@ export class EnvironmentInfluence {
       if (!pos) return false;
       const light = this._getLightLevel(bot);
       const blockAbove = bot.blockAt(pos.offset(0, 1, 0));
-      // Пещера = темно И блок выше это не небо
+      // A cave means it is dark AND the block above is not the sky
       return light < 7 && blockAbove?.name !== 'air';
     } catch (e) {
       return false;
@@ -252,10 +252,10 @@ export class EnvironmentInfluence {
   }
 
   /**
-   * Получить описание текущих условий
+   * Get a description of the current conditions
    */
   getConditionsDescription() {
-    let desc = '🌍 Условия окружения:\n';
+    let desc = '🌍 Environmental conditions:\n';
 
     for (const [key, value] of Object.entries(this.currentConditions)) {
       if (key === 'total') continue;
@@ -266,7 +266,7 @@ export class EnvironmentInfluence {
     }
 
     if (this.currentConditions.total) {
-      desc += `\n📊 ОБЩИЙ МНОЖИТЕЛЬ: x${this.currentConditions.total.toFixed(2)}`;
+      desc += `\n📊 TOTAL MULTIPLIER: x${this.currentConditions.total.toFixed(2)}`;
     }
 
     return desc;
