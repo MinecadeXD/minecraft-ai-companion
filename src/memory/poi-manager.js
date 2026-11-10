@@ -21,30 +21,30 @@ export class POIManager {
   }
 
   /**
-   * Добавляет новую точку интереса.
+   * Add a new point of interest.
    */
   addPOI(name, type, { x, y, z }, notes = '', dimension = 'overworld') {
     const id = this.storage.addPOI(name, type, { x, y, z }, notes, dimension);
-    logger.info(`Сохранена точка интереса [${type}] "${name}" на [${Math.round(x)}, ${Math.round(y)}, ${Math.round(z)}]`);
+    logger.info(`Saved point of interest [${type}] "${name}" at [${Math.round(x)}, ${Math.round(y)}, ${Math.round(z)}]`);
     return { id, name, type, x, y, z, notes };
   }
 
   /**
-   * Получает все POI указанного типа или все.
+   * Get all POIs of a specified type, or all POIs.
    */
   getPOIs(type = null) {
     return this.storage.getPOIs(type);
   }
 
   /**
-   * Поиск POI по имени.
+   * Find a POI by name.
    */
   findByName(name) {
     return this.storage.getPOIByName(name);
   }
 
   /**
-   * Находит ближайшую точку интереса к заданной позиции.
+   * Find the nearest point of interest to a given position.
    */
   findNearest(pos, type = null) {
     const all = this.getPOIs(type);
@@ -68,7 +68,7 @@ export class POIManager {
   }
 
   /**
-   * Возвращает базу (если задана).
+   * Return the base (if one is set).
    */
   getBase() {
     const bases = this.getPOIs(POITypes.BASE);
@@ -76,9 +76,9 @@ export class POIManager {
   }
 
   /**
-   * Устанавливает или обновляет главную базу.
+   * Set or update the main base.
    */
-  setBase(pos, name = 'Главная база', notes = 'Наша база') {
+  setBase(pos, name = 'Main Base', notes = 'Our base') {
     return this.addPOI(name, POITypes.BASE, pos, notes);
   }
 }
