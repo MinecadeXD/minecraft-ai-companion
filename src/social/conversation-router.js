@@ -25,8 +25,8 @@ export class ConversationRouter {
 
   _addressing(text, agentName) {
     const lower = text.toLowerCase();
-    if (/(^|\s)(ребята|ребят|парни|команда)(?=$|[\s,!?:;.])/i.test(lower)) return { kind: 'group' };
-    const aliases = { sam: ['сэм', 'сэмми', 'сам'], max: ['макс', 'максим'], jack: ['джек', 'джеки'], ryan: ['райан', 'райн'], alex: ['алекс', 'саша'], leo: ['лео', 'леон'] };
+    if (/(^|\s)(guys|folks|team|everyone)(?=$|[\s,!?:;.])/i.test(lower)) return { kind: 'group' };
+    const aliases = { sam: ['sammy'], max: ['maxim'], jack: ['jackie'], ryan: [], alex: ['sasha'], leo: ['leon'] };
     const hasName = (name) => [name.toLowerCase(), ...(aliases[name.toLowerCase()] || [])]
       .some((alias) => new RegExp(`(^|\\s)${alias}(?=($|[\\s,!?:;.]))`, 'i').test(lower));
     if (agentName && hasName(agentName)) return { kind: 'direct', target: agentName };
