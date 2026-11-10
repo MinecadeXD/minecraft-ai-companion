@@ -3,66 +3,66 @@ import { FastPlayerIntentRouter, PlayerIntents } from '../../../src/control/fast
 import { messageBus } from '../../../src/events/message-bus.js';
 
 describe('FastPlayerIntentRouter Expanded Vocabulary Tests', () => {
-  it('routes Russian agent names to the matching companion', () => {
-    expect(messageBus.checkAddressing('Сэм, иди за мной', 'Sam', ['Sam', 'Max']).isAddressedToMe).toBe(true);
-    expect(messageBus.checkAddressing('Сэм, иди за мной', 'Max', ['Sam', 'Max']).targetName).toBe('Sam');
-    expect(messageBus.checkAddressing('Макс, стой', 'Max', ['Sam', 'Max']).isAddressedToMe).toBe(true);
+  it('routes English agent names to the matching companion', () => {
+    expect(messageBus.checkAddressing('Sam, follow me', 'Sam', ['Sam', 'Max']).isAddressedToMe).toBe(true);
+    expect(messageBus.checkAddressing('Sam, follow me', 'Max', ['Sam', 'Max']).targetName).toBe('Sam');
+    expect(messageBus.checkAddressing('Max, stop', 'Max', ['Sam', 'Max']).isAddressedToMe).toBe(true);
   });
 
-  it('understands ordinary group phrasing without a bot name', () => {
-    expect(FastPlayerIntentRouter.classifyIntent('не отставайте')).toBe(PlayerIntents.FOLLOW);
-    expect(FastPlayerIntentRouter.classifyIntent('соберитесь около меня')).toBe(PlayerIntents.COME_HERE);
-    expect(FastPlayerIntentRouter.classifyIntent('прикройте меня')).toBe(PlayerIntents.HELP);
-    expect(FastPlayerIntentRouter.classifyIntent('стоим здесь')).toBe(PlayerIntents.STOP);
-    expect(FastPlayerIntentRouter.classifyIntent('куда идём?')).toBe(PlayerIntents.NONE);
+  it('understands ordinary English group phrasing without a bot name', () => {
+    expect(FastPlayerIntentRouter.classifyIntent('keep up')).toBe(PlayerIntents.FOLLOW);
+    expect(FastPlayerIntentRouter.classifyIntent('gather here')).toBe(PlayerIntents.COME_HERE);
+    expect(FastPlayerIntentRouter.classifyIntent('help me')).toBe(PlayerIntents.HELP);
+    expect(FastPlayerIntentRouter.classifyIntent('stand still')).toBe(PlayerIntents.STOP);
+    expect(FastPlayerIntentRouter.classifyIntent('where are we going?')).toBe(PlayerIntents.NONE);
   });
 
-  it('correctly classifies Russian STOP synonyms', () => {
-    expect(FastPlayerIntentRouter.classifyIntent('Sam, стоп')).toBe(PlayerIntents.STOP);
-    expect(FastPlayerIntentRouter.classifyIntent('стой!')).toBe(PlayerIntents.STOP);
-    expect(FastPlayerIntentRouter.classifyIntent('ребят, остановитесь')).toBe(PlayerIntents.STOP);
-    expect(FastPlayerIntentRouter.classifyIntent('замри тут')).toBe(PlayerIntents.STOP);
-    expect(FastPlayerIntentRouter.classifyIntent('парни, стойте')).toBe(PlayerIntents.STOP);
-    expect(FastPlayerIntentRouter.classifyIntent('хватит идти за мной')).toBe(PlayerIntents.STOP);
-    expect(FastPlayerIntentRouter.classifyIntent('не двигайся')).toBe(PlayerIntents.STOP);
-    expect(FastPlayerIntentRouter.classifyIntent('отмена')).toBe(PlayerIntents.STOP);
+  it('correctly classifies English STOP synonyms', () => {
+    expect(FastPlayerIntentRouter.classifyIntent('Sam, stop')).toBe(PlayerIntents.STOP);
+    expect(FastPlayerIntentRouter.classifyIntent('halt!')).toBe(PlayerIntents.STOP);
+    expect(FastPlayerIntentRouter.classifyIntent('guys, stop')).toBe(PlayerIntents.STOP);
+    expect(FastPlayerIntentRouter.classifyIntent('freeze here')).toBe(PlayerIntents.STOP);
+    expect(FastPlayerIntentRouter.classifyIntent('guys, stay still')).toBe(PlayerIntents.STOP);
+    expect(FastPlayerIntentRouter.classifyIntent("that's enough, stop following me")).toBe(PlayerIntents.STOP);
+    expect(FastPlayerIntentRouter.classifyIntent("don't move")).toBe(PlayerIntents.STOP);
+    expect(FastPlayerIntentRouter.classifyIntent('cancel')).toBe(PlayerIntents.STOP);
   });
 
-  it('correctly classifies Russian WAIT synonyms', () => {
-    expect(FastPlayerIntentRouter.classifyIntent('Sam, подожди')).toBe(PlayerIntents.WAIT);
-    expect(FastPlayerIntentRouter.classifyIntent('погоди секунду')).toBe(PlayerIntents.WAIT);
-    expect(FastPlayerIntentRouter.classifyIntent('постой тут')).toBe(PlayerIntents.WAIT);
-    expect(FastPlayerIntentRouter.classifyIntent('ждите меня')).toBe(PlayerIntents.WAIT);
-    expect(FastPlayerIntentRouter.classifyIntent('обожди пару минут')).toBe(PlayerIntents.WAIT);
+  it('correctly classifies English WAIT synonyms', () => {
+    expect(FastPlayerIntentRouter.classifyIntent('Sam, wait')).toBe(PlayerIntents.WAIT);
+    expect(FastPlayerIntentRouter.classifyIntent('hold on a second')).toBe(PlayerIntents.WAIT);
+    expect(FastPlayerIntentRouter.classifyIntent('pause here')).toBe(PlayerIntents.WAIT);
+    expect(FastPlayerIntentRouter.classifyIntent('wait for me')).toBe(PlayerIntents.WAIT);
+    expect(FastPlayerIntentRouter.classifyIntent('wait a minute')).toBe(PlayerIntents.WAIT);
   });
 
-  it('correctly classifies Russian COME_HERE synonyms', () => {
-    expect(FastPlayerIntentRouter.classifyIntent('Sam, иди сюда')).toBe(PlayerIntents.COME_HERE);
-    expect(FastPlayerIntentRouter.classifyIntent('быстро сюда!')).toBe(PlayerIntents.COME_HERE);
-    expect(FastPlayerIntentRouter.classifyIntent('подбеги ко мне')).toBe(PlayerIntents.COME_HERE);
-    expect(FastPlayerIntentRouter.classifyIntent('ребят, ко мне')).toBe(PlayerIntents.COME_HERE);
-    expect(FastPlayerIntentRouter.classifyIntent('подойдите сюда')).toBe(PlayerIntents.COME_HERE);
+  it('correctly classifies English COME_HERE synonyms', () => {
+    expect(FastPlayerIntentRouter.classifyIntent('Sam, come here')).toBe(PlayerIntents.COME_HERE);
+    expect(FastPlayerIntentRouter.classifyIntent('get over here!')).toBe(PlayerIntents.COME_HERE);
+    expect(FastPlayerIntentRouter.classifyIntent('come to me')).toBe(PlayerIntents.COME_HERE);
+    expect(FastPlayerIntentRouter.classifyIntent('guys, stay close')).toBe(PlayerIntents.COME_HERE);
+    expect(FastPlayerIntentRouter.classifyIntent('approach me')).toBe(PlayerIntents.COME_HERE);
   });
 
-  it('correctly classifies Russian FOLLOW synonyms', () => {
-    expect(FastPlayerIntentRouter.classifyIntent('Sam, пошли')).toBe(PlayerIntents.FOLLOW);
-    expect(FastPlayerIntentRouter.classifyIntent('ребят, идём за мной')).toBe(PlayerIntents.FOLLOW);
-    expect(FastPlayerIntentRouter.classifyIntent('поехали дальше')).toBe(PlayerIntents.FOLLOW);
-    expect(FastPlayerIntentRouter.classifyIntent('продолжай следовать')).toBe(PlayerIntents.FOLLOW);
-    expect(FastPlayerIntentRouter.classifyIntent('погнали со мной')).toBe(PlayerIntents.FOLLOW);
-    expect(FastPlayerIntentRouter.classifyIntent('следуйте за мной')).toBe(PlayerIntents.FOLLOW);
+  it('correctly classifies English FOLLOW synonyms', () => {
+    expect(FastPlayerIntentRouter.classifyIntent("Sam, let's go")).toBe(PlayerIntents.FOLLOW);
+    expect(FastPlayerIntentRouter.classifyIntent('guys, come with me')).toBe(PlayerIntents.FOLLOW);
+    expect(FastPlayerIntentRouter.classifyIntent('move forward')).toBe(PlayerIntents.FOLLOW);
+    expect(FastPlayerIntentRouter.classifyIntent('continue following')).toBe(PlayerIntents.FOLLOW);
+    expect(FastPlayerIntentRouter.classifyIntent('come with me')).toBe(PlayerIntents.FOLLOW);
+    expect(FastPlayerIntentRouter.classifyIntent('follow me')).toBe(PlayerIntents.FOLLOW);
   });
 
-  it('correctly classifies Russian HELP synonyms', () => {
-    expect(FastPlayerIntentRouter.classifyIntent('ребят, помогите!')).toBe(PlayerIntents.HELP);
-    expect(FastPlayerIntentRouter.classifyIntent('спасай, тут крипер!')).toBe(PlayerIntents.HELP);
-    expect(FastPlayerIntentRouter.classifyIntent('срочно на помощь')).toBe(PlayerIntents.HELP);
-    expect(FastPlayerIntentRouter.classifyIntent('выручай, мало хп')).toBe(PlayerIntents.HELP);
+  it('correctly classifies English HELP synonyms', () => {
+    expect(FastPlayerIntentRouter.classifyIntent('guys, help!')).toBe(PlayerIntents.HELP);
+    expect(FastPlayerIntentRouter.classifyIntent('help, there is a creeper!')).toBe(PlayerIntents.HELP);
+    expect(FastPlayerIntentRouter.classifyIntent('need help urgently')).toBe(PlayerIntents.HELP);
+    expect(FastPlayerIntentRouter.classifyIntent('help me, low health')).toBe(PlayerIntents.HELP);
   });
 
   it('returns NONE for normal conversation', () => {
-    expect(FastPlayerIntentRouter.classifyIntent('что крафтим дальше?')).toBe(PlayerIntents.NONE);
-    expect(FastPlayerIntentRouter.classifyIntent('как думаешь, где алмазы?')).toBe(PlayerIntents.NONE);
-    expect(FastPlayerIntentRouter.classifyIntent('красивый закат')).toBe(PlayerIntents.NONE);
+    expect(FastPlayerIntentRouter.classifyIntent('what should we craft next?')).toBe(PlayerIntents.NONE);
+    expect(FastPlayerIntentRouter.classifyIntent('where do you think the diamonds are?')).toBe(PlayerIntents.NONE);
+    expect(FastPlayerIntentRouter.classifyIntent('beautiful sunset')).toBe(PlayerIntents.NONE);
   });
 });
