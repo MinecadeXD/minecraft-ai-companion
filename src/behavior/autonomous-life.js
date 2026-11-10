@@ -45,7 +45,7 @@ export class AutonomousLifeEngine {
     try {
       await this._executeLifeRoutine(bot);
     } catch (err) {
-      logger.warn(`[${this.agent.name}] Ошибка в autonomous life: ${err.message}`);
+      logger.warn(`[${this.agent.name}] Error in autonomous life: ${err.message}`);
     } finally {
       this.isBusy = false;
     }
@@ -55,13 +55,13 @@ export class AutonomousLifeEngine {
     const agentName = this.agent.name;
     const now = Date.now();
 
-    // 0. ПЕРИОДИЧЕСКАЯ ОРГАНИЗАЦИЯ ХОТБАРА (Как у живого игрока)
+    // 0. PERIODIC HOTBAR ORGANIZATION (like a real player)
     if (now - this.lastHotbarSort > 45000) {
       this.lastHotbarSort = now;
       await HumanMotor.organizeHotbar(bot);
     }
 
-    // 1. SURVIVAL CHECK: Food & Auto-Eating (Бесшумно, без спама в чат!)
+    // 1. SURVIVAL CHECK: Food & Auto-Eating (Silently, without chat spam!)
     if (bot.food < 17 || bot.health < 17) {
       const foodItem = bot.inventory.items().find(i => 
         ['bread', 'cooked_beef', 'cooked_porkchop', 'cooked_mutton', 'cooked_chicken', 'apple', 'baked_potato', 'carrot'].includes(i.name)
@@ -81,7 +81,7 @@ export class AutonomousLifeEngine {
       }
     }
 
-    // 2. БЫТ В ЛАГЕРЕ: Сон ночью, факелы в темноте и сбор спелого урожая
+    // 2. CAMP ROUTINE: Sleep at night, place torches in darkness, and harvest ripe crops
     const slept = await CampLifeEngine.sleepAtNight(bot);
     if (slept) return;
 
@@ -116,7 +116,7 @@ export class AutonomousLifeEngine {
       if (logBlocks.length > 0) {
         const targetPos = logBlocks[0];
         this.currentSubtask = 'woodcutting';
-        logger.info(`[${agentName}] 🪓 Автономно добывает дерево на ${targetPos}`);
+        logger.info(`[${agentName}] 🪓 Autonomously gathering wood at ${targetPos}`);
         
         await KinematicsEngine.equipBestTool(bot, 'wood');
         const targetBlock = bot.blockAt(targetPos);
@@ -145,7 +145,7 @@ export class AutonomousLifeEngine {
           const recipe = bot.recipesFor(plankType.id, null, 1, null)[0];
           if (recipe) {
             await bot.craft(recipe, 1, null);
-            logger.info(`[${agentName}] 🔨 Автономно скрафтил доски (${plankName})`);
+            logger.info(`[${agentName}] 🔨 Autonomously crafted planks (${plankName})`);
             return;
           }
         }
@@ -159,7 +159,7 @@ export class AutonomousLifeEngine {
         const recipe = bot.recipesFor(stickType.id, null, 1, null)[0];
         if (recipe) {
           await bot.craft(recipe, 1, null);
-          logger.info(`[${agentName}] 🪵 Автономно скрафтил палки`);
+          logger.info(`[${agentName}] 🪵 Autonomously crafted sticks`);
           return;
         }
       }
@@ -179,7 +179,7 @@ export class AutonomousLifeEngine {
         const recipes = bot.recipesFor(pickType.id, null, 1, craftingTableBlock);
         if (recipes.length > 0) {
           await bot.craft(recipes[0], 1, craftingTableBlock);
-          logger.info(`[${agentName}] ⛏️ Автономно скрафтил ${pickName}!`);
+          logger.info(`[${agentName}] ⛏️ Autonomously crafted ${pickName}!`);
             return;
         }
       }
