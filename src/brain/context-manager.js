@@ -4,8 +4,8 @@ import { sceneObserver } from '../perception/scene-observer.js';
 const logger = createLogger('AI');
 
 /**
- * ContextManager — управление контекстом для LLM.
- * Формирует релевантную информацию для каждого запроса.
+ * ContextManager — context management for the LLM.
+ * Builds relevant information for each request.
  */
 export class ContextManager {
   constructor(config) {
@@ -34,40 +34,40 @@ export class ContextManager {
   }
 
   /**
-   * Строит контекстную строку для AI из текущего WorldState.
-   * @param {WorldState} worldState — объект состояния мира
-   * @param {string|null} currentTask — текущая задача
-   * @param {Array} recentHistory — недавняя история
+   * Build a context string for the AI from the current WorldState.
+   * @param {WorldState} worldState — world state object
+   * @param {string|null} currentTask — current task
+   * @param {Array} recentHistory — recent history
    * @returns {string}
    */
   buildContext(worldState, currentTask, recentHistory = [], memoryManager = null) {
     const parts = [];
 
-    parts.push('[СОСТОЯНИЕ МИРА]');
+    parts.push('[WORLD STATE]');
 
     if (worldState && worldState.getSummary) {
       parts.push(worldState.getSummary());
     } else if (worldState && worldState.position) {
-      // Fallback если передан snapshot
+      // Fallback when a snapshot is provided
       const pos = worldState.position;
-      parts.push(`Позиция: [${pos.x}, ${pos.y}, ${pos.z}]`);
-      parts.push(`Здоровье: ${worldState.health || 20}/20, Еда: ${worldState.food || 20}/20`);
+      parts.push(`Position: [${pos.x}, ${pos.y}, ${pos.z}]`);
+      parts.push(`Health: ${worldState.health || 20}/20, Food: ${worldState.food || 20}/20`);
     }
 
-    // Живое зрение: что бот реально видит вокруг (рельеф, стороны света, объекты).
+    // Live vision: what the bot actually sees nearby (terrain, cardinal directions, and objects).
     if (this.bot?.entity) {
       try {
         const scene = sceneObserver.observe(this.bot);
         if (scene) {
-          parts.push(`\n[ЧТО Я ВИЖУ]\n${sceneObserver.describe(scene)}`);
+          parts.push(`\n[WHAT I SEE]\n${sceneObserver.describe(scene)}`);
         }
       } catch (err) {
-        logger.debug(`Не удалось построить сцену для контекста: ${err.message}`);
+        logger.debug(`Could not build a scene for context: ${err.message}`);
       }
     }
 
     if (currentTask) {
-      parts.push(`\n[ТЕКУЩАЯ ЗАДАЧА]\n${currentTask}`);
+      parts.push(`\n[CURRENT TASK]\n${currentTask}`);
     }
 
     if (memoryManager && memoryManager.getMemoryContext) {
@@ -77,49 +77,49 @@ export class ContextManager {
       }
     }
 
-    // Открытые обещания/договорённости (живая память): бот сам вспоминает,
-    // что обещал и не сделал. Точные слова формулирует LLM.
+    // Open promises and commitments (living memory): the bot recalls on its own
+    // what it promised but has not done. The LLM generates the exact wording.
     if (this.commitmentMemory?.getContextForPrompt) {
       try {
         const promises = this.commitmentMemory.getContextForPrompt();
-        if (promises) parts.push(`\n[МОИ ОБЕЩАНИЯ]\n${promises}`);
+        if (promises) parts.push(`\n[MY PROMISES]\n${promises}`);
       } catch (_) {}
     }
 
-    // Недавняя история (сжатая)
+    // Recent history (summarized)
     const history = recentHistory.length > 0 ? recentHistory : this.recentHistory;
     if (history.length > 0) {
       const historyText = this._summarizeHistory(history);
-      parts.push(`\n[НЕДАВНЯЯ ИСТОРИЯ]\n${historyText}`);
+      parts.push(`\n[RECENT HISTORY]\n${historyText}`);
     }
 
     return parts.join('\n');
   }
 
   /**
-   * Добавляет сообщение в историю.
+   * Add a message to history.
    */
   addToHistory(role, content) {
     this.recentHistory.push({ role, content, timestamp: Date.now() });
-    // Ограничиваем размер
+    // Limit the size
     if (this.recentHistory.length > this.maxHistoryLength) {
       this.recentHistory = this.recentHistory.slice(-this.maxHistoryLength);
     }
   }
 
   /**
-   * Сжимает историю до читаемого формата.
+   * Compress the history into a readable format.
    */
   _summarizeHistory(messages) {
     if (!messages || messages.length === 0) return '';
     return messages
-      .slice(-10) // Последние 10 сообщений
+      .slice(-10) // Last 10 messages
       .map(m => `${m.role}: ${typeof m.content === 'string' ? m.content.substring(0, 150) : m.content}`)
       .join('\n');
   }
 
   /**
-   * Очистка истории.
+   * Clear history.
    */
   clearHistory() {
     this.recentHistory = [];
