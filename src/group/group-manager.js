@@ -39,19 +39,19 @@ export class GroupManager {
     this.groups.set(groupId, group);
     this.agentGroups.set(initiator, groupId);
     
-    logger.info(`Группа ${groupId} предложена ${initiator}. Цель: ${goal}. Приглашены: ${group.invited.join(', ')}`);
+    logger.info(`Group ${groupId} proposed by ${initiator}. Goal: ${goal}. Invited: ${group.invited.join(', ')}`);
     return group;
   }
 
   acceptGroupInvite(agentName, groupId) {
     const group = this.groups.get(groupId);
     if (!group) {
-      logger.warn(`Группа ${groupId} не найдена (acceptGroupInvite)`);
+      logger.warn(`Group ${groupId} not found (acceptGroupInvite)`);
       return false;
     }
     
     if (group.status !== 'forming') {
-      logger.warn(`Группа ${groupId} уже активна или распущена`);
+      logger.warn(`Group ${groupId} is already active or has been disbanded`);
       return false;
     }
     
@@ -60,7 +60,7 @@ export class GroupManager {
       group.invited.splice(inviteIndex, 1);
       group.members.push(agentName);
       this.agentGroups.set(agentName, groupId);
-      logger.info(`${agentName} принял приглашение в группу ${groupId}`);
+      logger.info(`${agentName} accepted the invitation to group ${groupId}`);
       return true;
     }
     
@@ -74,7 +74,7 @@ export class GroupManager {
     const inviteIndex = group.invited.indexOf(agentName);
     if (inviteIndex !== -1) {
       group.invited.splice(inviteIndex, 1);
-      logger.info(`${agentName} отклонил приглашение в группу ${groupId}. Причина: ${reason}`);
+      logger.info(`${agentName} declined the invitation to group ${groupId}. Reason: ${reason}`);
       
       // If no one is invited and only initiator is in group, might dissolve early
       if (group.invited.length === 0 && group.members.length <= 1) {
@@ -91,10 +91,10 @@ export class GroupManager {
     
     if (group.members.length >= 2) { // minimum 2 members to be a group
       group.status = 'active';
-      logger.info(`Группа ${groupId} активирована. Участники: ${group.members.join(', ')}`);
+      logger.info(`Group ${groupId} activated. Members: ${group.members.join(', ')}`);
       return group;
     } else {
-      logger.warn(`Недостаточно участников для активации группы ${groupId}`);
+      logger.warn(`Not enough members to activate group ${groupId}`);
       return false;
     }
   }
@@ -107,12 +107,12 @@ export class GroupManager {
     if (memberIndex !== -1) {
       group.members.splice(memberIndex, 1);
       this.agentGroups.delete(agentName);
-      logger.info(`${agentName} покинул группу ${groupId}. Причина: ${reason}`);
+      logger.info(`${agentName} left group ${groupId}. Reason: ${reason}`);
       
       // Reassign leader if leader left
       if (group.leader === agentName && group.members.length > 0) {
         group.leader = group.members[0];
-        logger.info(`Новый лидер группы ${groupId}: ${group.leader}`);
+        logger.info(`New leader of group ${groupId}: ${group.leader}`);
       }
       
       // Dissolve if empty or only 1 member left
@@ -133,7 +133,7 @@ export class GroupManager {
       this.agentGroups.delete(member);
     }
     group.status = 'dissolved';
-    logger.info(`Группа ${groupId} распущена. Причина: ${reason}`);
+    logger.info(`Group ${groupId} disbanded. Reason: ${reason}`);
     
     // We could delete it, but keeping it in 'dissolved' state for history might be useful
     // For now, keep it in the map. Cleanup will remove it later.
@@ -175,7 +175,7 @@ export class GroupManager {
     }
     
     group.taskBoard.push(task);
-    logger.info(`Новая задача добавлена в группу ${groupId}: ${task.description}`);
+    logger.info(`New task added to group ${groupId}: ${task.description}`);
     return task;
   }
 
@@ -187,7 +187,7 @@ export class GroupManager {
     if (task && (task.status === 'open' || task.status === 'assigned')) {
       task.assignedTo = agentName;
       task.status = 'in_progress';
-      logger.info(`${agentName} взял задачу ${taskId} в группе ${groupId}`);
+      logger.info(`${agentName} claimed task ${taskId} in group ${groupId}`);
       return true;
     }
     return false;
@@ -200,7 +200,7 @@ export class GroupManager {
     const task = group.taskBoard.find(t => t.id === taskId);
     if (task && task.status === 'in_progress') {
       task.status = 'completed';
-      logger.info(`Задача ${taskId} завершена в группе ${groupId}`);
+      logger.info(`Task ${taskId} completed in group ${groupId}`);
       return true;
     }
     return false;
