@@ -33,17 +33,17 @@ export class LocalVisionController {
       const frame = this.observer.observe(bot);
       const observation = this.observer.describe(frame);
       const raw = await this._askLocalModel(observation, [
-        'Ты непрерывный локальный мозг игрока Minecraft.',
-        'Оцени полный вид от первого лица, состояние игрока и ближайшие сущности.',
-        'Выбери ровно одно безопасное действие. Если текущая задача уже выполняется, продолжай ее.',
-        'Ответ только JSON: {"tool":"название инструмента или null","args":{},"reason":"кратко"}.',
-        'Не выбирай неизвестные инструменты, не стой без причины и не делай действие, если есть опасность.',
+        'You are the continuous local decision-making system for a Minecraft player.',
+        'Assess the full first-person view, player state, and nearby entities.',
+        'Choose exactly one safe action. If the current task is already in progress, continue it.',
+        'Respond with JSON only: {"tool":"tool name or null","args":{},"reason":"brief explanation"}.',
+        'Do not choose unknown tools, do not remain idle without a reason, and do not act when a hazard is present.',
       ].join('\n'));
       const decision = this._parse(raw);
       this.lastDecision = decision;
       if (decision?.tool) await this._execute(decision);
     } catch (error) {
-      logger.warn(`[${this.agent.name}] локальный vision-контур: ${error.message}`);
+      logger.warn(`[${this.agent.name}] local vision loop: ${error.message}`);
     } finally {
       this.busy = false;
     }
