@@ -127,7 +127,7 @@ describe('REAL PROTOCOL & BOT SUBSYSTEM VALIDATION', () => {
     expect(res.success).toBe(true);
     expect(res.data.x).toBe(100);
 
-    const chatRes = await registry.execute('say_in_chat', { message: 'Привет игроку kustash01!' });
+    const chatRes = await registry.execute('say_in_chat', { message: 'Hello to player kustash01!' });
     expect(chatRes.success).toBe(true);
   });
 });
