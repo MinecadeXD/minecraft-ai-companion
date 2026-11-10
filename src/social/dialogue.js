@@ -2,7 +2,7 @@ import logger from '../utils/logger.js';
 
 export const TalkMode = {
   SILENT: 'silent',       // Actions speak louder than words; only reports critical errors
-  BRIEF: 'brief',         // 1-5 word concise confirmations ("Понял", "Иду", "Сделал")
+  BRIEF: 'brief',         // 1-5 word concise confirmations ("Got it", "Coming", "Done")
   NORMAL: 'normal',       // Balanced natural companion responses
   CHATTY: 'chatty',       // Frequently comments, shares thoughts, asks questions
   IMMERSIVE: 'immersive', // Roleplay flavor, in-depth descriptive thoughts
@@ -24,23 +24,23 @@ export class DialogueManager {
 
   /**
    * Resolve spatial and contextual references in user input.
-   * e.g. "тот сундук", "эта пещера", "наша база", "сюда", "там".
+   * e.g. "that chest", "this cave", "our base", "here", "there".
    */
   resolveReferences(message, worldState, memoryManager = null) {
     let resolved = message;
 
-    if (message.includes('сюда') || message.includes('здесь')) {
+    if (message.includes('here') || message.includes('here')) {
       if (worldState?.playerEntity?.position) {
         const p = worldState.playerEntity.position;
-        resolved += ` [контекст: координаты игрока X:${Math.round(p.x)} Y:${Math.round(p.y)} Z:${Math.round(p.z)}]`;
+        resolved += ` [context: player coordinates X:${Math.round(p.x)} Y:${Math.round(p.y)} Z:${Math.round(p.z)}]`;
       }
     }
 
-    if (message.includes('наша база') || message.includes('базу') || message.includes('домой')) {
+    if (message.includes('our base') || message.includes('the base') || message.includes('home')) {
       if (memoryManager) {
         const basePoi = memoryManager.getPOI('base') || memoryManager.getPOI('home');
         if (basePoi) {
-          resolved += ` [контекст: координаты базы X:${basePoi.x} Y:${basePoi.y} Z:${basePoi.z}]`;
+          resolved += ` [context: base coordinates X:${basePoi.x} Y:${basePoi.y} Z:${basePoi.z}]`;
         }
       }
     }
