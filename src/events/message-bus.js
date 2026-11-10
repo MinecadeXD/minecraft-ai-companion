@@ -18,8 +18,8 @@ export const MessageChannel = {
 };
 
 /**
- * MessageBus — единая шина сообщений с контролем происхождения (provenance),
- * дедупликацией сообщений и строгим разделением восприятия и отправки.
+ * MessageBus — a unified message bus with provenance tracking,
+ * message deduplication, and a strict separation between receiving and sending.
  */
 export class MessageBus extends EventEmitter {
   constructor() {
@@ -31,7 +31,7 @@ export class MessageBus extends EventEmitter {
   }
 
   /**
-   * Генерация уникального ID сообщения
+   * Generate a unique message ID
    */
   generateMessageId(sender, content, timestamp = Date.now()) {
     // Stable short-lived id: duplicate event emissions for the same chat line
@@ -41,7 +41,7 @@ export class MessageBus extends EventEmitter {
   }
 
   /**
-   * Публикация полученного из Minecraft чата сообщения (chat_received)
+   * Publish a message received from Minecraft chat (chat_received)
    * @param {Object} payload
    * @param {string} payload.sender
    * @param {string} payload.content
@@ -76,10 +76,10 @@ export class MessageBus extends EventEmitter {
   }
 
   /**
-   * Проверка: обрабатывал ли конкретный агент это сообщение ранее (дедупликация)
+   * Check whether a specific agent has already processed this message (deduplication)
    * @param {string} agentName
    * @param {string} messageId
-   * @returns {boolean} true если сообщение новое, false если дубликат
+   * @returns {boolean} true if the message is new, false if it is a duplicate
    */
   markProcessed(agentName, messageId) {
     if (!this.agentSeenMap.has(agentName)) {
@@ -88,7 +88,7 @@ export class MessageBus extends EventEmitter {
 
     const seen = this.agentSeenMap.get(agentName);
     if (seen.has(messageId)) {
-      return false; // Уже было обработано
+      return false; // Already processed
     }
 
     seen.add(messageId);
@@ -96,7 +96,7 @@ export class MessageBus extends EventEmitter {
       const first = seen.values().next().value;
       seen.delete(first);
     }
-    return true; // Новое сообщение
+    return true; // New message
   }
 
   /** Allow one natural-language responder for an unaddressed chat line. */
@@ -111,7 +111,7 @@ export class MessageBus extends EventEmitter {
   }
 
   /**
-   * Проверка адресации сообщения: адресовано ли оно конкретному агенту, группе или всем
+   * Check message addressing: is it addressed to a specific agent, a group, or everyone?
    * @param {string} content
    * @param {string} agentName
    * @param {string[]} allAgentNames
@@ -121,24 +121,24 @@ export class MessageBus extends EventEmitter {
     const lower = content.toLowerCase().trim();
     const myNameLower = agentName.toLowerCase();
     const aliases = {
-      sam: ['сэм', 'сэмми', 'сам'],
-      max: ['макс', 'максим'],
-      jack: ['джек', 'джеки'],
-      ryan: ['райан', 'райн'],
-      alex: ['алекс', 'саша'],
-      leo: ['лео', 'леон'],
+      sam: ['sammy'],
+      max: ['maxim'],
+      jack: ['jackie'],
+      ryan: [],
+      alex: ['sasha'],
+      leo: ['leon'],
     };
     const hasAddress = (name) => {
       const names = [name.toLowerCase(), ...(aliases[name.toLowerCase()] || [])];
       return names.some((alias) => new RegExp(`(^|\\s)${alias}(?=($|[\\s,!?:;.]))`, 'i').test(lower));
     };
 
-    // 1. Проверка прямого обращения к боту (например: "Sam,", "Sam ", "Sam!")
+    // 1. Check for a direct mention of a bot (for example: "Sam,", "Sam ", "Sam!")
     if (hasAddress(agentName)) {
       return { isAddressedToMe: true, isGroupMessage: false, targetName: agentName, routing: { kind: 'direct', recipientIds: [agentName] } };
     }
 
-    // 2. Проверка обращения к другому конкретному боту
+    // 2. Check whether another specific bot was addressed
     for (const other of allAgentNames) {
       if (other.toLowerCase() === myNameLower) continue;
       if (hasAddress(other)) {
@@ -146,8 +146,8 @@ export class MessageBus extends EventEmitter {
       }
     }
 
-    // 3. Проверка группового обращения
-    const groupKeywords = ['ребят', 'парни', 'народ', 'боты', 'все', 'команда', 'друзья', 'everyone', 'all'];
+    // 3. Check for a group-wide message
+    const groupKeywords = ['guys', 'folks', 'bots', 'everyone', 'all', 'team', 'friends'];
     const isGroup = groupKeywords.some(kw => lower.includes(kw));
 
     return {
