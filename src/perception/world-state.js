@@ -3,8 +3,8 @@ import { createLogger } from '../utils/logger.js';
 const logger = createLogger('WORLD');
 
 /**
- * WorldState — собирает и хранит текущее состояние игрового мира.
- * Периодически обновляется (не каждый тик).
+ * WorldState — collects and stores the current state of the game world.
+ * Updated periodically (not every tick).
  */
 export class WorldState {
   constructor() {
@@ -32,12 +32,12 @@ export class WorldState {
     this.foodCount = 0;
     this.hasShield = false;
     this.lastUpdate = 0;
-    this.updateInterval = 2000; // Обновляем каждые 2 секунды
+    this.updateInterval = 2000; // Updated every 2 seconds
     this._autoUpdateTimer = null;
   }
 
   /**
-   * Обновляет состояние мира из mineflayer бота.
+   * Update world state from the Mineflayer bot.
    */
   update(bot) {
     if (!bot || !bot.entity) return;
@@ -47,7 +47,7 @@ export class WorldState {
   }
 
   /**
-   * Принудительное обновление (игнорирует интервал).
+   * Force an update (ignore the interval).
    */
   forceUpdate(bot) {
     if (!bot || !bot.entity) return;
@@ -69,7 +69,7 @@ export class WorldState {
       this.gameMode = bot.game ? bot.game.gameMode : 'survival';
       this.experience = bot.experience ? bot.experience.points : 0;
 
-      // Инвентарь
+      // Inventory
       const rawItems = bot.inventory ? bot.inventory.items() : [];
       this.inventory = rawItems.map(item => ({
         name: item.name,
@@ -77,7 +77,7 @@ export class WorldState {
         slot: item.slot,
       }));
 
-      // Предмет в главной руке
+      // Main-hand item
       this.heldItem = bot.heldItem ? {
         name: bot.heldItem.name,
         count: bot.heldItem.count,
@@ -85,7 +85,7 @@ export class WorldState {
         durabilityUsed: bot.heldItem.durabilityUsed ?? null,
       } : null;
 
-      // Предмет во второй руке (off-hand, слот 45)
+      // Off-hand item (slot 45)
       const offHandItem = bot.inventory?.slots ? bot.inventory.slots[45] : null;
       this.offHand = offHandItem ? {
         name: offHandItem.name,
@@ -94,7 +94,7 @@ export class WorldState {
         durabilityUsed: offHandItem.durabilityUsed ?? null,
       } : null;
 
-      // Свободные слоты инвентаря (слоты 9..44)
+      // Available inventory slots (slots 9–44)
       if (bot.inventory?.slots) {
         let free = 0;
         for (let s = 9; s <= 44; s++) {
@@ -105,7 +105,7 @@ export class WorldState {
         this.freeSlots = 36;
       }
 
-      // Хотбар (слоты 36..44)
+      // Hotbar (slots 36–44)
       this.hotbar = bot.inventory?.slots
         ? bot.inventory.slots.slice(36, 45).filter(Boolean).map(item => ({
             name: item.name,
@@ -114,7 +114,7 @@ export class WorldState {
           }))
         : [];
 
-      // Броня (слоты 5..8: шлем, нагрудник, поножи, ботинки)
+      // Armor (slots 5–8: helmet, chestplate, leggings, boots)
       const armorSlots = [
         { slot: 5, type: 'head' },
         { slot: 6, type: 'torso' },
@@ -128,7 +128,7 @@ export class WorldState {
           }).filter(Boolean)
         : [];
 
-      // Факелы
+      // Torches
       this.torchCount = rawItems.reduce((acc, item) => {
         if (item.name === 'torch' || item.name === 'soul_torch') {
           return acc + (item.count || 1);
@@ -136,7 +136,7 @@ export class WorldState {
         return acc;
       }, 0);
 
-      // Еда
+      // Food
       const EDIBLE_ITEMS = new Set([
         'apple', 'baked_potato', 'beef', 'beetroot', 'beetroot_soup', 'bread', 'carrot',
         'chorus_fruit', 'cooked_beef', 'cooked_chicken', 'cooked_cod', 'cooked_mutton',
@@ -152,14 +152,14 @@ export class WorldState {
         return acc;
       }, 0);
 
-      // Наличие щита
+      // Shield availability
       this.hasShield = Boolean(
         this.offHand?.name === 'shield' ||
         this.heldItem?.name === 'shield' ||
         rawItems.some(i => i.name === 'shield')
       );
 
-      // Освещение и нахождение в пещере
+      // Lighting and whether the bot is in a cave
       let blockLight = 15;
       let skyLight = 0;
       let lightLevel = 15;
@@ -195,17 +195,17 @@ export class WorldState {
       const yPos = this.position ? this.position.y : 64;
       this.inCave = Boolean(yPos < 55 || (this.skyLight <= 4 && yPos < 65));
 
-      // Ближайшие сущности
+      // Nearby entities
       this.nearbyEntities = this._getNearbyEntities(bot, 16);
 
       this.lastUpdate = now;
     } catch (error) {
-      logger.error(`Ошибка обновления WorldState: ${error.message}`);
+      logger.error(`WorldState update error: ${error.message}`);
     }
   }
 
   /**
-   * Запуск автоматического обновления.
+   * Start automatic updates.
    */
   startAutoUpdate(bot) {
     this.stopAutoUpdate();
@@ -213,11 +213,11 @@ export class WorldState {
     this._autoUpdateTimer = setInterval(() => {
       this.forceUpdate(bot);
     }, this.updateInterval);
-    logger.info('Авто-обновление WorldState запущено');
+    logger.info('WorldState auto-update started');
   }
 
   /**
-   * Остановка автоматического обновления.
+   * Stop automatic updates.
    */
   stopAutoUpdate() {
     if (this._autoUpdateTimer) {
@@ -227,7 +227,7 @@ export class WorldState {
   }
 
   /**
-   * Возвращает сериализуемый снимок состояния для AI.
+   * Return a serializable state snapshot for the AI.
    */
   getSnapshot() {
     return {
@@ -247,7 +247,7 @@ export class WorldState {
         type: e.type,
         distance: e.distance,
       })),
-      armorSummary: this.armor.map(a => a.name).join(', ') || 'нет',
+      armorSummary: this.armor.map(a => a.name).join(', ') || 'none',
       armor: this.armor,
       heldItem: this.heldItem,
       offHand: this.offHand,
@@ -265,38 +265,38 @@ export class WorldState {
   }
 
   /**
-   * Краткое текстовое описание для AI контекста.
+   * Short text description for AI context.
    */
   getSummary() {
     const pos = this.position
       ? `${this.position.x}, ${this.position.y}, ${this.position.z}`
-      : 'Неизвестно';
+      : 'Unknown';
 
     const timeStr = this._getTimeDescription();
     const entities = this.nearbyEntities.length > 0
-      ? `Рядом: ${this.nearbyEntities.slice(0, 5).map(e => e.name || e.type).join(', ')}`
-      : 'Рядом никого';
+      ? `Nearby: ${this.nearbyEntities.slice(0, 5).map(e => e.name || e.type).join(', ')}`
+      : 'Nobody nearby';
 
-    const lightStr = `Свет: ${this.lightLevel}/15${this.inCave ? ' (в пещере)' : ''}`;
-    const handsStr = `В руках: [${this.heldItem?.name || 'рука'}], оффхэнд: [${this.offHand?.name || 'пусто'}]`;
-    const gearStr = `Свободно слотов: ${this.freeSlots}, Факелов: ${this.torchCount}, Еды: ${this.foodCount}`;
+    const lightStr = `Light: ${this.lightLevel}/15${this.inCave ? ' (in a cave)' : ''}`;
+    const handsStr = `Held: [${this.heldItem?.name || 'hand'}], off-hand: [${this.offHand?.name || 'empty'}]`;
+    const gearStr = `Free slots: ${this.freeSlots}, Torches: ${this.torchCount}, Food: ${this.foodCount}`;
 
     return [
-      `Позиция: [${pos}]`,
-      `Здоровье: ${this.health}/20, Еда: ${this.food}/20`,
-      `Время: ${timeStr}, Погода: ${this.isRaining ? 'Дождь' : 'Ясно'}, ${lightStr}`,
+      `Position: [${pos}]`,
+      `Health: ${this.health}/20, Food: ${this.food}/20`,
+      `Time: ${timeStr}, Weather: ${this.isRaining ? 'Rain' : 'Clear'}, ${lightStr}`,
       handsStr,
       gearStr,
-      `Инвентарь: ${this.getInventorySummary()}`,
+      `Inventory: ${this.getInventorySummary()}`,
       entities,
     ].join('. ');
   }
 
   /**
-   * Компактное описание инвентаря.
+   * Compact inventory description.
    */
   getInventorySummary() {
-    if (!this.inventory || this.inventory.length === 0) return 'пустой';
+    if (!this.inventory || this.inventory.length === 0) return 'empty';
     const counts = {};
     for (const item of this.inventory) {
       counts[item.name] = (counts[item.name] || 0) + item.count;
@@ -307,7 +307,7 @@ export class WorldState {
   }
 
   /**
-   * Собирает ближайшие сущности.
+   * Collect nearby entities.
    */
   _getNearbyEntities(bot, range = 16) {
     if (!bot || !bot.entities || !bot.entity) return [];
@@ -334,14 +334,14 @@ export class WorldState {
   }
 
   /**
-   * Описание времени суток в Minecraft.
+   * Description of the time of day in Minecraft.
    */
   _getTimeDescription() {
     const t = this.timeOfDay;
-    if (t >= 0 && t < 6000) return 'Утро';
-    if (t >= 6000 && t < 12000) return 'День';
-    if (t >= 12000 && t < 13000) return 'Закат';
-    if (t >= 13000 && t < 23000) return 'Ночь';
-    return 'Рассвет';
+    if (t >= 0 && t < 6000) return 'Morning';
+    if (t >= 6000 && t < 12000) return 'Day';
+    if (t >= 12000 && t < 13000) return 'Sunset';
+    if (t >= 13000 && t < 23000) return 'Night';
+    return 'Dawn';
   }
 }
