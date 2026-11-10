@@ -30,9 +30,9 @@ describe('AIBrain Integration', () => {
   });
 
   it('should process simple text message', async () => {
-    provider.addResponse({ text: 'Привет, kustash01!', toolCalls: [], raw: {} });
-    const result = await brain.processMessage('Привет', mockWorldState);
-    expect(result).toBe('Привет, kustash01!');
+    provider.addResponse({ text: 'Hello, kustash01!', toolCalls: [], raw: {} });
+    const result = await brain.processMessage('Hello', mockWorldState);
+    expect(result).toBe('Hello, kustash01!');
   });
 
   it('should execute tool calls', async () => {
@@ -44,7 +44,7 @@ describe('AIBrain Integration', () => {
     });
     // Second response: text after tool result
     provider.addResponse({
-      text: 'Ты на координатах 100, 64, 200',
+      text: 'You are at coordinates 100, 64, 200',
       toolCalls: [],
       raw: {},
     });
@@ -56,8 +56,8 @@ describe('AIBrain Integration', () => {
       handler: async () => ({ success: true, data: { x: 100, y: 64, z: 200 } }),
     });
 
-    const result = await brain.processMessage('Где ты?', mockWorldState);
-    expect(result).toBe('Ты на координатах 100, 64, 200');
+    const result = await brain.processMessage('Where are you?', mockWorldState);
+    expect(result).toBe('You are at coordinates 100, 64, 200');
     // Verify tool results were sent back
     expect(provider.callLog.some(c => c.method === 'sendToolResults')).toBe(true);
   });
@@ -69,7 +69,7 @@ describe('AIBrain Integration', () => {
       raw: {},
     });
     provider.addResponse({
-      text: 'Инструмент не сработал, попробую по-другому',
+      text: 'The tool did not work; I will try a different approach',
       toolCalls: [],
       raw: {},
     });
@@ -82,7 +82,7 @@ describe('AIBrain Integration', () => {
     });
 
     const result = await brain.processMessage('test', mockWorldState);
-    expect(result).toContain('по-другому');
+    expect(result).toContain('different approach');
   });
 
   it('should prevent concurrent processing', async () => {
@@ -94,7 +94,7 @@ describe('AIBrain Integration', () => {
     const p2 = brain.processMessage('msg2', mockWorldState);
 
     const [r1, r2] = await Promise.all([p1, p2]);
-    expect(r2.toLowerCase()).toContain('подожд');
+    expect(r2.toLowerCase()).toContain('wait');
   });
 
   it('should stop processing after max iterations', async () => {
@@ -115,7 +115,7 @@ describe('AIBrain Integration', () => {
     });
 
     const result = await brain.processMessage('loop', mockWorldState);
-    expect(result).toContain('слишком много');
+    expect(result).toContain('too many');
   });
 
   it('should execute tool calls from AI and return text reply', async () => {
@@ -138,25 +138,25 @@ describe('AIBrain Integration', () => {
     });
     // AI responds after tool result
     provider.addResponse({
-      text: 'Рублю дуб, сейчас будет!',
+      text: 'Chopping oak, coming up!',
       toolCalls: [],
       raw: {},
     });
 
-    const result = await brain.processMessage('[kustash01]: добудь дерево', mockWorldState);
+    const result = await brain.processMessage('[kustash01]: gather wood', mockWorldState);
     expect(mined).toBe(true);
-    expect(result).toBe('Рублю дуб, сейчас будет!');
+    expect(result).toBe('Chopping oak, coming up!');
   });
 
   it('should pass through text reply without filtering when no tool calls', async () => {
     provider.addResponse({
-      text: 'Привет! Как дела в шахте?',
+      text: 'Hey! How is it going in the mine?',
       toolCalls: [],
       raw: {},
     });
 
-    const result = await brain.processMessage('[kustash01]: привет', mockWorldState);
-    expect(result).toBe('Привет! Как дела в шахте?');
+    const result = await brain.processMessage('[kustash01]: hello', mockWorldState);
+    expect(result).toBe('Hey! How is it going in the mine?');
   });
 
   it('returns empty string (silence) when AI returns empty text — no template filler', async () => {
@@ -166,8 +166,8 @@ describe('AIBrain Integration', () => {
       raw: {},
     });
 
-    const result = await brain.processMessage('[kustash01]: иди за мной', mockWorldState);
-    // Empty AI output is no longer masked by a hardcoded 'Понял!'. Silence is
+    const result = await brain.processMessage('[kustash01]: follow me', mockWorldState);
+    // Empty AI output is no longer masked by a hardcoded 'Got it!'. Silence is
     // more human than a canned acknowledgement; the caller decides what to do.
     expect(result).toBe('');
   });
