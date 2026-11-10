@@ -17,8 +17,8 @@ export const AgentAIState = {
 };
 
 /**
- * AI Brain — главный оркестратор AI-мозга с контролем жизненного цикла,
- * отменой запросов (AbortController) и строгим инвариантом activeRequests <= 1.
+ * AI Brain — the main AI orchestrator with lifecycle management,
+ * request cancellation (AbortController), and a strict activeRequests <= 1 invariant.
  */
 export class AIBrain {
   constructor(config, toolRegistry, contextManager, provider, memoryManager = null, options = {}) {
@@ -34,7 +34,7 @@ export class AIBrain {
     this.bot = options.bot || null;
     this.session = null;
     this.maxIterations = 10;
-    this.processTimeout = 25000; // 25 секунд макс таймаут
+    this.processTimeout = 25000; // 25-second maximum timeout
     this.isProcessing = false;
     this.activeRequests = 0;
     this.state = AgentAIState.IDLE;
@@ -48,7 +48,7 @@ export class AIBrain {
     const windowMs = config?.ai?.rateLimit?.windowMs ?? 60000;
     this.rateLimiter = new RateLimiter(maxRequests, windowMs);
 
-    logger.info('AI Brain инициализирован (State: IDLE, activeRequests: 0)');
+    logger.info('AI Brain initialized (State: IDLE, activeRequests: 0)');
   }
 
   setBot(bot) {
@@ -66,12 +66,12 @@ export class AIBrain {
   }
 
   /**
-   * Принудительная отмена текущего AI-запроса (например, при поступлении экстренной команды игрока)
+   * Force-cancel the current AI request (for example, when an urgent player command arrives)
    */
   cancelActiveRequest(reason = 'Cancelled by system') {
     const hadActive = this.activeRequests > 0 || this.isProcessing;
     if (this.currentAbortController) {
-      logger.warn(`[AI CANCEL] Отмена активного запроса: ${reason}`);
+      logger.warn(`[AI CANCEL] Cancelling active request: ${reason}`);
       this.currentAbortController.abort();
       if (hadActive) telemetry.increment('cancelledRequests');
     }
@@ -93,21 +93,21 @@ export class AIBrain {
   }
 
   /**
-   * Главная точка входа — обработка сообщения пользователя.
-   * @param {string} message — сообщение от игрока
-   * @param {object} worldState — текущее состояние мира
-   * @param {string} [currentTask] — текущая задача (опционально)
-   * @returns {Promise<string>} — ответ AI
+   * Main entry point — process a user message.
+   * @param {string} message — message from the player
+   * @param {object} worldState — current world state
+   * @param {string} [currentTask] — current task (optional)
+   * @returns {Promise<string>} — AI response
    */
   async processMessage(message, worldState, currentTask = null) {
-    // Прямое обращение игрока всегда прерывает тишину и выводит из local mode
+    // A direct player message always interrupts silence and exits local mode
     this.state = AgentAIState.IDLE;
     this.localModeUntil = 0;
     telemetry.leaveLocalMode(this.agentName);
-    // ЖЁСТКИЙ ИНВАРИАНТ: activeRequests <= 1
+    // STRICT INVARIANT: activeRequests <= 1
     if (this.activeRequests >= 1) {
-      logger.warn(`[AI REJECT] Запрос отклонён: активен другой запрос (State: ${this.state}, activeRequests: ${this.activeRequests})`);
-      return 'Подожди, я ещё думаю над предыдущим запросом...';
+      logger.warn(`[AI REJECT] Request rejected: another request is active (State: ${this.state}, activeRequests: ${this.activeRequests})`);
+      return 'Wait, I'm still thinking about the previous request...';
     }
 
     this.activeRequests = 1;
@@ -139,7 +139,7 @@ export class AIBrain {
     this.telemetryRequestController = requestController;
 
     const startTime = Date.now();
-    logger.info(`[ЗАПРОС] "${message}"`);
+    logger.info(`[REQUEST] "${message}"`);
 
     try {
       const response = await this._processWithTimeout(
@@ -158,26 +158,26 @@ export class AIBrain {
 
       return response;
     } catch (error) {
-      if (error.name === 'AbortError' || error.message.includes('отменён') || error.message.includes('Cancelled')) {
-        logger.warn(`Запрос к AI был успешно отменён: ${error.message}`);
+      if (error.name === 'AbortError' || error.message.includes('Cancelled')) {
+        logger.warn(`AI request was successfully cancelled: ${error.message}`);
         this.session = null;
         this.state = AgentAIState.LOCAL_MODE;
         this.localModeUntil = Date.now() + this.localModeCooldownMs;
         return null;
       }
 
-      if (error.name === 'TimeoutError' || error.message.includes('таймаут') || error.message.includes('timeout')) {
+      if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
         telemetry.increment('timedOutRequests');
         telemetry.increment('timeouts');
         this.state = AgentAIState.LOCAL_MODE;
         this.session = null;
         this.localModeUntil = Date.now() + this.localModeCooldownMs;
         telemetry.enterLocalMode(this.agentName);
-        logger.warn(`[AI TIMEOUT] Истёк таймаут ответа (${this.processTimeout}ms), переключаюсь в LOCAL_MODE`);
+        logger.warn(`[AI TIMEOUT] Response timed out (${this.processTimeout} ms); switching to LOCAL_MODE`);
         return null;
       }
 
-      logger.error(`Ошибка обработки сообщения: ${error.message}`);
+      logger.error(`Error processing message: ${error.message}`);
       this.session = null;
       this.state = AgentAIState.LOCAL_MODE;
       this.localModeUntil = Date.now() + this.localModeCooldownMs;
@@ -202,7 +202,7 @@ export class AIBrain {
   }
 
   /**
-   * Обёртка таймаута с поддержкой AbortSignal
+   * Timeout wrapper with AbortSignal support
    * @private
    */
   _processWithTimeout(promise, timeoutMs, abortSignal, requestController = null) {
@@ -218,13 +218,13 @@ export class AIBrain {
 
       const timer = setTimeout(() => {
         requestController?.abort();
-        const error = new Error(`Время обработки AI истекло (${timeoutMs / 1000} секунд)`);
+        const error = new Error(`AI processing time expired (${timeoutMs / 1000} seconds)`);
         error.name = 'TimeoutError';
         settle(reject, error);
       }, timeoutMs);
 
       const onAbort = () => {
-        const error = new Error('Запрос к AI был отменён');
+        const error = new Error('AI request was cancelled');
         error.name = 'AbortError';
         settle(reject, error);
       };
@@ -257,13 +257,13 @@ export class AIBrain {
   }
 
   /**
-   * Внутренняя обработка с function calling loop.
+   * Internal processing with a function-calling loop.
    */
   async _processInternal(message, worldState, currentTask, abortSignal = null) {
-    // Ждём слот rate limiter
+    // Wait for a rate limiter slot
     await this.rateLimiter.waitForSlot(abortSignal);
 
-    // Строим контекст с учётом состояния мира и памяти
+    // Build context using world state and memory
     const context = this.contextManager.buildContext(
       worldState,
       currentTask,
@@ -272,7 +272,7 @@ export class AIBrain {
     );
     const fullMessage = context ? `${context}\n\n${message}` : message;
 
-    // Создаём/переиспользуем сессию
+    // Create or reuse a session
     if (!this.session) {
       const tools = this.toolRegistry.getFunctionDeclarations();
       const systemPrompt = getSystemPrompt(this.config);
@@ -281,11 +281,11 @@ export class AIBrain {
         systemPrompt,
         tools,
       });
-      logger.info(`Новая AI-сессия создана (tools: ${tools.length})`);
+      logger.info(`New AI session created (tools: ${tools.length})`);
     }
 
     this.state = AgentAIState.WAITING_API;
-    // Отправляем сообщение
+    // Send the message
     let response = await this.provider.sendMessage(this.session, fullMessage, { signal: abortSignal });
     let iteration = 0;
 
@@ -293,7 +293,7 @@ export class AIBrain {
     while (response.toolCalls && response.toolCalls.length > 0 && iteration < this.maxIterations) {
       iteration++;
       this.state = AgentAIState.EXECUTING;
-      logger.info(`[TOOL LOOP] Итерация ${iteration}/${this.maxIterations}: вызовы [${response.toolCalls.map(tc => tc.name).join(', ')}]`);
+      logger.info(`[TOOL LOOP] Iteration ${iteration}/${this.maxIterations}: calls [${response.toolCalls.map(tc => tc.name).join(', ')}]`);
 
       const toolResults = [];
 
@@ -317,7 +317,7 @@ export class AIBrain {
             name: tc.name,
             result: {
               success: false,
-              error: `Вызов ${tc.name} повторяется без изменений. Измени параметры или выбери другой подход.`,
+              error: `Call to ${tc.name} is repeating without changes. Change the parameters or choose a different approach.`,
             },
           });
           continue;
@@ -326,29 +326,29 @@ export class AIBrain {
         const toolDef = this.toolRegistry.get(tc.name);
         const validation = validateToolCall(toolDef, tc.args || {});
         if (!validation.valid) {
-          logger.warn(`Валидация не прошла для ${tc.name}: ${validation.errors.join(', ')}`);
+          logger.warn(`Validation failed for ${tc.name}: ${validation.errors.join(', ')}`);
           toolResults.push({
             id: tc.id,
             name: tc.name,
-            result: { success: false, error: `Ошибка валидации: ${validation.errors.join(', ')}` },
+            result: { success: false, error: `Validation error: ${validation.errors.join(', ')}` },
           });
           continue;
         }
 
         try {
-          logger.info(`[ACTION] Выполняю: ${tc.name}(${JSON.stringify(tc.args)})`);
+          logger.info(`[ACTION] Executing: ${tc.name}(${JSON.stringify(tc.args)})`);
           const result = await this.toolRegistry.execute(tc.name, tc.args || {});
 
           if (tc.name === 'run_code' && result && result.success === false) {
-            logger.warn(`[SELF_HEALING] Ошибка в скрипте: ${result.error}. Передаю диагностику для автоисправления.`);
+            logger.warn(`[SELF_HEALING] Script error: ${result.error}. Passing diagnostics for automatic repair.`);
             if (!result.instruction) {
-              result.instruction = 'Внимание: в твоём скрипте возникла ошибка. Проанализируй диагностику и исправь её, вызвав run_code с исправленным кодом в этом же ходе.';
+              result.instruction = 'Your script encountered an error. Analyze the diagnostics and fix it by calling run_code with corrected code in this same turn.';
             }
           }
 
           toolResults.push({ id: tc.id, name: tc.name, result });
         } catch (error) {
-          logger.error(`[ACTION] Ошибка ${tc.name}: ${error.message}`);
+          logger.error(`[ACTION] Error in ${tc.name}: ${error.message}`);
           toolResults.push({
             id: tc.id,
             name: tc.name,
@@ -357,24 +357,24 @@ export class AIBrain {
         }
       }
 
-      // Отправляем результаты обратно AI
+      // Send the results back to the AI
       await this.rateLimiter.waitForSlot(abortSignal);
       this.state = AgentAIState.WAITING_API;
       response = await this.provider.sendToolResults(this.session, toolResults, { signal: abortSignal });
     }
 
     if (iteration >= this.maxIterations) {
-      logger.warn('Достигнут лимит итераций function calling');
-      return 'Я выполнил слишком много действий подряд и решил остановиться. Скажи, что делать дальше.';
+      logger.warn('Function-calling iteration limit reached');
+      return 'I have performed too many actions in a row, so I stopped. Tell me what to do next.';
     }
 
     let reply = (response.text || '').trim();
 
-    // Не навязываем заглавную букву и не затыкаем тишину шаблонным «Понял!».
-    // Если модель уже отработала действиями и молчит — молчание естественнее
-    // фальшивого подтверждения. Пустой ответ вернём как пустую строку, чтобы
-    // вызывающий код сам решил (обычно — промолчать).
-    logger.info(`[ОТВЕТ] "${reply.substring(0, 200)}"`);
+    // Do not force capitalization or fill silence with a canned "Got it!".
+    // If the model has already completed actions and stays silent, silence is more natural
+    // than a fake acknowledgement. Return an empty response as an empty string so
+    // the calling code can decide what to do (usually, remain silent).
+    logger.info(`[RESPONSE] "${reply.substring(0, 200)}"`);
 
     this.contextManager.addToHistory('user', message);
     if (reply.length > 0) this.contextManager.addToHistory('bot', reply);
@@ -383,11 +383,11 @@ export class AIBrain {
   }
 
   /**
-   * Быстрый одиночный запрос к LLM для короткой живой реплики — без function
-   * calling, без сессии, с низким таймаутом. Используется генераторами речи
-   * (ResponseGenerator и др.), чтобы НЕ падать в шаблонные фразы.
+   * A quick standalone LLM request for a short natural response — without function
+   * calling or a session, and with a short timeout. Used by speech generators
+   * (ResponseGenerator, etc.) to AVOID falling back to canned phrases.
    *
-   * @param {string} prompt — готовый промпт
+   * @param {string} prompt — ready-to-use prompt
    * @param {object} options — { maxTokens, temperature, stopSequences, systemPrompt, timeoutMs }
    * @returns {Promise<{text: string}>}
    */
@@ -415,26 +415,26 @@ export class AIBrain {
       });
       return { text: String(text || '').trim() };
     } catch (err) {
-      logger.debug(`generateQuickResponse не удался: ${err.message}`);
+      logger.debug(`generateQuickResponse failed: ${err.message}`);
       return { text: '' };
     }
   }
 
   /**
-   * Сброс AI-сессии (например, при смене контекста).
+   * Reset the AI session (for example, when the context changes).
    */
   resetSession() {
     this.session = null;
     this.loopDetector.reset();
-    logger.info('AI-сессия сброшена');
+    logger.info('AI session reset');
   }
 
   /**
-   * Остановка текущей обработки.
+   * Stop the current processing.
    */
   stop() {
     this.cancelActiveRequest('AIBrain stop called');
     this.loopDetector.reset();
-    logger.info('AI Brain остановлен');
+    logger.info('AI Brain stopped');
   }
 }
