@@ -55,14 +55,14 @@ describe('Group Intelligence, Delegation & Reality Reconciliation', () => {
   });
 
   it('should manage agent-to-agent task delegation with pending intentions', () => {
-    const del = samDelegation.delegate('Ryan', 'Принеси 10 угля из шахты');
+    const del = samDelegation.delegate('Ryan', 'Bring 10 coal from the mine');
     expect(del.status).toBe('pending');
     expect(del.from).toBe('Sam');
     expect(del.to).toBe('Ryan');
 
-    // Ryan receives and defers ("потом")
+    // Ryan receives and defers ("later")
     ryanDelegation.receiveRequest(del);
-    ryanDelegation.respondToRequest(del.id, 'Давай потом, я занят', 'deferred');
+    ryanDelegation.respondToRequest(del.id, 'Maybe later, I am busy', 'deferred');
 
     const deferred = ryanDelegation.getDeferred();
     expect(deferred.length).toBe(1);
