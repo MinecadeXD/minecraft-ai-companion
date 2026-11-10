@@ -4,8 +4,8 @@ import { telemetry } from '../utils/telemetry.js';
 const logger = createLogger('RECOVERY');
 
 /**
- * RecoveryController — безопасная система восстановления без телепортации
- * и БЕЗ принудительного создания повторных LLM-запросов.
+ * RecoveryController — safe recovery system without teleportation
+ * and WITHOUT forcibly creating repeated LLM requests.
  */
 export class RecoveryController {
   /**
@@ -37,7 +37,7 @@ export class RecoveryController {
 
   startMonitoring() {
     if (this.monitoringInterval) return;
-    logger.info(`[${this.agentName}] Запуск безопасной системы восстановления...`);
+    logger.info(`[${this.agentName}] Starting safe recovery system...`);
 
     this.monitoringInterval = setInterval(() => {
       this._runDetectors();
@@ -48,7 +48,7 @@ export class RecoveryController {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
-      logger.info(`[${this.agentName}] Остановка системы восстановления`);
+      logger.info(`[${this.agentName}] Stopping recovery system`);
     }
   }
 
@@ -66,7 +66,7 @@ export class RecoveryController {
     const pos = this.bot.entity.position;
     this.recordPosition(pos);
 
-    // 1. StuckDetector: позиция не меняется при активном движении
+    // 1. StuckDetector: position does not change while movement is active
     if (this.history.positions.length >= 8) {
       const first = this.history.positions[0];
       const last = this.history.positions[this.history.positions.length - 1];
@@ -76,7 +76,7 @@ export class RecoveryController {
       }
     }
 
-    // 2. PhysicsAnomalyDetector: проверка нахождения в воздухе без движения
+    // 2. PhysicsAnomalyDetector: check for being airborne without movement
     if (this.bot.entity.velocity && !this.bot.entity.onGround && Math.abs(this.bot.entity.velocity.y) < 0.01) {
       issues.push({ type: 'physics_anomaly' });
     }
@@ -87,7 +87,7 @@ export class RecoveryController {
       issues.push({ type: 'hazard_liquid', data: { type: blockAtFeet.name } });
     }
 
-    // 4. UnresponsiveDetector: отсутствие активности более 40 секунд при активной задаче или зависшем запросе
+    // 4. UnresponsiveDetector: no activity for more than 40 seconds while a task is active or a request is stuck
     const isExpectingAction =
       (this.aiBrain && this.aiBrain.isProcessing) ||
       (this.movementController && (this.movementController.mode === 'moving_to' || this.movementController.mode === 'following')) ||
@@ -98,7 +98,7 @@ export class RecoveryController {
       if (isExpectingAction) {
         issues.push({ type: 'unresponsive', data: { inactiveTime } });
       } else {
-        // Если бот просто находится в нормальном режиме ожидания/idle, не считаем это зависанием
+        // If the bot is simply in a normal waiting/idle state, do not treat it as stuck
         this.lastActionTime = Date.now();
       }
     }
@@ -113,7 +113,7 @@ export class RecoveryController {
     if (now - lastRecovery < cooldownMs) return;
     this.issueCooldowns.set(issue.type, now);
 
-    logger.warn(`[${this.agentName}] Обнаружена проблема [${issue.type}]. Безопасное восстановление.`);
+    logger.warn(`[${this.agentName}] Issue detected [${issue.type}]. Starting safe recovery.`);
     telemetry.increment('recoveryCount');
 
     this.recoveryHistory.push({
@@ -127,7 +127,7 @@ export class RecoveryController {
 
     switch (issue.type) {
       case 'stuck':
-        logger.info(`[${this.agentName}] Recovery [stuck]: Локальный сброс pathfinder, микро-прыжок и очистка`);
+        logger.info(`[${this.agentName}] Recovery [stuck]: Local pathfinder reset, small jump, and cleanup`);
         if (!this.debugMode && this.bot) {
           if (this.bot.pathfinder) this.bot.pathfinder.stop();
           if (typeof this.bot.setControlState === 'function') {
@@ -141,19 +141,19 @@ export class RecoveryController {
         break;
 
       case 'loop':
-        logger.info(`[${this.agentName}] Recovery [loop]: Сброс зацикленных действий`);
+        logger.info(`[${this.agentName}] Recovery [loop]: Reset repeated actions`);
         this.history.actions = [];
         this.lastActionTime = Date.now();
         break;
 
       case 'tool_failure':
-        logger.info(`[${this.agentName}] Recovery [tool_failure]: Очистка счётчика ошибок инструмента ${issue.data?.toolName}`);
+        logger.info(`[${this.agentName}] Recovery [tool_failure]: Clear error counter for tool ${issue.data?.toolName}`);
         this.history.tools.delete(issue.data?.toolName);
         this.lastActionTime = Date.now();
         break;
 
       case 'physics_anomaly':
-        logger.info(`[${this.agentName}] Recovery [physics_anomaly]: Проверка опоры под ногами`);
+        logger.info(`[${this.agentName}] Recovery [physics_anomaly]: Check for a supporting block beneath the bot`);
         if (this.bot?.setControlState) {
           this.bot.setControlState('sneak', true);
           setTimeout(() => this.bot.setControlState?.('sneak', false), 300);
@@ -162,7 +162,7 @@ export class RecoveryController {
         break;
 
       case 'hazard_liquid':
-        logger.info(`[${this.agentName}] Recovery [hazard_liquid]: Всплытие на поверхность`);
+        logger.info(`[${this.agentName}] Recovery [hazard_liquid]: Return to the surface`);
         if (!this.debugMode && this.bot?.setControlState) {
           this.bot.setControlState('jump', true);
           setTimeout(() => this.bot.setControlState?.('jump', false), 1000);
@@ -172,12 +172,12 @@ export class RecoveryController {
         break;
 
       case 'unresponsive':
-        // КРИТИЧЕСКИ ВАЖНО: НИКАКИХ ПРИНУДИТЕЛЬНЫХ ВЫЗОВОВ LLM!
-        logger.info(`[${this.agentName}] Recovery [unresponsive]: Отмена зависших запросов и переход в LOCAL_MODE`);
+        // CRITICAL: DO NOT FORCE ANY LLM CALLS!
+        logger.info(`[${this.agentName}] Recovery [unresponsive]: Cancel stuck requests and switch to LOCAL_MODE`);
         if (this.aiBrain) {
           this.aiBrain.cancelActiveRequest('Unresponsive recovery timeout');
         }
-        // Сохраняем локальное движение/следование если оно было активно
+        // Preserve local movement/following if it was active
         if (this.movementController && this.movementController.mode === 'following') {
           this.movementController.resume();
         }
