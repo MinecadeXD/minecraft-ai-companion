@@ -10,10 +10,10 @@ export class LoopDetector {
   }
 
   /**
-   * Записывает вызов инструмента и проверяет на зацикливание.
+   * Record a tool call and check for loops.
    * @param {string} toolName
    * @param {Object} args
-   * @returns {boolean} true если обнаружен бесконечный цикл
+   * @returns {boolean} true if an infinite loop is detected
    */
   recordAndCheck(toolName, args = {}) {
     const signature = `${toolName}:${JSON.stringify(args)}`;
@@ -23,13 +23,13 @@ export class LoopDetector {
       this.history.shift();
     }
 
-    // Проверяем последние N вызовов
+    // Check the last N calls
     if (this.history.length >= this.maxRepeats) {
       const recent = this.history.slice(-this.maxRepeats);
       const allSame = recent.every(item => item.signature === signature);
 
       if (allSame) {
-        logger.warn(`⚠️ [ЗАЦИКЛИВАНИЕ] Инструмент ${toolName} вызван одинаково ${this.maxRepeats} раз подряд!`);
+        logger.warn(`⚠️ [LOOP DETECTED] Tool ${toolName} was called identically ${this.maxRepeats} times in a row!`);
         return true;
       }
     }
