@@ -8,37 +8,37 @@ export class Diary {
   }
 
   /**
-   * Записывает новое событие в дневник.
+   * Record a new event in the diary.
    */
   logEntry(mcDay, title, content) {
     const info = this.storage.addDiaryEntry(mcDay, title, content);
-    logger.info(`[ДНЕВНИК] День ${mcDay}: ${title}`);
+    logger.info(`[DIARY] Day ${mcDay}: ${title}`);
     return info;
   }
 
   /**
-   * Получает последние записи дневника.
+   * Get the latest diary entries.
    */
   getRecentEntries(limit = 5) {
     return this.storage.getDiaryEntries(limit);
   }
 
   /**
-   * Получает записи за конкретный день.
+   * Get entries for a specific day.
    */
   getEntriesByDay(mcDay) {
     return this.storage.getDiaryByDay(mcDay);
   }
 
   /**
-   * Возвращает форматированный текст дневника для AI.
+   * Return formatted diary text for the AI.
    */
   getFormattedSummary(limit = 5) {
     const entries = this.getRecentEntries(limit);
-    if (entries.length === 0) return 'Дневник пуст.';
+    if (entries.length === 0) return 'The diary is empty.';
 
     return entries
-      .map(e => `[День ${e.mc_day}] ${e.title}: ${e.content}`)
+      .map(e => `[Day ${e.mc_day}] ${e.title}: ${e.content}`)
       .join('\n');
   }
 }
