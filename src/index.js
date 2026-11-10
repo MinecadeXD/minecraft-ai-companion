@@ -40,7 +40,7 @@ const logger = createLogger('MAIN');
 
 
 /**
- * Главный класс приложения — связывает все модули Minecraft AI Companion.
+ * Main application class — connects all Minecraft AI Companion modules.
  */
 class MinecraftAICompanion {
   constructor() {
@@ -76,46 +76,46 @@ class MinecraftAICompanion {
   }
 
   /**
-   * Инициализация и запуск всех систем.
+   * Initialize and start all systems.
    */
   async start() {
     logger.info('=============================================');
-    logger.info('🤖 Minecraft AI Companion — Запуск');
-    logger.info(`AI Провайдер: ${config.ai.provider} (Модель: ${config.ai.model})`);
-    logger.info(`Сервер: ${config.minecraft.host}:${config.minecraft.port} (${config.minecraft.version || 'auto'})`);
-    logger.info(`Имя бота: ${config.minecraft.username}`);
-    logger.info(`Владелец: ${config.bot.owner}`);
-    logger.info(`Инициатива: ${config.bot.initiative}`);
+    logger.info('🤖 Minecraft AI Companion — Starting');
+    logger.info(`AI provider: ${config.ai.provider} (Model: ${config.ai.model})`);
+    logger.info(`Server: ${config.minecraft.host}:${config.minecraft.port} (${config.minecraft.version || 'auto'})`);
+    logger.info(`Bot name: ${config.minecraft.username}`);
+    logger.info(`Owner: ${config.bot.owner}`);
+    logger.info(`Initiative: ${config.bot.initiative}`);
     logger.info('=============================================');
 
     try {
-      // 1. Память (SQLite)
-      logger.info('1/7. Инициализация памяти (SQLite)...');
+      // 1. Memory (SQLite)
+      logger.info('1/7. Initializing memory (SQLite)...');
       this.memoryManager = new MemoryManager();
 
-      // 2. AI Провайдер
-      logger.info('2/7. Инициализация AI провайдера...');
+      // 2. AI provider
+      logger.info('2/7. Initializing AI provider...');
       const aiProvider = createAIProvider(config);
-      logger.info(`AI провайдер готов: ${aiProvider.name}`);
+      logger.info(`AI provider ready: ${aiProvider.name}`);
 
-      // 2.5. Система максимальной человекоподобности
-      logger.info('2.5/7. Инициализация системы максимальной человекоподобности...');
+      // 2.5. Maximum human-likeness system
+      logger.info('2.5/7. Initializing maximum human-likeness system...');
       const { createMaximalHumanController } = await import('./behavior/human-like/maximal-human-controller.js');
       this.humanController = createMaximalHumanController({
         agentName: config.minecraft.username,
         profile: config.agentProfile || {},
         provider: aiProvider,
         durableStorage: this.memoryManager,
-        socialGraph: null, // Будет подключено после инициализации friendship
+        socialGraph: null, // Will be connected after friendship initialization
         conversationMemory: null,
       });
-      logger.info(`✅ Система максимальной человекоподобности активна для ${config.minecraft.username}`);
+      logger.info(`✅ Maximum human-likeness system is active for ${config.minecraft.username}`);
 
-      // 3. Реестр инструментов и контекст
-      logger.info('3/7. Инициализация реестра инструментов и планировщика...');
+      // 3. Tool registry and context
+      logger.info('3/7. Initializing tool registry and planner...');
       this.toolRegistry = new ToolRegistry();
       this.contextManager = new ContextManager(config);
-      // Память об обещаниях/договорённостях (живая память, без новой БД).
+      // Commitment memory (living memory, no new database).
       const { CommitmentMemory } = await import('./memory/commitment-memory.js');
       this.commitmentMemory = new CommitmentMemory(this.memoryManager);
       this.contextManager.setCommitmentMemory(this.commitmentMemory);
@@ -130,21 +130,21 @@ class MinecraftAICompanion {
         aiBrain: this.aiBrain,
       });
 
-      // 4. Дружба и характер
+      // 4. Friendship and personality
       this.friendship = new FriendshipSystem(this.memoryManager, config.bot.owner);
       this.friendship.load();
 
-      // Подключаем friendship к humanController
+      // Connect friendship to humanController
       if (this.humanController) {
         this.humanController.socialGraph = this.friendship;
       }
 
-      // 5. Minecraft Бот
-      logger.info('4/7. Создание бота и подключение к Minecraft...');
+      // 5. Minecraft bot
+      logger.info('4/7. Creating the bot and connecting to Minecraft...');
       this.mcBot = new MinecraftBot(config);
       this.worldState = new WorldState();
 
-      // Контроллер безопасности
+      // Safety controller
       this.emergency = new EmergencyController({
         bot: null,
         planner: this.planner,
@@ -153,18 +153,18 @@ class MinecraftAICompanion {
 
       this.deathHandler = new DeathHandler(null, this.memoryManager, config);
 
-      // Подключаемся к серверу
+      // Connect to the server
       await this.mcBot.connect();
       this.emergency.bot = this.mcBot.bot;
       this.deathHandler.bot = this.mcBot.bot;
 
-      // Даём мозгу «глаза»: контекст-менеджер теперь видит мир от первого лица.
+      // Give the brain "eyes": the context manager now sees the world from a first-person perspective.
       this.contextManager.setBot(this.mcBot.bot);
       this.aiBrain.setBot(this.mcBot.bot);
       this.aiBrain.setFidgetController(fidgetController);
 
-      // 6. Регистрация всех инструментов (включая Code-as-Action песочницу и навыки)
-      logger.info('5/7. Регистрация инструментов и песочницы...');
+      // 6. Register all tools (including the Code-as-Action sandbox and skills)
+      logger.info('5/7. Registering tools and sandbox...');
       this.skillLibrary = new SkillLibrary();
       this.actionSandbox = new ActionSandbox({
         bot: this.mcBot.bot,
@@ -184,67 +184,67 @@ class MinecraftAICompanion {
         actionSandbox: this.actionSandbox,
         skillLibrary: this.skillLibrary,
       });
-      logger.info(`Зарегистрировано ${this.toolRegistry.getAll().length} инструментов.`);
+      logger.info(`Registered ${this.toolRegistry.getAll().length} tools.`);
 
-      // 6.6. Инициализация системы реалистичных ошибок при взаимодействии с миром
-      logger.info('6.6/7. Инициализация системы реалистичных ошибок...');
+      // 6.6. Initializing realistic mistakes for world interactions
+      logger.info('6.6/7. Initializing realistic mistake system...');
       this.worldInteractionErrors = new WorldInteractionErrorsExtended({
         agentName: config.minecraft.username,
         emotionalSystem: this.humanController?.emotionalSystem || null,
       });
 
-      // Создаём расширенный wrapper для действий бота
+      // Create an extended wrapper for bot actions
       this.botActionWrapper = new BotActionWrapperExtended(
         this.mcBot.bot,
         this.humanController?.emotionalSystem || null,
         config.minecraft.username
       );
 
-      // 6.7. Инициализация памяти об ошибках (бот УЧИТСЯ!)
+      // 6.7. Initialize mistake memory (the bot LEARNS!)
       this.errorMemory = new ErrorMemory(config.minecraft.username);
-      logger.info('✅ Система памяти об ошибках активирована');
+      logger.info('✅ Mistake memory system activated');
 
-      // 6.8. Инициализация персональных привычек (каждый бот УНИКАЛЕН!)
+      // 6.8. Initialize personal habits (every bot is UNIQUE!)
       this.personalityHabits = new PersonalityHabits(config.minecraft.username);
-      logger.info('✅ Персональные привычки активированы:');
+      logger.info('✅ Personal habits activated:');
       logger.info(this.personalityHabits.getDescription());
 
-      // 6.9. Инициализация влияния окружения (ОЧЕНЬ МНОГО фишек!)
+      // 6.9. Initialize environmental influence (MANY factors!)
       this.environmentInfluence = new EnvironmentInfluence();
-      logger.info('✅ Система влияния окружения активирована (20+ факторов)');
+      logger.info('✅ Environmental influence system activated (20+ factors)');
 
-      logger.info('✅ ВСЕ системы реалистичных ошибок активированы!');
+      logger.info('✅ ALL realistic mistake systems activated!');
 
-      // 7. Запуск подсистем восприятия и когнитивного ядра
-      logger.info('6/7. Запуск систем восприятия и когнитивного ядра...');
+      // 7. Start perception subsystems and cognitive core
+      logger.info('6/7. Starting perception systems and cognitive core...');
       this.worldState.startAutoUpdate(this.mcBot.bot);
 
-      // Спинной мозг (Reflex Engine 20 Hz)
+      // Spinal cord (Reflex Engine 20 Hz)
       this.reflexEngine = new ReflexEngine(this.mcBot.bot);
       this.reflexEngine.setEmergencyHandler((reason) => {
         this.actionSandbox?.abortRunning(reason);
       });
       this.reflexEngine.start();
-      logger.info('✅ Спинной мозг (Reflex Engine 20 Hz) активирован');
+      logger.info('✅ Spinal cord (Reflex Engine 20 Hz) activated');
 
       this.cognitiveEngine.start(() => this.worldState.getSnapshot(), this.mcBot.bot);
 
-      // Контроллер перемещения. Настроение влияет на темп/прыжки/бдительность
-      // (только числа — речь остаётся за LLM).
+      // Movement controller. Mood affects pace, jumping, and alertness
+      // (numbers only — speech remains the LLM's responsibility).
       this.movementController = new MovementController({
         agentName: config.minecraft.username,
         bot: this.mcBot.bot,
         moodProvider: () => this.humanController?.emotionalSystem?.getMood?.() || null,
       });
 
-      // Система автономных целей (бот развивается сам, а не только по командам)
+      // Autonomous goal system (the bot develops on its own, not only in response to commands)
       this.autonomousGoals = new AutonomousGoals({
         bot: this.mcBot.bot,
         memoryManager: this.memoryManager,
         aiBrain: this.aiBrain,
         config,
       });
-      logger.info('✅ Система автономных целей активирована (бот развивается самостоятельно)');
+      logger.info('✅ Autonomous goal system activated (the bot develops independently)');
 
       this.initiative = new InitiativeController({
         bot: this.mcBot.bot,
@@ -257,7 +257,7 @@ class MinecraftAICompanion {
       });
       this.initiative.start();
 
-      // Поток сознания и свободная воля бота
+      // Stream of consciousness and the bot's free will
       const { StreamOfConsciousness } = await import('./cognition/stream-of-consciousness.js');
       this.streamOfConsciousness = new StreamOfConsciousness({
         bot: this.mcBot.bot,
@@ -267,17 +267,17 @@ class MinecraftAICompanion {
         config,
       });
       this.streamOfConsciousness.start();
-      logger.info('✅ Поток сознания (StreamOfConsciousness) активирован');
+      logger.info('✅ Stream of consciousness (StreamOfConsciousness) activated');
 
       this.lootProtection = new LootProtectionManager(this.mcBot.bot);
 
-      // Обработчик событий
+      // Event handler
       this.eventHandler = new EventHandler(this.mcBot, this.aiBrain, this.worldState, config, {
         deathHandler: this.deathHandler,
         emergency: this.emergency,
         friendship: this.friendship,
         planner: this.planner,
-        humanController: this.humanController, // Передаём humanController
+        humanController: this.humanController, // Pass humanController
         movementController: this.movementController,
         bodyLanguage: this.bodyLanguage,
         lootProtection: this.lootProtection,
@@ -286,7 +286,7 @@ class MinecraftAICompanion {
       });
       this.eventHandler.setup();
 
-      // Первичное дружеское приветствие хозяина (shift-shift + кивок), если он рядом
+      // Initial friendly greeting for the owner (shift-shift + nod) if nearby
       setTimeout(async () => {
         try {
           const ownerUsername = config.bot.owner;
@@ -303,13 +303,13 @@ class MinecraftAICompanion {
 
       this.isRunning = true;
       logger.info('=============================================');
-      logger.info('✅ Minecraft AI Companion успешно запущен!');
-      logger.info(`🎮 Бот "${config.minecraft.username}" готов играть в мире Minecraft.`);
-      logger.info(`💬 Общайтесь с компанией обычными фразами в чате Minecraft.`);
+      logger.info('✅ Minecraft AI Companion started successfully!');
+      logger.info(`🎮 Bot "${config.minecraft.username}" is ready to play in the Minecraft world.`);
+      logger.info(`💬 Chat with the group naturally using ordinary phrases in Minecraft chat.`);
       logger.info('=============================================');
 
     } catch (error) {
-      logger.error(`❌ Ошибка запуска: ${error.message}`);
+      logger.error(`❌ Startup error: ${error.message}`);
       logger.error(error.stack);
       await this.stop();
       process.exit(1);
@@ -317,20 +317,20 @@ class MinecraftAICompanion {
   }
 
   /**
-   * Остановка всех систем.
+   * Stop all systems.
    */
   async stop() {
-    logger.info('Остановка всех систем бота...');
+    logger.info('Stopping all bot systems...');
     this.isRunning = false;
 
-    // Сохраняем статистику ошибок
+    // Save mistake statistics
     if (this.errorMemory) {
-      logger.info('📊 Финальная статистика ошибок:');
+      logger.info('📊 Final mistake statistics:');
       const stats = this.errorMemory.getStats();
-      logger.info(`Всего ошибок: ${stats.totalErrors}`);
-      logger.info(`Всего успехов: ${stats.totalSuccesses}`);
-      logger.info(`% Успеха: ${stats.successRate}%`);
-      logger.info(`Множитель обучения: ${stats.learningMultiplier}x`);
+      logger.info(`Total mistakes: ${stats.totalErrors}`);
+      logger.info(`Total successes: ${stats.totalSuccesses}`);
+      logger.info(`Success rate: ${stats.successRate}%`);
+      logger.info(`Learning multiplier: ${stats.learningMultiplier}x`);
     }
 
     if (this.humanController) {
@@ -374,7 +374,7 @@ class MinecraftAICompanion {
     }
 
 
-    logger.info('Minecraft AI Companion остановлен.');
+    logger.info('Minecraft AI Companion stopped.');
   }
 }
 
