@@ -61,9 +61,9 @@ describe('WorldState Deep Perception & Inventory Mechanics', () => {
     expect(worldState.freeSlots).toBe(33); // 36 main inventory slots minus 3 filled slots
 
     const summary = worldState.getSummary();
-    expect(summary).toContain('Свет: 3/15 (в пещере)');
-    expect(summary).toContain('оффхэнд: [shield]');
-    expect(summary).toContain('Факелов: 16');
+    expect(summary).toContain('Light: 3/15 (in a cave)');
+    expect(summary).toContain('off-hand: [shield]');
+    expect(summary).toContain('Torches: 16');
   });
 });
 
