@@ -8,7 +8,7 @@ export class EpisodicMemory {
   }
 
   /**
-   * Запоминает важное событие.
+   * Remember an important event.
    */
   rememberEpisode({
     mcDay,
@@ -19,7 +19,7 @@ export class EpisodicMemory {
     outcome = '',
     importance = 5,
   }) {
-    // Сохраняем только события с достаточной важностью
+    // Only save events with sufficient importance
     if (importance < 3) return null;
 
     const x = position ? position.x : null;
@@ -38,12 +38,12 @@ export class EpisodicMemory {
       importance,
     });
 
-    logger.info(`[ЭПИЗОД] (${eventType}, важность ${importance}): ${summary}`);
+    logger.info(`[EPISODE] (${eventType}, importance ${importance}): ${summary}`);
     return result;
   }
 
   /**
-   * Получает релевантные воспоминания по запросу или последние.
+   * Get relevant memories for a query, or the latest ones.
    */
   recall(query = null, limit = 5) {
     if (query) {
@@ -53,14 +53,14 @@ export class EpisodicMemory {
   }
 
   /**
-   * Форматирует воспоминания для контекста AI.
+   * Format memories for AI context.
    */
   getFormattedMemories(limit = 5) {
     const episodes = this.recall(null, limit);
-    if (episodes.length === 0) return 'Нет сохранённых воспоминаний.';
+    if (episodes.length === 0) return 'No saved memories.';
 
     return episodes
-      .map(e => `• [День ${e.mc_day || '?'}] ${e.summary} (${e.outcome || 'успешно'})`)
+      .map(e => `• [Day ${e.mc_day || '?'}] ${e.summary} (${e.outcome || 'successfully'})`)
       .join('\n');
   }
 }
