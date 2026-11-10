@@ -68,8 +68,7 @@ export class FastPlayerIntentRouter {
       clean.includes('where you at') ||
       clean.includes('where are you now') ||
       clean.includes('where are you located') ||
-      clean.includes('where have you been') ||
-      clean.includes('where are you')
+      clean.includes('where have you been')
     ) {
       return PlayerIntents.WHERE_ARE_YOU;
     }
@@ -90,7 +89,6 @@ export class FastPlayerIntentRouter {
 
     // 3. COME HERE
     if (
-      false ||
       clean.includes('come here') ||
       clean.includes('come to me') ||
       clean.includes('get over here') ||
@@ -106,26 +104,15 @@ export class FastPlayerIntentRouter {
 
     // 4. FOLLOW
     if (
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
       clean.includes('follow me') ||
-      false ||
-      false ||
-      false ||
-      false ||
-      false ||
+      clean.includes('come with me') ||
+      clean.includes("let's go") ||
+      clean.includes('keep up') ||
+      clean.includes('stay with me') ||
+      clean.includes('move forward') ||
+      clean.includes('move out') ||
+      clean.includes('go ahead') ||
+      clean.includes('continue') ||
       (!isQuestion && (
         hasStem('follow', 'proceed', 'continue', 'move') || words.includes('forward')
       ))
