@@ -75,7 +75,7 @@ export class FastPlayerIntentRouter {
 
     // 1. STOP
     if (
-      hasStem('stop', 'halt', 'freeze', 'pause', 'cancel') ||
+      hasStem('stop', 'halt', 'freeze', 'cancel') ||
       clean.includes("don't move") || clean.includes('do not move') || clean.includes('stay still') ||
       clean.includes("that's enough") || clean.includes('stand still')
     ) {
@@ -97,7 +97,7 @@ export class FastPlayerIntentRouter {
       clean.includes('gather here') ||
       clean.includes('return to me') ||
       clean.includes('stay close') ||
-      hasStem('approach', 'come', 'gather', 'return')
+      hasStem('approach', 'gather')
     ) {
       return PlayerIntents.COME_HERE;
     }
