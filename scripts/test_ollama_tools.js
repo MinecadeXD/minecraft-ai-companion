@@ -6,7 +6,7 @@ async function test() {
       model: "qwen2.5:3b",
       messages: [
         { role: "system", content: "You are a Minecraft assistant. If user asks to mine, chop, or follow, call the corresponding function tool immediately." },
-        { role: "user", content: "добудь дерево" }
+        { role: "user", content: "gather wood" }
       ],
       tools: [{
         type: "function",
