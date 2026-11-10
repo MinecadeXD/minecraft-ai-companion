@@ -38,7 +38,7 @@ describe('Phase 9 Architecture & Fast Player Intent (Acceptance Tests 1-13)', ()
   });
 
   // Criteria 1 & 2: Fast follow command with & without API
-  it('Criterion 1 & 2: "Sam, иди за мной" acknowledges quickly and starts following without LLM', async () => {
+  it('Criterion 1 & 2: "Sam, follow me" acknowledges quickly and starts following without LLM', async () => {
     const movement = new MovementController({ agentName: 'Sam', bot: mockBot });
     const mockAgentInstance = {
       name: 'Sam',
@@ -48,7 +48,7 @@ describe('Phase 9 Architecture & Fast Player Intent (Acceptance Tests 1-13)', ()
       preemptRuntimeForLegacy: vi.fn(),
     };
 
-    const intent = FastPlayerIntentRouter.classifyIntent('Sam, иди за мной');
+    const intent = FastPlayerIntentRouter.classifyIntent('Sam, follow me');
     expect(intent).toBe(PlayerIntents.FOLLOW);
 
     const res = await FastPlayerIntentRouter.executeLocally({
@@ -67,7 +67,7 @@ describe('Phase 9 Architecture & Fast Player Intent (Acceptance Tests 1-13)', ()
   });
 
   // Criteria 3: Immediate stop
-  it('Criterion 3: "Sam, стой" stops movement immediately', async () => {
+  it('Criterion 3: "Sam, stop" stops movement immediately', async () => {
     const movement = new MovementController({ agentName: 'Sam', bot: mockBot });
     movement.mode = 'following';
     movement.targetPlayer = 'kustash01';
@@ -80,7 +80,7 @@ describe('Phase 9 Architecture & Fast Player Intent (Acceptance Tests 1-13)', ()
       preemptRuntimeForLegacy: vi.fn(),
     };
 
-    const intent = FastPlayerIntentRouter.classifyIntent('Sam, стой');
+    const intent = FastPlayerIntentRouter.classifyIntent('Sam, stop');
     expect(intent).toBe(PlayerIntents.STOP);
 
     const res = await FastPlayerIntentRouter.executeLocally({
@@ -96,7 +96,7 @@ describe('Phase 9 Architecture & Fast Player Intent (Acceptance Tests 1-13)', ()
   });
 
   // Criteria 4 & 5: Wait and resume
-  it('Criteria 4 & 5: "Sam, подожди" pauses with wait-state, and "Sam, пошли" resumes', async () => {
+  it('Criteria 4 & 5: "Sam, wait" pauses with wait-state, and "Sam, let's go" resumes', async () => {
     const movement = new MovementController({ agentName: 'Sam', bot: mockBot });
     const mockAgentInstance = {
       name: 'Sam',
@@ -107,7 +107,7 @@ describe('Phase 9 Architecture & Fast Player Intent (Acceptance Tests 1-13)', ()
     };
 
     // 1. Wait
-    const waitIntent = FastPlayerIntentRouter.classifyIntent('Sam, подожди');
+    const waitIntent = FastPlayerIntentRouter.classifyIntent('Sam, wait');
     expect(waitIntent).toBe(PlayerIntents.WAIT);
     await FastPlayerIntentRouter.executeLocally({
       agentInstance: mockAgentInstance,
@@ -118,7 +118,7 @@ describe('Phase 9 Architecture & Fast Player Intent (Acceptance Tests 1-13)', ()
     expect(movement.isPaused).toBe(true);
 
     // 2. Resume
-    const resumeIntent = FastPlayerIntentRouter.classifyIntent('Sam, пошли');
+    const resumeIntent = FastPlayerIntentRouter.classifyIntent("Sam, let's go");
     expect(resumeIntent).toBe(PlayerIntents.FOLLOW);
     await FastPlayerIntentRouter.executeLocally({
       agentInstance: mockAgentInstance,
@@ -130,31 +130,31 @@ describe('Phase 9 Architecture & Fast Player Intent (Acceptance Tests 1-13)', ()
   });
 
   // Criteria 6: Addressing isolation (other agents do not activate)
-  it('Criterion 6: "Ryan, стой" is ignored by Sam (not addressed to Sam)', () => {
+  it('Criterion 6: "Ryan, stop" is ignored by Sam (not addressed to Sam)', () => {
     const allAgents = ['Sam', 'Max', 'Jack', 'Ryan', 'Alex', 'Leo'];
-    const samAddressing = messageBus.checkAddressing('Ryan, стой', 'Sam', allAgents);
+    const samAddressing = messageBus.checkAddressing('Ryan, stop', 'Sam', allAgents);
     expect(samAddressing.isAddressedToMe).toBe(false);
     expect(samAddressing.targetName).toBe('Ryan');
 
-    const ryanAddressing = messageBus.checkAddressing('Ryan, стой', 'Ryan', allAgents);
+    const ryanAddressing = messageBus.checkAddressing('Ryan, stop', 'Ryan', allAgents);
     expect(ryanAddressing.isAddressedToMe).toBe(true);
     expect(ryanAddressing.targetName).toBe('Ryan');
   });
 
   // Criteria 7: Group command
-  it('Criterion 7: "Ребят, пошли" is recognized as a group command for all members', () => {
+  it('Criterion 7: "Guys, let's go" is recognized as a group command for all members', () => {
     const allAgents = ['Sam', 'Max', 'Jack', 'Ryan', 'Alex', 'Leo'];
-    const addressing = messageBus.checkAddressing('Ребят, пошли', 'Sam', allAgents);
+    const addressing = messageBus.checkAddressing("Guys, let's go", 'Sam', allAgents);
     expect(addressing.isGroupMessage).toBe(true);
     expect(addressing.isAddressedToMe).toBe(true);
 
-    const intent = FastPlayerIntentRouter.classifyIntent('Ребят, пошли');
+    const intent = FastPlayerIntentRouter.classifyIntent("Guys, let's go");
     expect(intent).toBe(PlayerIntents.FOLLOW);
   });
 
   // Criteria 8: Single messageId and deduplication
   it('Criterion 8: Message deduplication ensures one messageId is processed at most once per bot', () => {
-    const msgId = messageBus.generateMessageId('kustash01', 'Привет!');
+    const msgId = messageBus.generateMessageId('kustash01', 'Hello!');
     const firstCheckSam = messageBus.markProcessed('Sam', msgId);
     const secondCheckSam = messageBus.markProcessed('Sam', msgId);
 
@@ -181,7 +181,7 @@ describe('Phase 9 Architecture & Fast Player Intent (Acceptance Tests 1-13)', ()
 
     const [r1, r2] = await Promise.all([p1, p2]);
     expect(brain.activeRequests).toBe(0);
-    expect(r2).toContain('Подожди, я ещё думаю');
+    expect(r2).toContain("Wait, I'm still thinking");
   });
 
   // Criteria 10: Unresponsive recovery NEVER creates new LLM requests
