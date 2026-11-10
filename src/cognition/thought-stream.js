@@ -3,9 +3,9 @@
 const logger = createLogger('THOUGHT_STREAM');
 
 /**
- * ThoughtStream — поток подсознания и внутреннего монолога бота:
- * Позволяет Gemini и фоновым процессам транслировать спонтанные мысли,
- * сомнения и размышления в реальном времени.
+ * ThoughtStream — stream of the bot's subconscious and inner monologue:
+ * Allows Gemini and background processes to surface spontaneous thoughts,
+ * doubts, and reflections in real time.
  */
 export class ThoughtStream {
   constructor() {
@@ -14,7 +14,7 @@ export class ThoughtStream {
   }
 
   /**
-   * Сгенерировать и зафиксировать мысль в потоке сознания
+   * Generate and record a thought in the stream of consciousness
    */
   emit(thoughtText) {
     if (!thoughtText || typeof thoughtText !== 'string') return null;
@@ -31,7 +31,7 @@ export class ThoughtStream {
       this.recentThoughts.shift();
     }
 
-    logger.info(`[💭 МЫСЛЬ] ${clean}`);
+    logger.info(`[💭 THOUGHT] ${clean}`);
 
     for (const listener of this.listeners) {
       try { listener(entry); } catch (_) {}
@@ -41,7 +41,7 @@ export class ThoughtStream {
   }
 
   /**
-   * Подписка на поток мыслей
+   * Subscribe to the thought stream
    */
   subscribe(callback) {
     if (typeof callback === 'function') {
@@ -52,7 +52,7 @@ export class ThoughtStream {
   }
 
   /**
-   * Получить недавние мысли
+   * Get recent thoughts
    */
   getRecent(limit = 5) {
     return this.recentThoughts.slice(-limit);
