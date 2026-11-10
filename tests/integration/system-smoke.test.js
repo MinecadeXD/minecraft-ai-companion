@@ -53,8 +53,8 @@ describe('System Integration Smoke Test', () => {
     expect(invResult.data).toContain('diamond_pickaxe');
 
     // Test AI Brain query
-    provider.addResponse({ text: 'Я готов исследовать мир!', toolCalls: [], raw: {} });
-    const reply = await aiBrain.processMessage('Привет, как дела?', worldState);
-    expect(reply).toBe('Я готов исследовать мир!');
+    provider.addResponse({ text: 'I am ready to explore the world!', toolCalls: [], raw: {} });
+    const reply = await aiBrain.processMessage('Hello, how are you?', worldState);
+    expect(reply).toBe('I am ready to explore the world!');
   });
 });
