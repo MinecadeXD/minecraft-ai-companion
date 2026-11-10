@@ -4,9 +4,9 @@ import { HumanErrorEngine } from '../behavior/human-error-engine.js';
 const logger = createLogger('EMOTIONAL_MEMORY');
 
 /**
- * EmotionalMemory — хранит воспоминания с эмоциями, не координатами.
- * Человек помнит не "x:-234, y:-58, z:891", а "глубоко под базой".
- * Человек помнит не факт, а ПЕРЕЖИВАНИЕ.
+ * EmotionalMemory — stores memories with emotions, not coordinates.
+ * People remember "deep beneath the base," not "x:-234, y:-58, z:891."
+ * People remember the EXPERIENCE, not just the facts.
  */
 export class EmotionalMemory {
   constructor({ provider, agentName }) {
@@ -17,8 +17,8 @@ export class EmotionalMemory {
   }
 
   /**
-   * Сохраняет воспоминание с эмоциональным контекстом.
-   * НЕ структурированные данные — живое описание переживания.
+   * Store a memory with its emotional context.
+   * NOT structured data — a natural description of an experience.
    */
   async remember(event) {
     const {
@@ -35,9 +35,9 @@ export class EmotionalMemory {
     const memory = {
       id: `mem_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
       what,
-      where: where || 'где-то в мире',
+      where: where || 'somewhere in the world',
       when: this.describeTime(),
-      who: who || 'один',
+      who: who || 'alone',
       feeling: emotion,
       importance: Math.max(0, Math.min(1, importance)),
       sensory: sensoryDetails,
@@ -57,7 +57,7 @@ export class EmotionalMemory {
         .slice(0, 80);
     }
 
-    logger.info(`[${this.agentName}] запомнил: "${what}" (${emotion})`);
+    logger.info(`[${this.agentName}] remembered: "${what}" (${emotion})`);
     return memory;
   }
 
@@ -69,21 +69,21 @@ export class EmotionalMemory {
 
     return (timestamp) => {
       const diff = now - timestamp;
-      if (diff < minute * 2) return 'только что';
-      if (diff < minute * 10) return 'несколько минут назад';
-      if (diff < hour) return 'недавно';
-      if (diff < hour * 3) return 'пару часов назад';
-      if (diff < day) return 'сегодня';
-      if (diff < day * 2) return 'вчера';
-      if (diff < day * 7) return 'на днях';
-      if (diff < day * 30) return 'давно';
-      return 'очень давно';
+      if (diff < minute * 2) return 'just now';
+      if (diff < minute * 10) return 'a few minutes ago';
+      if (diff < hour) return 'recently';
+      if (diff < hour * 3) return 'a couple of hours ago';
+      if (diff < day) return 'today';
+      if (diff < day * 2) return 'yesterday';
+      if (diff < day * 7) return 'a few days ago';
+      if (diff < day * 30) return 'a long time ago';
+      return 'a very long time ago';
     };
   }
 
   /**
-   * Ассоциативное вспоминание — не поиск по SQL, а живое всплывание.
-   * Триггер → ассоциация → воспоминание.
+   * Associative recall — not an SQL search, but a natural memory surfacing.
+   * Trigger → association → memory.
    */
   async recall(trigger, limit = 3) {
     const now = Date.now();
@@ -93,20 +93,20 @@ export class EmotionalMemory {
 
     this.lastRecallTime = now;
 
-    const prompt = `Ты — ${this.agentName}.
-Триггер: "${trigger}"
+    const prompt = `You are ${this.agentName}.
+Trigger: "${trigger}"
 
-У тебя есть эти воспоминания:
+You have these memories:
 ${this.memories.slice(0, 20).map((m, i) =>
   `${i + 1}. ${m.what} (${m.feeling}, ${this.describeTime()(m.timestamp)})`
 ).join('\n')}
 
-Какие 1-3 воспоминания ЕСТЕСТВЕННО всплывают в голове при этом триггере?
-Ответь ТОЛЬКО номерами через запятую (например: 3,7,12) или "нет" если ничего не всплывает.`;
+Which 1–3 memories NATURALLY come to mind in response to this trigger?
+Reply ONLY with comma-separated numbers (for example: 3,7,12), or "none" if nothing comes to mind.`;
 
     try {
       const session = await this.provider.createChat({
-        systemPrompt: 'Ты выбираешь ассоциативно связанные воспоминания. Отвечай только номерами или "нет".',
+        systemPrompt: 'You select associatively related memories. Reply only with numbers or "none".',
         tools: [],
       });
 
@@ -117,7 +117,7 @@ ${this.memories.slice(0, 20).map((m, i) =>
 
       const text = (response.text || '').trim().toLowerCase();
 
-      if (text === 'нет' || text === 'no' || !text) return [];
+      if (text === 'none' || text === 'no' || !text) return [];
 
       const indices = text
         .split(/[,\s]+/)
@@ -130,11 +130,11 @@ ${this.memories.slice(0, 20).map((m, i) =>
         if (m) m.timesRecalled++;
       });
 
-      logger.debug(`[${this.agentName}] вспомнил ${recalled.length} эпизодов по триггеру "${trigger}"`);
+      logger.debug(`[${this.agentName}] recalled ${recalled.length} episodes for trigger "${trigger}"`);
 
       return recalled;
     } catch (err) {
-      logger.debug(`Ошибка ассоциативного вспоминания: ${err.message}`);
+      logger.debug(`Associative recall error: ${err.message}`);
       return this.memories
         .filter(m =>
           m.what.toLowerCase().includes(trigger.toLowerCase()) ||
@@ -145,7 +145,7 @@ ${this.memories.slice(0, 20).map((m, i) =>
   }
 
   /**
-   * Случайное воспоминание (всплывает спонтанно).
+   * Random memory (surfaces spontaneously).
    */
   randomMemory() {
     if (this.memories.length === 0) return null;
@@ -160,18 +160,18 @@ ${this.memories.slice(0, 20).map((m, i) =>
   }
 
   /**
-   * Форматирует воспоминание для рассказа (не для SQL-вывода).
+   * Format a memory for storytelling (not SQL output).
    */
   formatMemory(memory) {
     if (!memory) return null;
 
     let text = `${memory.what}`;
 
-    if (memory.where && memory.where !== 'где-то в мире') {
+    if (memory.where && memory.where !== 'somewhere in the world') {
       text += ` — ${memory.where}`;
     }
 
-    if (memory.who && memory.who !== 'один') {
+    if (memory.who && memory.who !== 'alone') {
       text += `, ${memory.who}`;
     }
 
@@ -185,7 +185,7 @@ ${this.memories.slice(0, 20).map((m, i) =>
   }
 
   /**
-   * Получить последние воспоминания для контекста.
+   * Get the latest memories for context.
    */
   getRecentMemories(limit = 5) {
     return this.memories
@@ -197,7 +197,7 @@ ${this.memories.slice(0, 20).map((m, i) =>
   }
 
   /**
-   * Очистка старых малозначимых воспоминаний.
+   * Clean up old, low-importance memories.
    */
   forget(memoryId) {
     this.memories = this.memories.filter(m => m.id !== memoryId);
