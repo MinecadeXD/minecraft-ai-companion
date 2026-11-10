@@ -12,10 +12,10 @@ export class Planner {
   }
 
   /**
-   * Создаёт структурированный план.
-   * @param {string} goal - Главная цель плана
-   * @param {Array<string>} stepDescriptions - Список шагов
-   * @returns {Object} объект плана
+   * Create a structured plan.
+   * @param {string} goal - Main goal of the plan
+   * @param {Array<string>} stepDescriptions - List of steps
+   * @returns {Object} plan object
    */
   createPlan(goal, stepDescriptions) {
     const plan = {
@@ -42,7 +42,7 @@ export class Planner {
       this.memoryManager.shortTerm.setTask(goal);
     }
 
-    logger.info(`[ПЛАН СОЗДАН] Цель: "${goal}" (${plan.steps.length} шагов)`);
+    logger.info(`[PLAN CREATED] Goal: "${goal}" (${plan.steps.length} steps)`);
     for (let i = 0; i < plan.steps.length; i++) {
       logger.info(`  ${i + 1}. ${plan.steps[i].description}`);
     }
@@ -51,30 +51,30 @@ export class Planner {
   }
 
   /**
-   * Получает текущий активный план.
+   * Get the current active plan.
    */
   getActivePlan() {
     return this.activePlan;
   }
 
   /**
-   * Отмечает шаг как выполненный и переходит к следующему.
+   * Mark a step as completed and move to the next one.
    */
   completeStep(index, result = null) {
     if (!this.activePlan || !this.activePlan.steps[index]) return null;
 
     this.activePlan.steps[index].status = 'completed';
     this.activePlan.steps[index].result = result;
-    logger.info(`[ШАГ ВЫПОЛНЕН] Шаг ${index + 1}: ${this.activePlan.steps[index].description}`);
+    logger.info(`[STEP COMPLETED] Step ${index + 1}: ${this.activePlan.steps[index].description}`);
 
     const nextIndex = index + 1;
     if (nextIndex < this.activePlan.steps.length) {
       this.activePlan.currentStepIndex = nextIndex;
       this.activePlan.steps[nextIndex].status = 'in_progress';
-      logger.info(`[СЛЕДУЮЩИЙ ШАГ] Шаг ${nextIndex + 1}: ${this.activePlan.steps[nextIndex].description}`);
+      logger.info(`[NEXT STEP] Step ${nextIndex + 1}: ${this.activePlan.steps[nextIndex].description}`);
     } else {
       this.activePlan.status = 'completed';
-      logger.info(`🎉 [ПЛАН ЗАВЕРШЁН] Цель "${this.activePlan.goal}" успешно достигнута!`);
+      logger.info(`🎉 [PLAN COMPLETED] Goal "${this.activePlan.goal}" achieved successfully!`);
     }
 
     if (this.memoryManager) {
@@ -85,7 +85,7 @@ export class Planner {
   }
 
   /**
-   * Отмечает шаг как проваленный.
+   * Mark a step as failed.
    */
   failStep(index, error = null) {
     if (!this.activePlan || !this.activePlan.steps[index]) return null;
@@ -93,7 +93,7 @@ export class Planner {
     this.activePlan.steps[index].status = 'failed';
     this.activePlan.steps[index].result = error;
     this.activePlan.status = 'failed';
-    logger.warn(`❌ [ШАГ ПРОВАЛЕН] Шаг ${index + 1}: ${this.activePlan.steps[index].description} (${error || 'ошибка'})`);
+    logger.warn(`❌ [STEP FAILED] Step ${index + 1}: ${this.activePlan.steps[index].description} (${error || 'error'})`);
 
     if (this.memoryManager) {
       this.memoryManager.shortTerm.setPlan(this.activePlan);
@@ -103,12 +103,12 @@ export class Planner {
   }
 
   /**
-   * Пересматривает план при возникновении препятствий.
+   * Revise the plan when obstacles arise.
    */
   revisePlan(newSteps) {
     if (!this.activePlan) return null;
 
-    logger.info(`[ПЕРЕСМОТР ПЛАНА] Старый план обновляется новыми ${newSteps.length} шагами`);
+    logger.info(`[PLAN REVISION] Replacing the old plan with ${newSteps.length} new steps`);
     const completed = this.activePlan.steps.filter(s => s.status === 'completed');
 
     const freshSteps = newSteps.map((desc, idx) => ({
@@ -130,13 +130,13 @@ export class Planner {
   }
 
   /**
-   * Отменяет текущий план.
+   * Cancel the current plan.
    */
-  cancelPlan(reason = 'Отменено пользователем') {
+  cancelPlan(reason = 'Cancelled by user') {
     if (!this.activePlan) return false;
 
     this.activePlan.status = 'cancelled';
-    logger.warn(`[ПЛАН ОТМЕНЁН] Причина: ${reason}`);
+    logger.warn(`[PLAN CANCELLED] Reason: ${reason}`);
     this.activePlan = null;
 
     if (this.memoryManager) {
