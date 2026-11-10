@@ -41,55 +41,55 @@ describe('EventHandler direct player routing', () => {
 
   it('routes greetings to AI brain for natural response', async () => {
     const { mcBot, aiBrain } = createSetup();
-    mcBot.emit('chat', 'kustash01', 'эй');
+    mcBot.emit('chat', 'kustash01', 'hey Sam');
     await new Promise(r => setTimeout(r, 10));
     expect(aiBrain.processMessage).toHaveBeenCalled();
   });
 
-  it('routes "ты где вообще" to AI brain (coordinates come from world context, not a template)', async () => {
+  it('routes "where are you anyway" to AI brain (coordinates come from world context, not a template)', async () => {
     const { mcBot, aiBrain } = createSetup();
-    mcBot.emit('chat', 'kustash01', 'ты где вообще');
+    mcBot.emit('chat', 'kustash01', 'where are you anyway');
     await new Promise(r => setTimeout(r, 10));
     // Location question is no longer answered with a hardcoded string —
-    // it goes through the AI brain, which sees real coords in [ЧТО Я ВИЖУ].
+    // it goes through the AI brain, which sees real coords in [WHAT I SEE].
     expect(aiBrain.processMessage).toHaveBeenCalled();
     const call = aiBrain.processMessage.mock.calls[0];
-    expect(call[0]).toContain('ты где вообще');
+    expect(call[0]).toContain('where are you anyway');
   });
 
-  it('routes "добудь дерево" to AI brain for function calling', async () => {
+  it('routes "gather wood" to AI brain for function calling', async () => {
     const { mcBot, aiBrain } = createSetup();
-    mcBot.emit('chat', 'kustash01', 'добудь дерево');
+    mcBot.emit('chat', 'kustash01', 'gather wood');
     await new Promise(r => setTimeout(r, 10));
     expect(aiBrain.processMessage).toHaveBeenCalled();
     const call = aiBrain.processMessage.mock.calls[0];
-    expect(call[0]).toContain('добудь дерево');
+    expect(call[0]).toContain('gather wood');
   });
 
-  it('routes "иди за мной" to AI brain for function calling', async () => {
+  it('routes "follow me" to AI brain for function calling', async () => {
     const { mcBot, aiBrain } = createSetup();
-    mcBot.emit('chat', 'kustash01', 'иди за мной');
+    mcBot.emit('chat', 'kustash01', 'follow me');
     await new Promise(r => setTimeout(r, 10));
     expect(aiBrain.processMessage).toHaveBeenCalled();
     const call = aiBrain.processMessage.mock.calls[0];
-    expect(call[0]).toContain('иди за мной');
+    expect(call[0]).toContain('follow me');
   });
 
-  it('routes "добыл" to AI brain for natural response', async () => {
+  it('routes "I gathered some wood" to AI brain for natural response', async () => {
     const { mcBot, aiBrain } = createSetup();
-    mcBot.emit('chat', 'kustash01', 'добыл');
+    mcBot.emit('chat', 'kustash01', 'I gathered some wood');
     await new Promise(r => setTimeout(r, 10));
     expect(aiBrain.processMessage).toHaveBeenCalled();
   });
 
-  it('stops immediately when ordered "стой" (action fires; reply is generated live, not a template)', async () => {
+  it('stops immediately when ordered "stop" (action fires; reply is generated live, not a template)', async () => {
     const { mcBot } = createSetup();
     const stopSpy = mcBot.bot.pathfinder.stop;
     const clearSpy = mcBot.bot.clearControlStates;
-    mcBot.emit('chat', 'kustash01', 'стой');
+    mcBot.emit('chat', 'kustash01', 'stop');
     await new Promise(r => setTimeout(r, 10));
     // The stop ACTION must be instant. The chat acknowledgement is no longer a
-    // hardcoded 'Стою' — it comes from the humanController (absent here, so no
+    // hardcoded 'I'm stopping' — it comes from the humanController (absent here, so no
     // chat is expected). What matters is that movement halts immediately.
     expect(stopSpy).toHaveBeenCalled();
     expect(clearSpy).toHaveBeenCalled();
