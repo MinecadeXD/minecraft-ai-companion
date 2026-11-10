@@ -102,8 +102,8 @@ describe('PHASE 8: 1,000-DECISION MULTI-HOUR ENDURANCE BENCHMARK & METRICS', () 
 
       // 7. Memory write & recall verification
       if (turn === 50) {
-        memory.savePOI('main_base', 100, 64, 200, 'Основная база');
-        knowledge.setPlayerRule('chest_rule', 'Не класть дерево в сундук руды');
+        memory.savePOI('main_base', 100, 64, 200, 'Main Base');
+        knowledge.setPlayerRule('chest_rule', 'Do not put wood in the ore chest');
       } else if (turn % 100 === 0) {
         memoryRecallAttempts++;
         const poi = memory.getPOI('main_base');
