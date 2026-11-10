@@ -15,8 +15,8 @@ import { HumanErrorEngine } from '../behavior/human-error-engine.js';
 const logger = createLogger('EVENT');
 
 /**
- * EventHandler — обработка событий Minecraft, маршрутизация быстрых команд игрока (Fast Path)
- * и фильтрация сообщений с дедупликацией.
+ * EventHandler — handles Minecraft events, routes fast player commands (Fast Path)
+ * and filters messages with deduplication.
  */
 export class EventHandler {
   constructor(mcBot, aiBrain, worldState, config, options = {}) {
@@ -35,7 +35,7 @@ export class EventHandler {
     this.conversationManager = options.conversationManager || null;
     this.conversationEngine = options.conversationEngine || null;
     this.chatBus = options.chatBus || new MessageBus();
-    this.humanController = options.humanController || null; // Добавляем humanController
+    this.humanController = options.humanController || null; // Attach humanController
     this.movementController = options.movementController || null;
     this.bodyLanguage = options.bodyLanguage || null;
     this.allAgentNames = options.allAgentNames || ['Sam', 'Max', 'Jack', 'Ryan', 'Alex', 'Leo'];
@@ -63,21 +63,21 @@ export class EventHandler {
   }
 
   /**
-   * Установка всех обработчиков событий.
+   * Register all event handlers.
    */
   setup() {
     if (this._isSetup) return;
     this._isSetup = true;
-    // 1. Чат — основной канал общения
+    // 1. Chat — the primary communication channel
     this.mcBot.on('chat', async (username, rawMessage, generation) => {
       if (this.agentInstance && (generation !== this.agentInstance?.activeGeneration || this.agentInstance?.bindingReady !== true)) return;
-      // Игнорируем собственные сообщения бота
+      // Ignore the bot's own messages
       if (username === this.botUsername) return;
 
       const message = rawMessage.trim();
       const lower = message.toLowerCase();
 
-      // Генерация/получение ID сообщения и дедупликация
+      // Generate/retrieve message ID and deduplicate
       const timestamp = Date.now();
       const msgId = this.agentInstance?.chatIngress?.getEnvelopeId(username, message, timestamp)
         || this.chatBus.generateMessageId(username, message, timestamp);
@@ -91,8 +91,8 @@ export class EventHandler {
       if (
         lower.startsWith('[ui]') ||
         lower.startsWith('[web-ui]') ||
-        lower.includes('подожди, я ещё думаю') ||
-        lower.includes('произошла ошибка:')
+        lower.includes('wait, i'm still thinking') ||
+        lower.includes('an error occurred:')
       ) {
         return;
       }
@@ -109,7 +109,7 @@ export class EventHandler {
       const isDirectMessage = routing.kind === 'direct' || !this.agentInstance;
       const isSelectedPublic = routing.recipientIds.includes(this.botUsername) || !this.agentInstance;
 
-      // Плавно поворачиваемся лицом к говорящему игроку
+      // Smoothly turn toward the speaking player
       if (this.mcBot?.bot?.players?.[username]?.entity) {
         try {
           const pEntity = this.mcBot.bot.players[username].entity;
@@ -117,24 +117,24 @@ export class EventHandler {
         } catch (_) {}
       }
 
-      // Если команда явно адресована другому конкретному боту, не обрабатываем её
+      // If the command is explicitly addressed to another specific bot, do not process it
       if (this.agentInstance && (routing.kind === 'named' || (!isDirectMessage && !isSelectedPublic))) {
-        logger.debug(`[${this.botUsername}] Реплика маршрутизирована другим участникам.`);
+        logger.debug(`[${this.botUsername}] Message routed to other participants.`);
         return;
       }
 
-      // Главный путь: если подключен AI Brain — полная агентная обработка без шаблонов и регулярок
+      // Main path: when AI Brain is connected, use full agent processing without templates or regex shortcuts
       if (this.aiBrain && !isBot && isDirectMessage) {
         const lower = message.toLowerCase().trim();
 
-        // 1. Остановка — действие мгновенное (отзывчивость важнее всего),
-        // но реплику НЕ хардкодим: её сгенерит LLM живыми словами ниже.
-        if (isOwner && /(^|\s)(стоп|стой|stop|хватит|остановись|замри)(?=$|[\s,!?.])/i.test(lower)) {
+        // 1. Stop is immediate (responsiveness comes first),
+        // but do NOT hardcode the reply; the LLM will generate a natural response below.
+        if (isOwner && /(^|\s)(stop|halt|freeze|enough|cancel)(?=$|[\s,!?.])/i.test(lower)) {
           if (this.agentInstance) this.agentInstance.emergencyStop('Owner stop command');
           else this.emergency?.emergencyStop('Owner stop command');
           if (this.mcBot?.bot?.pathfinder) this.mcBot.bot.pathfinder.stop();
           this.mcBot?.bot?.clearControlStates?.();
-          // Живой короткий отклик через humanController, если доступен; иначе молча встаём.
+          // Generate a short natural acknowledgement through humanController if available; otherwise stop silently.
           if (this.humanController) {
             try {
               const ack = await this.humanController.generateResponse('player_command', {
@@ -150,13 +150,13 @@ export class EventHandler {
           return;
         }
 
-        // 2. «Где ты / координаты» — НЕ отвечаем шаблонной строкой.
-        // Пропускаем вопрос в AIBrain: он видит реальные координаты в контексте
-        // [ЧТО Я ВИЖУ] и отвечает своими словами, как живой игрок.
+        // 2. "Where are you / coordinates" — do NOT reply with a canned line.
+        // Pass the question to AIBrain; it can see the real coordinates in context
+        // [WHAT I SEE] and can answer in its own words, like a real player.
 
-        // 2.5. Детектор «просьбы на потом» → запоминаем как обещание.
-        // Слова генерит LLM; здесь только фиксируем факт договорённости.
-        if (isOwner && this.commitmentMemory && /(потом|попозже|позже|не забудь|напомни|как освободишься|когда сможешь|на будущее)/i.test(lower)) {
+        // 2.5. Detect "do this later" requests and save them as commitments.
+        // The LLM generates the wording; this code only records the commitment.
+        if (isOwner && this.commitmentMemory && /(later|afterwards|don't forget|remind me|when you're free|when you can|for the future)/i.test(lower)) {
           try {
             this.commitmentMemory.remember(message, { requestedBy: username, importance: 0.6 });
           } catch (_) {}
@@ -177,16 +177,16 @@ export class EventHandler {
             return;
           }
         } catch (err) {
-          logger.warn(`Ошибка обработки AI Brain: ${err.message}`);
+          logger.warn(`AI Brain processing error: ${err.message}`);
         }
       }
 
-      // Резервный путь для изолированных тестов без AI (Fast Path)
+      // Fallback path for isolated tests without AI (Fast Path)
       if (!isBot) {
         const intent = FastPlayerIntentRouter.classifyIntent(message);
         if (FastPlayerIntentRouter.isGameplayMutation(intent)) {
           if (!isOwner) {
-            logger.debug(`[${this.botUsername}] Команда ${intent} отклонена: отправитель не является владельцем.`);
+            logger.debug(`[${this.botUsername}] Command ${intent} rejected: sender is not the owner.`);
           } else {
 
             const result = await FastPlayerIntentRouter.executeLocally({
@@ -203,14 +203,14 @@ export class EventHandler {
               intent,
             });
             if (result.status !== 'unrecognized') {
-              // Мгновенная реакция телом: кивок головы подтверждает получение команды
+              // Immediate physical response: a head nod confirms the command was received
               try {
                 if (this.bodyLanguage && this.mcBot?.bot) {
                   this.bodyLanguage.nodHead?.(this.mcBot.bot);
                 }
               } catch (_) {}
 
-              // Если есть человеческий контроллер — генерируем живой естественный ответ через LLM без шаблонов
+              // If the human-like controller is available, generate a natural LLM response without templates
               if (this.humanController) {
                 const physicalState = this._getPhysicalState();
 
@@ -225,7 +225,7 @@ export class EventHandler {
                 });
 
                 if (response) {
-                  // Человеческая задержка набора текста (печатает со скоростью обычного игрока)
+                  // Human-like typing delay (at the speed of an ordinary player)
                   const typingDelayMs = Math.min(1800, Math.max(300, response.length * 28 + Math.floor(HumanErrorEngine.range(0, 120))));
                   await new Promise((r) => setTimeout(r, typingDelayMs));
 
@@ -254,15 +254,15 @@ export class EventHandler {
                   social: false,
                 });
               } else if (!this.agentInstance && this.mcBot?.bot?.chat) {
-                // Минимальный резерв для изолированных тестов без AI
+                // Minimal fallback for isolated tests without AI
                 const quickAcks = {
-                  [PlayerIntents.STOP]: 'стою',
-                  [PlayerIntents.WAIT]: 'жду',
-                  [PlayerIntents.COME_HERE]: 'иду',
-                  [PlayerIntents.FOLLOW]: 'пошли',
-                  [PlayerIntents.HELP]: 'ща помогу',
+                  [PlayerIntents.STOP]: 'I am stopping',
+                  [PlayerIntents.WAIT]: 'waiting',
+                  [PlayerIntents.COME_HERE]: 'coming',
+                  [PlayerIntents.FOLLOW]: "let's go",
+                  [PlayerIntents.HELP]: "I'll help",
                 };
-                const reply = quickAcks[intent] || 'ок';
+                const reply = quickAcks[intent] || 'okay';
                 this.mcBot.bot.chat(reply);
               }
               return;
@@ -272,7 +272,7 @@ export class EventHandler {
       }
 
       // STOP is the only gameplay-adjacent route. It is owner-only and direct.
-      if (isOwner && isDirectMessage && /(^|\s)(стоп|стой|stop)(?=$|[\s,!?.])/i.test(message)) {
+      if (isOwner && isDirectMessage && /(^|\s)(stop|halt|freeze)(?=$|[\s,!?.])/i.test(message)) {
         if (this.agentInstance) {
           this.agentInstance.emergencyStop('Owner stop command');
         } else {
@@ -301,9 +301,9 @@ export class EventHandler {
           }
         } else {
           if (this.agentInstance) {
-            await this.agentInstance.sendChat('стою', { generation, recipientScope: routing, social: true });
+            await this.agentInstance.sendChat('I am stopping', { generation, recipientScope: routing, social: true });
           } else if (this.mcBot?.bot?.chat) {
-            this.mcBot.bot.chat('стою');
+            this.mcBot.bot.chat('I am stopping');
           }
         }
         return;
@@ -312,16 +312,16 @@ export class EventHandler {
       // Conversation is opt-in: only direct or explicit group messages enter it.
       const routedEnvelope = this.chatBus.emitChatReceived(envelope);
 
-      // ИНТЕГРАЦИЯ: Используем систему максимальной человекоподобности или AI Brain
+      // INTEGRATION: Use the maximum human-likeness system or AI Brain
       if (this.humanController) {
-        // Определяем тип ситуации
+        // Determine the situation type
         const situationType = isDirectMessage ? 'direct_question' :
                              isSelectedPublic ? 'group_question' : 'social_chat';
 
-        // Собираем физическое состояние бота
+        // Collect the bot's physical state
         const physicalState = this._getPhysicalState();
 
-        // Генерируем естественный ответ через систему человекоподобности
+        // Generate a natural response through the human-like behavior system
         const response = await this.humanController.generateResponse(situationType, {
           speaker: username,
           message: message,
@@ -331,7 +331,7 @@ export class EventHandler {
         });
 
         if (response) {
-          // Реалистичная задержка чтения и набора текста человеком
+          // Realistic human reading and typing delay
           if (!this.agentInstance) {
             const typingDelayMs = Math.min(2200, Math.max(500, response.length * 35 + Math.floor(HumanErrorEngine.range(0, 250))));
             await new Promise((r) => setTimeout(r, typingDelayMs));
@@ -347,7 +347,7 @@ export class EventHandler {
             this.mcBot.bot.chat(response);
           }
 
-          // Записываем событие в память и эмоции
+          // Record the event in memory and emotional state
           this.humanController.processEvent('received_message', {
             speaker: username,
             message: message,
@@ -369,11 +369,11 @@ export class EventHandler {
       }
     });
 
-    // 2. Смерть бота
+    // 2. Bot death
     this.mcBot.on('death', () => {
-      logger.warn(`[${this.botUsername}] Бот погиб — запуск обработчика смерти`);
+      logger.warn(`[${this.botUsername}] Bot died — starting the death handler`);
 
-      // Записываем событие в систему человекоподобности
+      // Record the event in the human-like behavior system
       if (this.humanController) {
         this.humanController.processEvent('died', {
           location: this.mcBot.bot?.entity?.position,
@@ -390,12 +390,12 @@ export class EventHandler {
       }
     });
 
-    // 3. Спавн бота
+    // 3. Bot spawn
     this.mcBot.on('spawn', ({ generation, bot } = {}) => {
       if (bot) this.bindBot(bot, generation);
-      logger.info(`[${this.botUsername}] Заспавнился в мире`);
+      logger.info(`[${this.botUsername}] Spawned in the world`);
 
-      // Записываем событие в систему человекоподобности
+      // Record the event in the human-like behavior system
       if (this.humanController) {
         this.humanController.processEvent('spawned', {
           location: bot?.entity?.position,
@@ -411,7 +411,7 @@ export class EventHandler {
       }, 1000);
     });
 
-    // 4. Респавн бота после гибели
+    // 4. Bot respawn after death
     this.mcBot.on('respawn', ({ generation, bot } = {}) => {
       const activeBot = bot || this.mcBot.bot;
       if (activeBot) {
@@ -423,7 +423,7 @@ export class EventHandler {
 
       this.movementController?.stop?.();
 
-      logger.info(`[${this.botUsername}] Возродился (respawn) после гибели`);
+      logger.info(`[${this.botUsername}] Respawned after death`);
 
       if (this.humanController) {
         this.humanController.processEvent('respawned', {
@@ -440,7 +440,7 @@ export class EventHandler {
       }, 1000);
     });
 
-    logger.info(`Обработчики событий установлены для [${this.botUsername}]`);
+    logger.info(`Event handlers registered for [${this.botUsername}]`);
   }
 
   bindBot(bot, generation) {
@@ -466,7 +466,7 @@ export class EventHandler {
       this._entityDeadListener = (entity) => {
         if (this.boundBot !== bot || this.boundGeneration !== generation) return;
         if (entity.type === 'player' && entity.username && entity.username !== this.botUsername) {
-          logger.info(`[${this.botUsername}] Зафиксировал смерть игрока: ${entity.username}`);
+          logger.info(`[${this.botUsername}] Recorded player death: ${entity.username}`);
           if (this.deathHandler) {
             this.deathHandler.handlePlayerDeath(entity.username, entity.position);
           }
@@ -477,7 +477,7 @@ export class EventHandler {
       };
       bot.on('entityDead', this._entityDeadListener);
 
-      // Инициализация психофизиологических движков человека
+      // Initialize human psychophysiological engines
       if (!bot._adrenalineController) bot._adrenalineController = new AdrenalineController();
       if (!bot._auditoryEngine) bot._auditoryEngine = new AuditoryEngine(bot, bot._adrenalineController);
       if (!bot._hotbarErgonomics) bot._hotbarErgonomics = new HotbarErgonomics(bot, bot._adrenalineController);
@@ -511,7 +511,7 @@ export class EventHandler {
         bot.on('entityHurt', this._entityHurtListener);
       }
 
-      // Фоновый мониторинг защиты лута и возврата вещей напарнику
+      // Background monitoring for loot protection and returning items to teammates
       this._lootCheckInterval = setInterval(async () => {
         if (!this.boundBot || this.boundGeneration !== generation) return;
         if (!this.lootProtection || !this.lootProtection.deathRecord) return;
@@ -522,7 +522,7 @@ export class EventHandler {
           if (returned && returned.tossedCount > 0) {
             if (this.aiBrain && typeof this.aiBrain.processMessage === 'function') {
               try {
-                const prompt = `[SYSTEM_EVENT] Ты только что сохранил и сбросил обратно выпавшие вещи погибшего напарника ${returned.recipient} (${returned.tossedCount} шт/стаков). Напиши короткую дружескую реплику в чат (без шаблонов, естественным стилем живого игрока).`;
+                const prompt = `[SYSTEM_EVENT] You just saved and returned the dropped items belonging to your teammate ${returned.recipient} (${returned.tossedCount} items/stacks). Write a short, friendly chat message (no templates; use a natural player-like style).`;
                 const reply = await this.aiBrain.processMessage(prompt, this.worldState);
                 if (reply && this.boundBot?.chat) {
                   this.boundBot.chat(reply);
