@@ -1,5 +1,5 @@
 /**
- * Враппер для действий с интеграцией системы человекоподобности
+ * Action wrapper integrated with the human-like behavior system
  */
 
 export class HumanActionWrapper {
@@ -9,15 +9,15 @@ export class HumanActionWrapper {
   }
 
   /**
-   * Выполняет действие с проверкой через систему человекоподобности
+   * Execute an action with checks from the human-like behavior system
    */
   async executeAction(action, originalExecutor, context = {}) {
     if (!this.humanController) {
-      // Fallback — выполняем напрямую
+      // Fallback — execute directly
       return await originalExecutor(action);
     }
 
-    // Проверяем действие через систему человекоподобности
+    // Check the action through the human-like behavior system
     const actionResult = await this.humanController.processAction(action, {
       ...context,
       health: this.bot?.health,
@@ -26,7 +26,7 @@ export class HumanActionWrapper {
     });
 
     if (!actionResult.allowed) {
-      // Действие отложено
+      // Action was deferred
       return {
         executed: false,
         reason: actionResult.reason,
@@ -34,18 +34,18 @@ export class HumanActionWrapper {
       };
     }
 
-    // Добавляем естественную задержку реакции
+    // Add a natural reaction delay
     await this._sleep(actionResult.reactionTime);
 
-    // Пауза на раздумье
+    // Thinking pause
     if (actionResult.pauseBefore) {
       await this._sleep(actionResult.pauseBefore);
     }
 
-    // Выполняем действие
+    // Execute the action
     const result = await originalExecutor(action);
 
-    // Реакции на ошибки
+    // Error reactions
     if (actionResult.mistake && this.bot?.chat) {
       for (const reaction of actionResult.reactions) {
         if (reaction) {
