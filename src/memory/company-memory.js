@@ -22,7 +22,7 @@ export class CompanyMemory {
       } catch (e) {
         // WAL mode optional if locked
       }
-      logger.info(`Подключение к базе памяти компании: ${this.dbPath}`);
+      logger.info(`Connected to company memory database: ${this.dbPath}`);
 
       this.db.exec(`
         CREATE TABLE IF NOT EXISTS company_events (
@@ -91,9 +91,9 @@ export class CompanyMemory {
           resolved_at INTEGER
         );
       `);
-      logger.info('Таблицы памяти компании успешно инициализированы.');
+      logger.info('Company memory tables initialized successfully.');
     } catch (err) {
-      logger.error(`Ошибка при инициализации БД компании: ${err.message}`);
+      logger.error(`Error initializing company database: ${err.message}`);
     }
   }
 
@@ -314,7 +314,7 @@ export class CompanyMemory {
     if (this.db) {
       this.db.close();
       this.db = null;
-      logger.info('Подключение к БД памяти компании закрыто.');
+      logger.info('Company memory database connection closed.');
     }
   }
 }
