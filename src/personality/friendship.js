@@ -33,7 +33,7 @@ export class FriendshipSystem {
       this.activityCounts[type]++;
       this.trustLevel = Math.min(100, this.trustLevel + 1);
       this._save();
-      logger.info(`[ДРУЖБА] Активность ${type} (+1). Уровень доверия: ${this.trustLevel}/100`);
+      logger.info(`[FRIENDSHIP] Activity ${type} (+1). Trust level: ${this.trustLevel}/100`);
     }
   }
 
