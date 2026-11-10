@@ -35,8 +35,8 @@ export const ResponseDisposition = Object.freeze({
 // This eliminates robotic template phrases and creates unique, context-aware responses
 
 /**
- * FastPlayerIntentRouter — мгновенное распознавание базовых команд игрока
- * и их прямое исполнение на локальном уровне без ожидания LLM.
+ * FastPlayerIntentRouter — instant recognition of basic player commands
+ * and their direct local execution without waiting for the LLM.
  */
 export class FastPlayerIntentRouter {
   static isGameplayMutation(intent) {
@@ -50,28 +50,25 @@ export class FastPlayerIntentRouter {
   }
 
   /**
-   * Классификация намерения из текста
+   * Classify intent from text
    * @param {string} content
    * @returns {string} PlayerIntents enum
    */
   static classifyIntent(content) {
     const raw = content.toLowerCase().trim();
-    // Очищаем от знаков препинания
+    // Remove punctuation
     const clean = raw.replace(/[.,!?;:()]/g, ' ').replace(/\s+/g, ' ').trim();
     const words = clean.split(' ');
     const hasStem = (...stems) => words.some((word) => stems.some((stem) => word.startsWith(stem)));
-    const isQuestion = /\?|^(куда|где|почему|зачем|когда|кто|что|как)\b/.test(raw);
+    const isQuestion = /\?|^(where|why|when|who|what|how|which)\b/.test(raw);
 
     // 0. WHERE ARE YOU
     if (
-      clean.includes('где ты') ||
-      clean.includes('ты где') ||
-      clean.includes('где вы') ||
-      clean.includes('вы где') ||
-      clean.includes('где находишься') ||
-      clean.includes('где стоишь') ||
-      clean.includes('где бегаешь') ||
-      clean.includes('где сейчас') ||
+      clean.includes('where are you') ||
+      clean.includes('where you at') ||
+      clean.includes('where are you now') ||
+      clean.includes('where are you located') ||
+      clean.includes('where have you been') ||
       clean.includes('where are you')
     ) {
       return PlayerIntents.WHERE_ARE_YOU;
@@ -79,67 +76,58 @@ export class FastPlayerIntentRouter {
 
     // 1. STOP
     if (
-      hasStem('стоп', 'стой', 'останов', 'замри', 'тормоз', 'хватит', 'прекрат', 'отмен') ||
-      clean.includes('не двигайся') || clean.includes('не двигайтесь') || clean.includes('хватит идти') ||
-      clean.includes('ни с места') || clean.includes('стоим здесь')
+      hasStem('stop', 'halt', 'freeze', 'pause', 'cancel') ||
+      clean.includes("don't move") || clean.includes('do not move') || clean.includes('stay still') ||
+      clean.includes("that's enough") || clean.includes('stand still')
     ) {
       return PlayerIntents.STOP;
     }
 
     // 2. WAIT
-    if (hasStem('подожд', 'жди', 'погод', 'посто', 'обожд') || words.includes('сек') || words.includes('минуту') || words.includes('wait')) {
+    if (hasStem('wait', 'hold', 'pause') || words.includes('sec') || words.includes('second') || words.includes('minute')) {
       return PlayerIntents.WAIT;
     }
 
     // 3. COME HERE
     if (
-      clean.includes('иди сюда') ||
-      clean.includes('идите сюда') ||
-      clean.includes('сюда') ||
-      clean.includes('ко мне') ||
-      clean.includes('беги сюда') ||
-      clean.includes('бегите сюда') ||
-      clean.includes('подойди') ||
-      clean.includes('подойдите') ||
-      clean.includes('подбеги') ||
-      clean.includes('подбегите') ||
-      clean.includes('подойди ко мне') ||
-      clean.includes('быстро сюда') ||
+      false ||
       clean.includes('come here') ||
-      clean.includes('соберитесь') ||
-      clean.includes('собраться') ||
-      clean.includes('вернитесь ко мне') ||
-      clean.includes('рядом со мной') ||
-      hasStem('подой', 'подбег', 'собер', 'вернит')
+      clean.includes('come to me') ||
+      clean.includes('get over here') ||
+      clean.includes('come over') ||
+      clean.includes('approach me') ||
+      clean.includes('gather here') ||
+      clean.includes('return to me') ||
+      clean.includes('stay close') ||
+      hasStem('approach', 'come', 'gather', 'return')
     ) {
       return PlayerIntents.COME_HERE;
     }
 
     // 4. FOLLOW
     if (
-      clean.includes('иди за мной') ||
-      clean.includes('идите за мной') ||
-      clean.includes('следуй за мной') ||
-      clean.includes('следуйте за мной') ||
-      clean.includes('за мной') ||
-      clean.includes('го со мной') ||
-      clean.includes('пошли за мной') ||
-      clean.includes('пойдём за мной') ||
-      clean.includes('пойдем за мной') ||
-      clean.includes('идём за мной') ||
-      clean.includes('идем за мной') ||
-      clean.includes('пошли дальше') ||
-      clean.includes('идём дальше') ||
-      clean.includes('идем дальше') ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
       clean.includes('follow me') ||
-      clean.includes('не отставай') ||
-      clean.includes('не отставайте') ||
-      clean.includes('держитесь рядом') ||
-      clean.includes('держись рядом') ||
-      clean.includes('вместе идём') ||
+      false ||
+      false ||
+      false ||
+      false ||
+      false ||
       (!isQuestion && (
-        hasStem('пош', 'пойд', 'погнал', 'след', 'идём', 'идем', 'поехал', 'продолж', 'возобнов', 'двиг') ||
-        words.includes('вперёд') || words.includes('вперед') || words.includes('follow')
+        hasStem('follow', 'proceed', 'continue', 'move') || words.includes('forward')
       ))
     ) {
       return PlayerIntents.FOLLOW;
@@ -147,23 +135,23 @@ export class FastPlayerIntentRouter {
 
     // 5. HELP
     if (
-      clean.includes('на помощь') || clean.includes('помоги мне') || clean.includes('помогите мне') || clean.includes('срочно помощь') ||
-      hasStem('помог', 'спас', 'выруч', 'прикр', 'защит') || words.includes('хэлп') || words.includes('хелп') || words.includes('help')
+      clean.includes('help me') || clean.includes('need help') || clean.includes('come help') ||
+      hasStem('help', 'assist', 'rescue') || words.includes('help')
     ) {
       return PlayerIntents.HELP;
     }
 
     // 6. CALL NAME (Just calling the bot)
     const nameAliases = [
-      'сэм', 'сам', 'сээм', 'сээээм', 'эй сэм',
-      'макс', 'максим', 'эй макс',
-      'джек', 'джеки', 'эй джек',
-      'райан', 'райн', 'эй райан',
-      'алекс', 'саша', 'эй алекс',
-      'лео', 'леон', 'эй лео',
-      'ребят', 'парни', 'ребята', 'команда',
+      'sam', 'sammy', 'hey sam',
+      'max', 'maxim', 'hey max',
+      'jack', 'jackie', 'hey jack',
+      'ryan', 'hey ryan',
+      'alex', 'hey alex',
+      'leo', 'leon', 'hey leo',
+      'guys', 'everyone', 'team',
     ];
-    if (nameAliases.includes(clean) || (clean.startsWith('эй ') && words.length <= 2)) {
+    if (nameAliases.includes(clean) || (clean.startsWith('hey ') && words.length <= 2)) {
       return PlayerIntents.CALL_NAME;
     }
 
@@ -171,7 +159,7 @@ export class FastPlayerIntentRouter {
   }
 
   /**
-   * Получить фразу подтверждения в характере персонажа
+   * Get an acknowledgement phrase in the character's style
    * DEPRECATED: Now handled by HumanBehaviorController for dynamic, natural responses
    * This method is kept for backward compatibility but should return null
    * to signal that response generation should be delegated to HumanBehaviorController
@@ -186,7 +174,7 @@ export class FastPlayerIntentRouter {
   }
 
   /**
-   * Мгновенное локальное исполнение команды на боте
+   * Execute a command locally on the bot immediately
    * @param {Object} options
    * @param {Object} [options.agentInstance]
    * @param {Object} [options.movementController]
@@ -234,7 +222,7 @@ export class FastPlayerIntentRouter {
       expectedObservation,
     });
 
-    logger.info(`[${agentName}] Мгновенное локальное исполнение намерения [${intent}] от игрока ${playerUsername}`);
+    logger.info(`[${agentName}] Executing local intent [${intent}] from player ${playerUsername}`);
 
 
     try {
@@ -285,16 +273,16 @@ export class FastPlayerIntentRouter {
         case PlayerIntents.WHERE_ARE_YOU:
           if (!activeBot?.entity?.position) return result({ status: FastIntentStatus.FAILED, responseDisposition: ResponseDisposition.NONE, error: 'POSITION_UNAVAILABLE' });
           const pos = { x: Math.round(activeBot.entity.position.x), y: Math.round(activeBot.entity.position.y), z: Math.round(activeBot.entity.position.z) };
-          return result({ status: FastIntentStatus.COMPLETED, ack: `Я тут: x: ${pos.x}, y: ${pos.y}, z: ${pos.z}`, outcome: { action: 'report_position', position: pos }, expectedObservation: { positionAvailable: true } });
+          return result({ status: FastIntentStatus.COMPLETED, ack: `I'm here: x: ${pos.x}, y: ${pos.y}, z: ${pos.z}`, outcome: { action: 'report_position', position: pos }, expectedObservation: { positionAvailable: true } });
 
         case PlayerIntents.CALL_NAME:
-          return result({ status: FastIntentStatus.NOOP, ack: 'Да, я тут!', outcome: { action: 'acknowledge_call' } });
+          return result({ status: FastIntentStatus.NOOP, ack: 'Yes, I'm here!', outcome: { action: 'acknowledge_call' } });
 
         default:
           return result({ status: FastIntentStatus.UNRECOGNIZED, responseDisposition: ResponseDisposition.NONE });
       }
     } catch (error) {
-      logger.warn(`[${agentName}] Не удалось выполнить [${intent}]: ${error.message}`);
+      logger.warn(`[${agentName}] Failed to execute [${intent}]: ${error.message}`);
       return result({ status: FastIntentStatus.FAILED, responseDisposition: ResponseDisposition.NONE, error: error.message });
     }
   }
