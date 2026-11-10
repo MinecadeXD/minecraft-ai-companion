@@ -1,5 +1,5 @@
 /**
- * Mock AI Provider для тестирования.
+ * Mock AI provider for testing.
  */
 export class MockAIProvider {
   constructor() {
@@ -12,7 +12,7 @@ export class MockAIProvider {
     return 'MockAI';
   }
 
-  /** Добавить предопределённый ответ */
+  /** Add a predefined response */
   addResponse(response) {
     this.responses.push(response);
   }
@@ -39,7 +39,7 @@ export class MockAIProvider {
     return { text: 'Mock default response', toolCalls: [], raw: {} };
   }
 
-  /** Сбрасывает состояние мока */
+  /** Reset mock state */
   reset() {
     this.responses = [];
     this.callLog = [];
