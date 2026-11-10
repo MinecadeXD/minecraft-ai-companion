@@ -86,8 +86,8 @@ export class SocialConversationMemory {
   }
 
   _render(entry) {
-    if (entry.provenance === 'own_chat') return `[OWN CHAT] Ты отправил в чат: ${quote(entry.content)}`;
-    if (entry.provenance === 'observed_event') return `[OBSERVED EVENT][${entry.type}] Ты наблюдал: ${quote(entry.content)}`;
+    if (entry.provenance === 'own_chat') return `[OWN CHAT] You sent to chat: ${quote(entry.content)}`;
+    if (entry.provenance === 'observed_event') return `[OBSERVED EVENT][${entry.type}] You observed: ${quote(entry.content)}`;
     return `[UNTRUSTED CHAT][heard from ${entry.sender}][tone ${entry.relationTone}]: ${quote(entry.content)}`;
   }
 
