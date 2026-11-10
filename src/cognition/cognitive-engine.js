@@ -43,8 +43,8 @@ export class CognitiveEngine {
     this.timer = null;
     this.currentCycle = 0;
     this.latestDeliberationSummary = {
-      decision: 'Ожидание указаний',
-      reason: 'Ситуация стабильна',
+      decision: 'Waiting for instructions',
+      reason: 'Situation is stable',
       confidence: 1.0,
       nextAction: 'idle',
     };
@@ -95,8 +95,8 @@ export class CognitiveEngine {
     if (reflex.handled) {
       logger.info(`[COGNITIVE CYCLE #${cycleId}] Fast-Path reflex executed: ${reflex.actionName}`);
       this.latestDeliberationSummary = {
-        decision: `Быстрый рефлекс: ${reflex.actionName}`,
-        reason: 'Мгновенная реакция на угрозу',
+        decision: `Quick reflex: ${reflex.actionName}`,
+        reason: 'Immediate response to a threat',
         confidence: 0.95,
         nextAction: reflex.actionName,
       };
@@ -112,7 +112,7 @@ export class CognitiveEngine {
     // 5. GOAL & DELIBERATION SUMMARY
     const situation = this.contextEngine.getSituationSummary();
     this.latestDeliberationSummary = {
-      decision: this.contextEngine.activeGoal ? `Выполняю цель: ${this.contextEngine.activeGoal}` : 'Патрулирую и наблюдаю за окружением',
+      decision: this.contextEngine.activeGoal ? `Working on goal: ${this.contextEngine.activeGoal}` : 'Patrolling and observing the surroundings',
       reason: situation.threats,
       confidence: 0.88,
       nextAction: this.contextEngine.botActivity,
@@ -188,12 +188,12 @@ export class CognitiveEngine {
       rememberEpisode.call(this.memoryManager.episodic, {
         mcDay: event.mcDay ?? context.mcDay ?? null,
         eventType: `decision:${appraisal.eventType}`,
-        summary: `Решение: ${decision.action || 'unknown'}; речь: ${decision.speech || 'unknown'}${reasons ? `; причины: ${reasons}` : ''}`,
+        summary: `Decision: ${decision.action || 'unknown'}; speech: ${decision.speech || 'unknown'}${reasons ? `; reasons: ${reasons}` : ''}`,
         outcome: decision.action || '',
         importance,
       });
     } catch (error) {
-      logger.warn(`[COGNITION] Не удалось сохранить decision ledger в долговременную память: ${error.message}`);
+      logger.warn(`[COGNITION] Failed to save decision ledger to long-term memory: ${error.message}`);
     }
   }
 
