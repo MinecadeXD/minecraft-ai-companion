@@ -7,10 +7,10 @@ import { HumanErrorEngine } from './human-error-engine.js';
 const logger = createLogger('CAVE_NAV');
 
 /**
- * CaveNavigation — управление поведением в пещерах и темных пространствах:
- * 1. Интеллектуальная расстановка факелов на полу и стенах при низком освещении (light <= 7).
- * 2. Человеческая осторожность в темноте (замедление, аккуратное сканирование взглядом при отсутствии света/факелов).
- * 3. Защита от спама факелами (проверка дистанции до существующих источников света и кулдаун).
+ * CaveNavigation — behavior management in caves and dark spaces:
+ * 1. Intelligent torch placement on floors and walls in low-light conditions (light <= 7).
+ * 2. Human-like caution in darkness (slowing down and carefully scanning the surroundings when there is no light or torch nearby).
+ * 3. Prevent excessive torch placement (check distance to existing light sources and enforce a cooldown).
  */
 export class CaveNavigation {
   /**
@@ -26,12 +26,12 @@ export class CaveNavigation {
     this.errorSystem = options.errorSystem || null;
     this.agentName = options.agentName || 'Bot';
     this.lastTorchTime = 0;
-    this.minTorchInterval = 8000; // Минимальный интервал между факелами (8 сек)
+    this.minTorchInterval = 8000; // Minimum interval between torches (8 seconds)
     this.lastGazeScan = 0;
   }
 
   /**
-   * Оценивает освещенность и окружение бота
+   * Evaluate the bot's lighting conditions and surroundings
    */
   checkEnvironment(bot = this.bot) {
     if (!bot || !bot.entity || !bot.entity.position) {
@@ -76,7 +76,7 @@ export class CaveNavigation {
   }
 
   /**
-   * Подсчитывает количество факелов в инвентаре
+   * Count the torches in the inventory
    */
   countTorches(bot = this.bot) {
     if (!bot || !bot.inventory) return 0;
@@ -90,7 +90,7 @@ export class CaveNavigation {
   }
 
   /**
-   * Проверяет, является ли текущее место перекрёстком / развилкой в пещере (3+ открытых направлений)
+   * Check whether the current location is a cave intersection or junction (3+ open directions)
    */
   isIntersection(bot = this.bot) {
     if (!bot?.entity?.position || typeof bot.blockAt !== 'function') return false;
@@ -122,7 +122,7 @@ export class CaveNavigation {
   }
 
   /**
-   * Проверяет, требуется ли ставить факел в данной точке
+   * Check whether a torch is needed at this location
    */
   shouldPlaceTorch(bot = this.bot) {
     if (!bot || !bot.entity) return false;
@@ -145,7 +145,7 @@ export class CaveNavigation {
 
     if (!decision.shouldPlace) return false;
 
-    // Не спамим, если рядом (в радиусе 6 блоков) уже стоит факел
+    // Do not place another torch if one is already nearby (within 6 blocks)
     if (typeof bot.findBlock === 'function') {
       try {
         const nearbyTorch = bot.findBlock({
@@ -160,7 +160,7 @@ export class CaveNavigation {
   }
 
   /**
-   * Ищет подходящий твердый блок и сторону для установки факела
+   * Find a suitable solid block and face for torch placement
    */
   findTorchSpot(bot = this.bot) {
     if (!bot || !bot.entity || typeof bot.blockAt !== 'function') return null;
@@ -176,7 +176,7 @@ export class CaveNavigation {
     const isSolid = (b) => b && b.boundingBox === 'block' && !b.name.includes('water') && !b.name.includes('lava') && !b.name.includes('leaves') && !b.name.includes('air');
     const isAir = (b) => b && (b.name === 'air' || b.name === 'cave_air');
 
-    // 1. Попытка установить на ПОЛ под ногами или на шаг вперед/вбок
+    // 1. 1. Try placing it on the FLOOR beneath the bot or one step ahead/to the side
     const floorOffsets = [
       { dx: 0, dz: 0 },
       { dx: 1, dz: 0 },
@@ -203,7 +203,7 @@ export class CaveNavigation {
       }
     }
 
-    // 2. Попытка установить на СТЕНУ рядом (на уровне пояса/глаз)
+    // 2. 2. Try placing it on a nearby WALL (at waist or eye level)
     const wallOffsets = [
       { dx: 1, dz: 0, normal: vec3(-1, 0, 0) },
       { dx: -1, dz: 0, normal: vec3(1, 0, 0) },
@@ -233,7 +233,7 @@ export class CaveNavigation {
   }
 
   /**
-   * Выполняет установку факела как живой игрок
+   * Place a torch using human-like behavior
    */
   async placeTorch(bot = this.bot) {
     if (!bot || !this.shouldPlaceTorch(bot)) return false;
@@ -245,15 +245,15 @@ export class CaveNavigation {
       const torchItem = bot.inventory?.items()?.find((i) => i.name === 'torch' || i.name === 'soul_torch');
       if (!torchItem) return false;
 
-      // Запоминаем текущий предмет, чтобы вернуть его в руку
+      // Remember the currently held item so it can be restored afterward
       const prevHeld = bot.heldItem;
 
-      // Экипируем факел
+      // Equip the torch
       if (typeof bot.equip === 'function') {
         await bot.equip(torchItem, 'hand');
       }
 
-      // Поворачиваемся к месту установки
+      // Turn toward the placement location
       if (typeof bot.lookAt === 'function') {
         const refPos = spot.referenceBlock.position || spot.targetPos;
         const offsetFn = typeof refPos.offset === 'function'
@@ -267,13 +267,13 @@ export class CaveNavigation {
         await bot.lookAt(lookTarget, true);
       }
 
-      // Устанавливаем факел с проверкой ошибок
+      // Place the torch with error checks
       const wrapper = new BotActionWrapper(bot, this.emotionalSystem, this.agentName);
       const placed = await wrapper.placeBlock(spot.referenceBlock, spot.faceVector);
 
       this.lastTorchTime = Date.now();
 
-      // Возвращаем исходный предмет в руку (меч/кирку)
+      // Restore the original held item (sword/pickaxe)
       if (prevHeld && typeof bot.equip === 'function' && prevHeld.name !== torchItem.name) {
         try {
           await bot.equip(prevHeld, 'hand');
@@ -281,16 +281,16 @@ export class CaveNavigation {
       }
 
       const env = this.checkEnvironment(bot);
-      logger.info(`[${this.agentName}] 🕯️ Установлен факел (${spot.type}) в темноте (свет был ${env.lightLevel})`);
+      logger.info(`[${this.agentName}] 🕯️ Placed a torch (${spot.type}) in darkness (previous light level: ${env.lightLevel})`);
       return placed !== false;
     } catch (err) {
-      logger.debug(`[${this.agentName}] Ошибка установки факела: ${err.message}`);
+      logger.debug(`[${this.agentName}] Torch placement failed: ${err.message}`);
       return false;
     }
   }
 
   /**
-   * Отрабатывает поведение осторожности в темноте
+   * Apply cautious behavior in darkness
    */
   handleDarknessCaution(bot = this.bot, movementController = null) {
     if (!bot || !bot.entity) return;
@@ -299,7 +299,7 @@ export class CaveNavigation {
     const torches = this.countTorches(bot);
     const now = Date.now();
 
-    // Если темно и нет факелов — включаем режим осторожности
+    // If it is dark and no torches are available, enable cautious mode
     const needsCaution = env.isDark && (torches === 0 || env.isPitchBlack);
 
     if (movementController && typeof movementController.setDarkCaution === 'function') {
@@ -308,10 +308,10 @@ export class CaveNavigation {
 
     if (needsCaution && now - this.lastGazeScan > 2200) {
       this.lastGazeScan = now;
-      // Осторожно осматриваемся по сторонам и вниз (проверяем пол/обрыв/врагов)
+      // Carefully look around and downward (check the floor, drops, and nearby threats)
       if (typeof bot.look === 'function' && bot.entity) {
         const yawJitter = HumanErrorEngine.jitter(0.6, bot);
-        const pitchCheck = HumanErrorEngine.range(-0.3, 0.1, bot); // Смотрим чуть под ноги или на уровень глаз
+        const pitchCheck = HumanErrorEngine.range(-0.3, 0.1, bot); // Look slightly downward or at eye level
         bot.look(bot.entity.yaw + yawJitter, pitchCheck, true).catch(() => {});
       }
     }
