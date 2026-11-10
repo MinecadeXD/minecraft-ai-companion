@@ -76,8 +76,8 @@ export class ConversationManager {
       probability = process.env.NODE_ENV === 'test' ? 1.0 : 0.96;
       reason = 'direct mention';
     } 
-    // 2. Question to group (contains '?' or 'кто')
-    else if (msgLower.includes('?') || msgLower.includes('кто') || msgLower.includes('куда') || msgLower.includes('что')) {
+    // 2. Question to the group (contains '?' or an English question word)
+    else if (msgLower.includes('?') || /\b(who|where|what|when|why|how)\b/.test(msgLower)) {
       probability = 0.2 + (talkativeness * 0.3); // 20-50%
       reason = 'group question';
     }
