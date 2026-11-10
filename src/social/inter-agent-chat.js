@@ -35,7 +35,7 @@ export class InterAgentChat {
     const agent = this.agents.get(agentName);
     const bot = agent?.bot || agent?.mcBot?.bot;
     if (!agent || !bot) {
-      logger.error(`Агент ${agentName} не найден или бот не инициализирован.`);
+      logger.error(`Agent ${agentName} not found or bot is not initialized.`);
       return false;
     }
 
@@ -60,7 +60,7 @@ export class InterAgentChat {
     // Clamp between 500ms and 8000ms
     delay = Math.max(500, Math.min(8000, delay));
 
-    logger.debug(`Агент ${agentName} начал печатать: "${message}" (задержка: ${Math.round(delay)}мс)`);
+    logger.debug(`Agent ${agentName} started typing: "${message}" (delay: ${Math.round(delay)} ms)`);
 
     return new Promise((resolve) => {
       // Set agent state to 'typing'
@@ -101,7 +101,7 @@ export class InterAgentChat {
       this.interruptTyping(agentName);
     }
 
-    logger.warn(`Агент ${agentName} отправляет ЭКСТРЕННОЕ сообщение: "${message}"`);
+    logger.warn(`Agent ${agentName} is sending an EMERGENCY message: "${message}"`);
     this._executeSend(bot, agentName, message, options.target || null);
   }
 
@@ -117,7 +117,7 @@ export class InterAgentChat {
         const targetName = target.split(':')[1];
         actualMessage = `/msg ${targetName} ${message}`;
       } else if (target === 'nearby') {
-        actualMessage = `[Рядом] ${message}`;
+        actualMessage = `[Nearby] ${message}`;
       }
     }
 
@@ -145,7 +145,7 @@ export class InterAgentChat {
       }
 
     } catch (err) {
-      logger.error(`Ошибка при отправке сообщения агентом ${agentName}: ${err.message}`);
+      logger.error(`Error sending message from agent ${agentName}: ${err.message}`);
     }
   }
 
@@ -166,7 +166,7 @@ export class InterAgentChat {
         bot.state = 'idle';
       }
       
-      logger.debug(`Набор текста агентом ${agentName} был прерван.`);
+      logger.debug(`Typing by agent ${agentName} was interrupted.`);
     }
   }
 
