@@ -15,7 +15,7 @@ export class DeathHandler {
   }
 
   /**
-   * Обработка смерти игрока.
+   * Handle a player death.
    */
   handlePlayerDeath(playerName, position) {
     if (!position) return;
@@ -26,33 +26,33 @@ export class DeathHandler {
       z: Math.round(position.z),
     };
 
-    logger.warn(`💀 [СМЕРТЬ ИГРОКА] ${playerName} погиб на [${coords.x}, ${coords.y}, ${coords.z}]`);
+    logger.warn(`💀 [PLAYER DEATH] ${playerName} died at [${coords.x}, ${coords.y}, ${coords.z}]`);
 
-    // Сохраняем в память как точку интереса
+    // Save to memory as a point of interest
     if (this.memoryManager) {
       this.memoryManager.pois.addPOI(
-        `Место гибели ${playerName}`,
+        `${playerName}'s death location`,
         POITypes.DEATH,
         coords,
-        `Погиб в ${new Date().toLocaleTimeString()}`
+        `Died at ${new Date().toLocaleTimeString()}`
       );
 
       this.memoryManager.episodic.rememberEpisode({
         mcDay: this.bot?.time ? Math.floor(this.bot.time.time / 24000) + 1 : 1,
         eventType: 'death',
-        summary: `${playerName} погиб на координатах [${coords.x}, ${coords.y}, ${coords.z}]`,
+        summary: `${playerName} died at coordinates [${coords.x}, ${coords.y}, ${coords.z}]`,
         position: coords,
         participants: playerName,
-        outcome: 'потеря вещей',
+        outcome: 'item loss',
         importance: 8,
       });
     }
 
-    // Событие сохраняется в память; социальную реакцию выбирает ConversationEngine.
+    // The event is saved to memory; ConversationEngine chooses the social response.
   }
 
   /**
-   * Обработка смерти самого бота.
+   * Handle the bot's own death.
    */
   handleBotDeath() {
     const now = Date.now();
@@ -72,12 +72,12 @@ export class DeathHandler {
       };
     }
 
-    logger.warn(`💀 [СМЕРТЬ БОТА] Бот погиб на [${coords.x}, ${coords.y}, ${coords.z}] (смерть #${this.botDeathCount})`);
+    logger.warn(`💀 [BOT DEATH] Bot died at [${coords.x}, ${coords.y}, ${coords.z}] (death #${this.botDeathCount})`);
 
-    // Защита от бесконечного цикла смертей
+    // Prevent an infinite death loop
     if (this.botDeathCount >= this.maxDeathsInWindow) {
-      logger.error('⚠️ [ДЕЗЛУП ДЕТЕКТЕД] Слишком много смертей подряд! Бот переходит в пассивный режим.');
-      // Не отправляем автоматическое сообщение: участник может промолчать.
+      logger.error('⚠️ [DEATH LOOP DETECTED] Too many consecutive deaths! The bot is switching to passive mode.');
+      // Do not send an automatic message; the agent may choose to remain silent.
       return false;
     }
 
@@ -85,7 +85,7 @@ export class DeathHandler {
       this.memoryManager.episodic.rememberEpisode({
         mcDay: this.bot?.time ? Math.floor(this.bot.time.time / 24000) + 1 : 1,
         eventType: 'bot_death',
-        summary: `Бот погиб на [${coords.x}, ${coords.y}, ${coords.z}]`,
+        summary: `Bot died at [${coords.x}, ${coords.y}, ${coords.z}]`,
         position: coords,
         importance: 7,
       });
