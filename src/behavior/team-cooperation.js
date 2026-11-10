@@ -4,12 +4,12 @@ import { KinematicsEngine } from './kinematics.js';
 const logger = createLogger('TEAM_COOPERATION');
 
 /**
- * TeamCooperationEngine — командное взаимодействие, передача вещей через Q,
- * охрана работающих напарников и дружеские эмоции (GG, приседания).
+ * TeamCooperationEngine — team cooperation, item sharing with Q,
+ * looking out for teammates who are busy and friendly gestures (GG, crouching).
  */
 export class TeamCooperationEngine {
   /**
-   * Передача предмета игроку или напарнику (Q Toss)
+   * Give an item to a player or teammate (Q Toss)
    */
   static async tossItemToTarget(bot, targetName, itemName, count = 1) {
     if (!bot || !bot.inventory) return false;
@@ -21,19 +21,19 @@ export class TeamCooperationEngine {
     if (!item) return false;
 
     try {
-      // Поворачиваемся к игроку
+      // Turn toward the player
       await bot.lookAt(targetPlayer.position.offset(0, 1.5, 0), true);
 
-      // Бросаем предмет клавишей Q
+      // Drop the item with the Q key
       if (typeof bot.toss === 'function') {
         await bot.toss(item.type, null, Math.min(count, item.count));
       } else if (typeof bot.tossStack === 'function') {
         await bot.tossStack(item);
       }
 
-      logger.info(`[${bot.username || 'Bot'}] 🎁 Сбросил ${count}x ${item.name} для ${targetName}`);
+      logger.info(`[${bot.username || 'Bot'}] 🎁 Dropped ${count}x ${item.name} for ${targetName}`);
 
-      // Дружеский кивок
+      // Friendly nod
       await KinematicsEngine.crouchNod(bot, 2);
       return true;
     } catch (err) {
@@ -43,7 +43,7 @@ export class TeamCooperationEngine {
   }
 
   /**
-   * Празднование победы / выполнения задачи (GG crouch spam + jump)
+   * Celebrate a victory or completed task (GG crouch-and-jump gesture)
    */
   static async celebrate(bot) {
     if (!bot || typeof bot.setControlState !== 'function') return;
