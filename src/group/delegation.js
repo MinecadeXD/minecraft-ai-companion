@@ -30,7 +30,7 @@ export class DelegationManager {
     };
     
     this.delegations.set(id, delegation);
-    logger.info(`[${this.agentName}] Делегирована задача для ${to}: ${taskDescription}`);
+    logger.info(`[${this.agentName}] Task delegated to ${to}: ${taskDescription}`);
     return delegation;
   }
 
@@ -38,7 +38,7 @@ export class DelegationManager {
     // Cloning the delegation object to store it locally
     const localDel = { ...delegation };
     this.delegations.set(localDel.id, localDel);
-    logger.info(`[${this.agentName}] Получен запрос от ${localDel.from}: ${localDel.task}`);
+    logger.info(`[${this.agentName}] Received a request from ${localDel.from}: ${localDel.task}`);
     return true;
   }
 
@@ -50,7 +50,7 @@ export class DelegationManager {
     del.status = status; // 'accepted' | 'declined' | 'deferred'
     del.respondedAt = Date.now();
     
-    logger.info(`[${this.agentName}] Ответ на запрос ${delegationId}: ${status} - ${responseText}`);
+    logger.info(`[${this.agentName}] Response to request ${delegationId}: ${status} - ${responseText}`);
     return true;
   }
 
@@ -72,9 +72,9 @@ export class DelegationManager {
     
     del.status = 'completed';
     del.completedAt = Date.now();
-    del.response = result ? String(result) : 'Завершено';
+    del.response = result ? String(result) : 'Completed';
     
-    logger.info(`[${this.agentName}] Делегированная задача ${delegationId} завершена`);
+    logger.info(`[${this.agentName}] Delegated task ${delegationId} completed`);
     return true;
   }
 
@@ -83,7 +83,7 @@ export class DelegationManager {
     if (!del) return false;
     
     del.status = 'forgotten';
-    logger.info(`[${this.agentName}] Забыл о задаче ${delegationId}`);
+    logger.info(`[${this.agentName}] Forgot about task ${delegationId}`);
     return true;
   }
 
@@ -95,7 +95,7 @@ export class DelegationManager {
     if (del.status === 'forgotten') {
       del.status = 'pending';
     }
-    logger.info(`[${this.agentName}] Напоминание о задаче ${delegationId} (счетчик: ${del.reminderCount})`);
+    logger.info(`[${this.agentName}] Reminder for task ${delegationId} (count: ${del.reminderCount})`);
     return true;
   }
 
@@ -131,7 +131,7 @@ export class DelegationManager {
       if (this.shouldRemember(del)) {
         // We remembered! Could transition to pending or something else, but for now we just return them
         remembered.push(del);
-        logger.info(`[${this.agentName}] Вспомнил отложенную задачу: ${del.task}`);
+        logger.info(`[${this.agentName}] Recalled deferred task: ${del.task}`);
       } else {
         // Chance to forget permanently
         if (HumanErrorEngine.chance(0.1)) { // 10% chance to forget when checked
