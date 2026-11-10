@@ -30,7 +30,7 @@ describe('EventHandler fast player intents', () => {
     }, { agentInstance, allAgentNames: ['Sam', 'Max'] });
 
     handler.setup();
-    mcBot.emit('chat', 'kustash01', 'Sam, иди за мной', 1);
+    mcBot.emit('chat', 'kustash01', 'Sam, follow me', 1);
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(movementController.followPlayer).toHaveBeenCalledWith('kustash01', 3);
@@ -65,7 +65,7 @@ describe('EventHandler fast player intents', () => {
     }, { agentInstance, allAgentNames: ['Sam', 'Max'] });
 
     handler.setup();
-    mcBot.emit('chat', 'kustash01', 'Sam, иди за мной', 1);
+    mcBot.emit('chat', 'kustash01', 'Sam, follow me', 1);
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(submitFastIntent).toHaveBeenCalledWith(expect.objectContaining({ intent: 'FOLLOW', playerUsername: 'kustash01', generation: 1 }));
@@ -99,7 +99,7 @@ describe('EventHandler fast player intents', () => {
     }, { agentInstance, allAgentNames: ['Sam', 'Max'] });
 
     handler.setup();
-    mcBot.emit('chat', 'visitor', 'Sam, иди за мной', 1);
+    mcBot.emit('chat', 'visitor', 'Sam, follow me', 1);
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(movementController.followPlayer).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe('EventHandler fast player intents', () => {
     }, { agentInstance, allAgentNames: ['Sam', 'Max'] });
 
     handler.setup();
-    mcBot.emit('chat', 'kustash01', 'Sam, иди за мной', 1);
+    mcBot.emit('chat', 'kustash01', 'Sam, follow me', 1);
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(agentInstance.sendChat).not.toHaveBeenCalled();
@@ -155,7 +155,7 @@ describe('EventHandler fast player intents', () => {
     }, { agentInstance, allAgentNames: ['Sam', 'Max'] });
 
     handler.setup();
-    mcBot.emit('chat', 'visitor', 'Sam, где ты?', 1);
+    mcBot.emit('chat', 'visitor', 'Sam, where are you?', 1);
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(agentInstance.handleConversationMessage).toHaveBeenCalledOnce();
