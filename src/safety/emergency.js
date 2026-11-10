@@ -11,13 +11,13 @@ export class EmergencyController {
   }
 
   /**
-   * Экстренная остановка всех действий бота.
+   * Emergency stop for all bot actions.
    */
-  emergencyStop(reason = 'Экстренная остановка', { announce = false } = {}) {
+  emergencyStop(reason = 'Emergency stop', { announce = false } = {}) {
     logger.warn(`🚨 [EMERGENCY STOP] ${reason}`);
 
     try {
-      // 1. Останавливаем навигацию и сбрасываем кнопки управления
+      // 1. Stop navigation and clear control states
       if (this.bot && this.bot.pathfinder) {
         this.bot.pathfinder.stop();
       }
@@ -25,47 +25,47 @@ export class EmergencyController {
         this.bot.clearControlStates();
       }
 
-      // 2. Останавливаем атаку / pvp
+      // 2. Stop attacking / PvP
       if (this.bot && this.bot.pvp) {
         this.bot.pvp.stop();
       }
 
-      // 3. Отменяем активный план
+      // 3. Cancel the active plan
       if (this.planner) {
         this.planner.cancelPlan('Emergency stop');
       }
 
-      // 4. Сбрасываем текущую сессию AI
+      // 4. Reset the current AI session
       if (this.aiBrain) {
         this.aiBrain.stop();
       }
 
-      if (announce && this.bot?.chat) this.bot.chat('стоп');
+      if (announce && this.bot?.chat) this.bot.chat('stop');
       return true;
     } catch (err) {
-      logger.error(`Ошибка при экстренной остановке: ${err.message}`);
+      logger.error(`Error during emergency stop: ${err.message}`);
       return false;
     }
   }
 
   /**
-   * Приостанавливает выполнение действий.
+   * Pause action execution.
    */
   pause() {
     this.isPaused = true;
     if (this.bot && this.bot.pathfinder) {
       this.bot.pathfinder.stop();
     }
-    logger.info('⏸️ Бот поставлен на паузу');
+    logger.info('⏸️ Bot paused');
     return true;
   }
 
   /**
-   * Возобновляет работу.
+   * Resume operation.
    */
   resume() {
     this.isPaused = false;
-    logger.info('▶️ Работа бота возобновлена');
+    logger.info('▶️ Bot resumed');
     return true;
   }
 }
