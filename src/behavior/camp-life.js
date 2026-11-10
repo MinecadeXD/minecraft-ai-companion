@@ -6,15 +6,15 @@ import vec3 from 'vec3';
 const logger = createLogger('CAMP_LIFE');
 
 /**
- * CampLifeEngine — естественный быт игрока в Minecraft:
- * - Установка факелов в темноте и в шахтах
- * - Сон в кроватях при наступлении ночи
- * - Сбор спелого урожая и немедленный засев семян
- * - Автоматическая плавка руды и жарка еды в печи
+ * CampLifeEngine — natural daily routines of a Minecraft player:
+ * - Place torches in dark areas and caves
+ * - Sleep in beds when night falls
+ * - Harvest ripe crops and immediately replant them
+ * - Automatically smelt ores and cook food in a furnace
  */
 export class CampLifeEngine {
   /**
-   * Установка факела если темно (уровень света < 7 или пещера)
+   * Place a torch when it is dark (light level < 7 or inside a cave)
    */
   static async placeTorchIfNeeded(bot, emotionalSystem = null) {
     if (!bot || !bot.entity) return false;
@@ -27,7 +27,7 @@ export class CampLifeEngine {
   }
 
   /**
-   * Сон в кровати при наступлении ночи (время > 12500)
+   * Sleep in a bed when night falls (time > 12500)
    */
   static async sleepAtNight(bot) {
     if (!bot || !bot.time || bot.time.timeOfDay < 12500 || bot.time.timeOfDay > 23500) return false;
@@ -41,7 +41,7 @@ export class CampLifeEngine {
 
       if (bed) {
         await bot.sleep(bed);
-        logger.info(`[${bot.username || 'Bot'}] 🛏️ Лёг спать в кровать на ночь`);
+        logger.info(`[${bot.username || 'Bot'}] 🛏️ Went to bed for the night`);
         return true;
       }
     } catch (err) {
@@ -51,7 +51,7 @@ export class CampLifeEngine {
   }
 
   /**
-   * Сбор спелых культур (пшеница, морковь, картошка) и засев семян
+   * Harvest ripe crops (wheat, carrots, potatoes) and replant them
    */
   static async harvestAndReplant(bot, emotionalSystem = null) {
     if (!bot || !bot.findBlock) return false;
@@ -71,12 +71,12 @@ export class CampLifeEngine {
       });
 
       if (matureCrop) {
-        // ✅ Используем wrapper с ошибками - может ломить не тот блок
+        // ✅ Use the error-aware wrapper; it may occasionally target the wrong block
         const wrapper = new BotActionWrapper(bot, emotionalSystem, bot.username || 'Bot');
         await wrapper.mineBlock(matureCrop);
-        logger.info(`[${bot.username || 'Bot'}] 🌾 Собрал урожай: ${matureCrop.name}`);
+        logger.info(`[${bot.username || 'Bot'}] 🌾 Harvested crop: ${matureCrop.name}`);
 
-        // Сразу засеваем обратно
+        // Replant immediately
         await new Promise((r) => setTimeout(r, 200));
         const cropToSeedMap = {
           wheat: 'wheat_seeds',
@@ -92,9 +92,9 @@ export class CampLifeEngine {
           if (farmland && farmland.name === 'farmland') {
             await bot.equip(seedItem, 'hand');
 
-            // ✅ Используем wrapper для плейса семян
+            // ✅ Use the wrapper to place the seeds
             await wrapper.placeBlock(farmland, vec3(0, 1, 0));
-            logger.info(`[${bot.username || 'Bot'}] 🌱 Засеял семена ${seedItem.name}`);
+            logger.info(`[${bot.username || 'Bot'}] 🌱 Planted ${seedItem.name}`);
           }
         }
         return true;
