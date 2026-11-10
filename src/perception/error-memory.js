@@ -3,12 +3,12 @@ import { createLogger } from '../utils/logger.js';
 const logger = createLogger('ERROR_MEMORY');
 
 /**
- * Система памяти об ошибках - бот УЧИТСЯ на своих ошибках!
+ * Mistake memory system — the bot LEARNS from its mistakes!
  *
- * - Помнит последние 100 ошибок
- * - Если ошибился дважды подряд - в 3-й раз шанс ↓
- * - После успеха - шанс ошибки ↓
- * - Анализирует паттерны ошибок
+ * - Remembers the last 100 mistakes
+ * - If a mistake happens twice in a row, the chance is lower the third time
+ * - After success, the chance of another mistake decreases
+ * - Analyzes mistake patterns
  */
 export class ErrorMemory {
   constructor(agentName = 'Bot') {
@@ -20,7 +20,7 @@ export class ErrorMemory {
   }
 
   /**
-   * Записывает ошибку и обновляет обучение
+   * Record a mistake and update learning
    */
   recordError(errorType, errorData = {}) {
     const error = {
@@ -38,7 +38,7 @@ export class ErrorMemory {
   }
 
   /**
-   * Записывает успех (успешно выполненное действие без ошибок)
+   * Record a success (an action completed without mistakes)
    */
   recordSuccess(actionType, actionData = {}) {
     const success = {
@@ -56,68 +56,68 @@ export class ErrorMemory {
   }
 
   /**
-   * Обновляет множитель обучения на основе истории
+   * Update the learning multiplier based on history
    */
   _updateLearning() {
     let learning = 1.0;
 
-    // Проверяем последние 5 действий на ошибки
+    // Check the last 5 actions for mistakes
     const recentErrors = this._getRecentErrors(5);
     const recentSuccesses = this._getRecentSuccesses(5);
 
-    // Если было много ошибок подряд - УЧИМСЯ и ошибаемся меньше
+    // If there have been many consecutive mistakes, LEARN and make fewer mistakes
     if (recentErrors.length >= 2) {
-      learning -= 0.1 * recentErrors.length; // -10% за каждую ошибку
+      learning -= 0.1 * recentErrors.length; // -10% for each mistake
     }
 
-    // Если было много успехов - становимся увереннее но ошибаемся больше (переуверенность)
+    // If there have been many successes, confidence increases but so does the mistake rate (overconfidence)
     if (recentSuccesses.length >= 3) {
-      learning += 0.05 * (recentSuccesses.length - 2); // +5% за каждый успех после 2-го
+      learning += 0.05 * (recentSuccesses.length - 2); // +5% for each success after the second
     }
 
-    // Проверяем повторяющиеся ошибки
+    // Check for repeated mistakes
     const repeatErrors = this._getRepeatingErrors();
-    learning -= 0.15 * repeatErrors.length; // -15% за каждую повторяющуюся ошибку
+    learning -= 0.15 * repeatErrors.length; // -15% for each repeated mistake
 
-    // Ограничиваем множитель
+    // Clamp the multiplier
     this.learningMultiplier = Math.max(0.3, Math.min(1.5, learning));
   }
 
   /**
-   * Получает множитель ошибок для конкретного типа действия
+   * Get the mistake multiplier for a specific action type
    */
   getErrorModifier(actionType) {
-    // Проверяем историю этого типа действия
+    // Check the history for this action type
     const recentForThisAction = this.errorHistory
       .filter(e => e.type === actionType)
       .slice(-5);
 
     let modifier = this.learningMultiplier;
 
-    // Если недавно ошибились в этом действии - становимся осторожнее
+    // If a mistake was made recently on this action, become more cautious
     if (recentForThisAction.length > 0) {
-      modifier *= (1 - 0.2 * recentForThisAction.length); // -20% за каждую ошибку
+      modifier *= (1 - 0.2 * recentForThisAction.length); // -20% for each mistake
     }
 
-    return Math.max(0.2, modifier); // Минимум 0.2x (бот всё ещё может ошибиться)
+    return Math.max(0.2, modifier); // Minimum 0.2x (the bot can still make mistakes)
   }
 
   /**
-   * Получает последние N ошибок
+   * Get the latest N mistakes
    */
   _getRecentErrors(count = 10) {
     return this.errorHistory.slice(-count);
   }
 
   /**
-   * Получает последние N успехов
+   * Get the latest N successes
    */
   _getRecentSuccesses(count = 10) {
     return this.successHistory.slice(-count);
   }
 
   /**
-   * Получает ошибки которые повторяются
+   * Get recurring mistakes
    */
   _getRepeatingErrors() {
     const errorCounts = {};
@@ -132,7 +132,7 @@ export class ErrorMemory {
   }
 
   /**
-   * Получить статистику ошибок
+   * Get mistake statistics
    */
   getStats() {
     const stats = {
@@ -148,7 +148,7 @@ export class ErrorMemory {
   }
 
   /**
-   * Вычисляет процент успехов
+   * Calculate the success rate
    */
   _calculateSuccessRate() {
     const total = this.errorHistory.length + this.successHistory.length;
@@ -157,18 +157,18 @@ export class ErrorMemory {
   }
 
   /**
-   * Получить описание обучения
+   * Get a learning summary
    */
   getDescription() {
     const stats = this.getStats();
-    let desc = `📚 Память об ошибках для ${this.agentName}\n`;
-    desc += `✅ Успехов: ${stats.totalSuccesses}\n`;
-    desc += `❌ Ошибок: ${stats.totalErrors}\n`;
-    desc += `📊 % Успеха: ${stats.successRate}%\n`;
-    desc += `🧠 Множитель обучения: ${stats.learningMultiplier}x\n`;
+    let desc = `📚 Mistake memory for ${this.agentName}\n`;
+    desc += `✅ Successes: ${stats.totalSuccesses}\n`;
+    desc += `❌ Mistakes: ${stats.totalErrors}\n`;
+    desc += `📊 Success rate: ${stats.successRate}%\n`;
+    desc += `🧠 Learning multiplier: ${stats.learningMultiplier}x\n`;
 
     if (stats.repeatingErrors.length > 0) {
-      desc += `⚠️ Повторяющиеся ошибки: ${stats.repeatingErrors.join(', ')}\n`;
+      desc += `⚠️ Recurring mistakes: ${stats.repeatingErrors.join(', ')}\n`;
     }
 
     return desc;
