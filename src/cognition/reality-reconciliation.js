@@ -29,14 +29,14 @@ export class RealityReconciliation {
     };
     
     this.expectations.set(id, expectation);
-    logger.info(`[${this.agentName}] Установлено ожидание [${id}] для действия: ${action}`);
+    logger.info(`[${this.agentName}] Registered expectation [${id}] for action: ${action}`);
     return id;
   }
 
   reconcile(expectationId, actual) {
     const expectation = this.expectations.get(expectationId);
     if (!expectation) {
-      logger.warn(`[${this.agentName}] Ожидание ${expectationId} не найдено для согласования`);
+      logger.warn(`[${this.agentName}] Expectation ${expectationId} was not found for reconciliation`);
       return false;
     }
     
@@ -50,9 +50,9 @@ export class RealityReconciliation {
     this.adjustConfidence(actionType, expectation.match);
     
     if (expectation.match) {
-      logger.info(`[${this.agentName}] Реальность совпала с ожиданиями для [${expectationId}]`);
+      logger.info(`[${this.agentName}] Reality matched expectations for [${expectationId}]`);
     } else {
-      logger.warn(`[${this.agentName}] Расхождение с реальностью для [${expectationId}]`);
+      logger.warn(`[${this.agentName}] Reality mismatch for [${expectationId}]`);
       this._recordMismatch(expectation);
     }
     
