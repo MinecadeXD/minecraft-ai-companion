@@ -83,7 +83,7 @@ export class VisualObserver {
   }
 
   describe(frame = this.lastFrame) {
-    if (!frame) return 'Кадр недоступен.';
+    if (!frame) return 'Frame unavailable.';
     const rows = [];
     for (let y = 0; y < this.verticalRays; y++) {
       rows.push(frame.rayGrid.slice(y * this.horizontalRays, (y + 1) * this.horizontalRays)
