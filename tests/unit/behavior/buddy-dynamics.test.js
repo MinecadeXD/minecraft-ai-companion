@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { BuddyDynamics } from '../../../src/behavior/buddy-dynamics.js';
 
-describe('BuddyDynamics — кооперативный этикет и забота о напарнике', () => {
-  it('находит сущность напарника по нику или первую попавшуюся', () => {
+describe('BuddyDynamics — cooperative etiquette and teammate support', () => {
+  it('finds a teammate entity by username or the first available player', () => {
     const mockBot = {
       entity: { id: 0 },
       entities: {
@@ -15,7 +15,7 @@ describe('BuddyDynamics — кооперативный этикет и забо�
     expect(buddy.username).toBe('kustash01');
   });
 
-  it('делится лутом с напарником (shareLoot)', async () => {
+  it('shares loot with a teammate (shareLoot)', async () => {
     const mockItem = { name: 'iron_ingot', type: 265, count: 10 };
     const mockBot = {
       entity: {
@@ -39,7 +39,7 @@ describe('BuddyDynamics — кооперативный этикет и забо�
     expect(mockBot.toss).toHaveBeenCalledWith(mockItem.type, null, 5);
   });
 
-  it('оказывает экстренную помощь едой (checkEmergencyHeal)', async () => {
+  it('provides emergency food support (checkEmergencyHeal)', async () => {
     const mockFood = { name: 'cooked_beef', type: 364, count: 8 };
     const mockBot = {
       entity: {
@@ -60,10 +60,10 @@ describe('BuddyDynamics — кооперативный этикет и забо�
 
     const helped = await BuddyDynamics.checkEmergencyHeal(mockBot, 'kustash01');
     expect(helped).toBe(true);
-    expect(mockBot.chat).toHaveBeenCalledWith(expect.stringContaining('поешь'));
+    expect(mockBot.chat).toHaveBeenCalledWith(expect.stringContaining('eat this'));
   });
 
-  it('уступает узкий проход напарнику (yieldHallway)', async () => {
+  it('yields a narrow passage to a teammate (yieldHallway)', async () => {
     const mockBot = {
       entity: {
         position: { x: 0, y: 64, z: 0, distanceTo: () => 1.8 },
@@ -79,7 +79,7 @@ describe('BuddyDynamics — кооперативный этикет и забо�
     expect(mockBot.setControlState).toHaveBeenCalledWith('back', true);
   });
 
-  it('исполняет победный танец (celebrateVictory)', async () => {
+  it('performs the victory dance (celebrateVictory)', async () => {
     const mockBot = {
       entity: { onGround: true },
       setControlState: vi.fn(),
