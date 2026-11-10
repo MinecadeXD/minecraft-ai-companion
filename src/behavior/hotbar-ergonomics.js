@@ -41,7 +41,7 @@ export class HotbarErgonomics {
 
       const realizationDelayMs = Math.max(100, Math.round(HumanErrorEngine.gaussian(160 + state.fatigue * 70, 25)));
 
-      logger.debug(`[HOTBAR] Осечка пальца! Нажата клавиша слота ${slippedSlot + 1} вместо ${targetSlot + 1} (осознание через ${realizationDelayMs}мс, стресс: ${state.stress.toFixed(2)})`);
+      logger.debug(`[HOTBAR] Finger slip! Selected hotbar slot ${slippedSlot + 1} instead of ${targetSlot + 1} (noticed after ${realizationDelayMs} ms; stress: ${state.stress.toFixed(2)})`);
 
       return {
         slotToEquip: slippedSlot,
@@ -77,11 +77,11 @@ export class HotbarErgonomics {
     const overlooked = ratio > 0.04 && oversightNoise > 0.48;
 
     if (overlooked) {
-      logger.debug(`[HOTBAR] Прочность инструмента ${item.name} низкая (${(ratio * 100).toFixed(0)}%), но игрок увлечён и пока не заметил`);
+      logger.debug(`[HOTBAR] ${item.name} is low on durability (${(ratio * 100).toFixed(0)}%), but the player is focused and has not noticed yet`);
       return { safe: false, ratio, shouldPreserve: false, overlooked: true };
     }
 
-    logger.debug(`[HOTBAR] Паранойя прочности: инструмент ${item.name} спасён на ${(ratio * 100).toFixed(0)}% прочности!`);
+    logger.debug(`[HOTBAR] Durability awareness: ${item.name} was saved with ${(ratio * 100).toFixed(0)}% durability remaining!`);
     return { safe: false, ratio, shouldPreserve: true, overlooked: false };
   }
 
