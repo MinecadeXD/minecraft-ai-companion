@@ -4,14 +4,14 @@ import { HumanErrorEngine } from '../human-error-engine.js';
 const logger = createLogger('CONTEXTUAL_MEMORY');
 
 /**
- * Контекстная система памяти — бот помнит прошлое и забывает детали.
+ * Contextual memory system — the bot remembers the past but forgets details.
  *
- * Ключевые механики:
- * 1. Краткосрочная память (последние 2 часа) — чёткая
- * 2. Среднесрочная память (последние 2 дня) — размытая
- * 3. Долгосрочная память (всё остальное) — только яркие моменты
- * 4. Забывчивость — детали стираются со временем
- * 5. Эмоциональные якоря — яркие события помнятся дольше
+ * Key mechanics:
+ * 1. Short-term memory (the last 2 hours) — clear
+ * 2. Medium-term memory (the last 2 days) — fuzzy
+ * 3. Long-term memory (everything older) — only vivid moments
+ * 4. Forgetfulness — details fade over time
+ * 5. Emotional anchors — vivid events are remembered longer
  */
 
 export class ContextualMemorySystem {
@@ -19,22 +19,22 @@ export class ContextualMemorySystem {
     this.agentName = agentName;
     this.storage = durableStorage;
 
-    // Три уровня памяти
-    this.shortTerm = []; // Последние 2 часа
-    this.mediumTerm = []; // 2 часа - 2 дня
-    this.longTerm = []; // > 2 дней
+    // Three memory levels
+    this.shortTerm = []; // Last 2 hours
+    this.mediumTerm = []; // 2 hours–2 days
+    this.longTerm = []; // > 2 days
 
-    // Забытые вещи (могут быть вспомнены)
+    // Forgotten items (may be recalled)
     this.forgotten = [];
 
-    // Искажения памяти
+    // Memory distortions
     this.distortedMemories = new Map();
 
     this.loadFromStorage();
   }
 
   /**
-   * Записывает новое воспоминание
+   * Store a new memory
    */
   remember(event, context = {}) {
     const memory = {
@@ -46,15 +46,15 @@ export class ContextualMemorySystem {
       emotionalIntensity: context.emotionalIntensity || 0.5,
       importance: context.importance || 0.5,
       details: context.details || {},
-      clarity: 1.0, // Изначально чёткое
-      accessCount: 0, // Сколько раз вспоминали
+      clarity: 1.0, // Clear initially
+      accessCount: 0, // Number of times recalled
     };
 
     this.shortTerm.push(memory);
 
-    logger.debug(`[${this.agentName}] Запомнил: ${event}`);
+    logger.debug(`[${this.agentName}] Remembered: ${event}`);
 
-    // Если очень важное — сразу закрепляем
+    // If it is very important, reinforce it immediately
     if (memory.importance > 0.8 || memory.emotionalIntensity > 0.8) {
       memory.anchored = true;
     }
@@ -63,12 +63,12 @@ export class ContextualMemorySystem {
   }
 
   /**
-   * Вспоминает событие (с возможной неточностью)
+   * Recall an event (possibly with inaccuracies)
    */
   recall(query, context = {}) {
     const now = Date.now();
 
-    // Ищем во всех уровнях памяти
+    // Search all memory levels
     const allMemories = [
       ...this.shortTerm,
       ...this.mediumTerm,
@@ -80,11 +80,11 @@ export class ContextualMemorySystem {
     );
 
     if (relevant.length === 0) {
-      // Может быть забыли?
+      // Could it have been forgotten?
       return this._tryRecallForgotten(query, context);
     }
 
-    // Сортируем по релевантности и свежести
+    // Sort by relevance and recency
     relevant.sort((a, b) => {
       const scoreA = this._calculateRecallScore(a, query, now);
       const scoreB = this._calculateRecallScore(b, query, now);
@@ -94,12 +94,12 @@ export class ContextualMemorySystem {
     const memory = relevant[0];
     memory.accessCount++;
 
-    // Память может быть искажена
+    // Memory may be distorted
     return this._applyMemoryDistortion(memory);
   }
 
   /**
-   * Получает последние N воспоминаний (для контекста)
+   * Get the latest N memories (for context)
    */
   getRecentContext(count = 5) {
     return this.shortTerm
@@ -112,27 +112,27 @@ export class ContextualMemorySystem {
   }
 
   /**
-   * Забывает менее важные детали (естественный процесс)
+   * Forget less important details (a natural process)
    */
   naturalForget() {
     const now = Date.now();
 
-    // Проверяем каждое воспоминание
+    // Check each memory
     for (const memory of this.shortTerm) {
       const age = now - memory.timestamp;
 
-      // Вероятность забыть увеличивается со временем
+      // The chance of forgetting increases over time
       let forgetChance = 0;
 
-      if (age > 7200000) { // > 2 часов
+      if (age > 7200000) { // > 2 hours
         forgetChance = 0.3;
       }
 
-      // Важные события забываются реже
+      // Important events are forgotten less often
       forgetChance *= (1 - memory.importance);
       forgetChance *= (1 - memory.emotionalIntensity * 0.5);
 
-      // Якорные воспоминания не забываются
+      // Anchored memories are not forgotten
       if (memory.anchored) {
         forgetChance = 0;
       }
@@ -140,24 +140,24 @@ export class ContextualMemorySystem {
       if (HumanErrorEngine.chance(forgetChance)) {
         this._forgetMemory(memory);
       } else {
-        // Снижаем чёткость
+        // Reduce clarity
         memory.clarity *= 0.95;
       }
     }
   }
 
   /**
-   * Иногда спонтанно вспоминает что-то (как у людей)
+   * Sometimes spontaneously recall something (like people do)
    */
   spontaneousRecall() {
-    if (!HumanErrorEngine.chance(0.02)) return null; // 2% шанс
+    if (!HumanErrorEngine.chance(0.02)) return null; // 2% chance
 
-    // Выбираем случайное воспоминание из среднесрочной памяти
+    // Choose a random memory from medium-term memory
     if (this.mediumTerm.length === 0) return null;
 
     const memory = HumanErrorEngine.choice(this.mediumTerm);
 
-    // Эмоционально яркие воспоминания всплывают чаще
+    // Emotionally vivid memories surface more often
     if (memory.emotionalIntensity > 0.6 || HumanErrorEngine.chance(0.3)) {
       memory.accessCount++;
 
@@ -173,19 +173,19 @@ export class ContextualMemorySystem {
   }
 
   /**
-   * Обновляет уровни памяти (перемещает из краткосрочной в долгосрочную)
+   * Update memory levels (move items from short-term toward long-term)
    */
   consolidate() {
     const now = Date.now();
-    const shortTermCutoff = now - 7200000; // 2 часа
-    const mediumTermCutoff = now - 172800000; // 2 дня
+    const shortTermCutoff = now - 7200000; // 2 hours
+    const mediumTermCutoff = now - 172800000; // 2 days
 
-    // Краткосрочная → Среднесрочная
+    // Short-term → Medium-term
     const toMedium = this.shortTerm.filter(m => m.timestamp < shortTermCutoff);
     this.shortTerm = this.shortTerm.filter(m => m.timestamp >= shortTermCutoff);
     this.mediumTerm.push(...toMedium);
 
-    // Среднесрочная → Долгосрочная (только важные)
+    // Medium-term → Long-term (important memories only)
     const toLong = this.mediumTerm.filter(m =>
       m.timestamp < mediumTermCutoff &&
       (m.importance > 0.6 || m.emotionalIntensity > 0.7 || m.anchored)
@@ -195,7 +195,7 @@ export class ContextualMemorySystem {
     );
     this.longTerm.push(...toLong);
 
-    // Забываем неважные из среднесрочной
+    // Forget unimportant medium-term memories
     const toForget = this.mediumTerm.filter(m =>
       m.timestamp < mediumTermCutoff &&
       m.importance < 0.4 &&
@@ -204,9 +204,9 @@ export class ContextualMemorySystem {
     toForget.forEach(m => this._forgetMemory(m));
     this.mediumTerm = this.mediumTerm.filter(m => !toForget.includes(m));
 
-    // Ограничиваем размер долгосрочной памяти
+    // Limit the size of long-term memory
     if (this.longTerm.length > 100) {
-      // Удаляем наименее важные
+      // Remove the least important items
       this.longTerm.sort((a, b) => {
         const scoreA = a.importance + a.emotionalIntensity + (a.anchored ? 2 : 0);
         const scoreB = b.importance + b.emotionalIntensity + (b.anchored ? 2 : 0);
@@ -219,25 +219,25 @@ export class ContextualMemorySystem {
   }
 
   /**
-   * Забывает воспоминание (но может вспомнить позже)
+   * Forget a memory (but it may be recalled later)
    */
   _forgetMemory(memory) {
-    // Не удаляем полностью — перемещаем в "забытые"
+    // Do not delete it completely — move it to the "forgotten" collection
     this.forgotten.push({
       ...memory,
       forgotAt: Date.now(),
-      recallDifficulty: 0.8, // Сложность вспомнить
+      recallDifficulty: 0.8, // Recall difficulty
     });
 
-    // Удаляем из активной памяти
+    // Remove from active memory
     this.shortTerm = this.shortTerm.filter(m => m.id !== memory.id);
     this.mediumTerm = this.mediumTerm.filter(m => m.id !== memory.id);
 
-    logger.debug(`[${this.agentName}] Забыл: ${memory.event}`);
+    logger.debug(`[${this.agentName}] Forgot: ${memory.event}`);
   }
 
   /**
-   * Пытается вспомнить забытое (с трудом)
+   * Try to recall a forgotten memory (with difficulty)
    */
   _tryRecallForgotten(query, context) {
     const relevant = this.forgotten.filter(m =>
@@ -246,29 +246,29 @@ export class ContextualMemorySystem {
 
     if (relevant.length === 0) return null;
 
-    // Сортируем по сложности вспоминания
+    // Sort by recall difficulty
     relevant.sort((a, b) => a.recallDifficulty - b.recallDifficulty);
 
     const memory = relevant[0];
 
-    // Шанс вспомнить зависит от сложности
+    // Recall probability depends on difficulty
     const recallChance = 1 - memory.recallDifficulty;
 
     if (HumanErrorEngine.chance(recallChance)) {
-      // Вспомнили! Но память нечёткая
-      memory.clarity = HumanErrorEngine.range(0.3, 0.6); // 30-60% чёткости
+      // Recalled! But the memory is fuzzy
+      memory.clarity = HumanErrorEngine.range(0.3, 0.6); // 30–60% clarity
 
-      // Возвращаем в краткосрочную память
+      // Return it to short-term memory
       this.shortTerm.push(memory);
       this.forgotten = this.forgotten.filter(m => m.id !== memory.id);
 
-      logger.info(`[${this.agentName}] Вспомнил забытое: ${memory.event}`);
+      logger.info(`[${this.agentName}] Recalled a forgotten memory: ${memory.event}`);
 
       return {
         event: memory.event,
         timestamp: memory.timestamp,
         clarity: memory.clarity,
-        reconstructed: true, // Восстановленная память
+        reconstructed: true, // Reconstructed memory
       };
     }
 
@@ -276,61 +276,61 @@ export class ContextualMemorySystem {
   }
 
   /**
-   * Проверяет релевантность воспоминания запросу
+   * Check whether a memory is relevant to a query
    */
   _isRelevant(memory, query, context) {
-    // Простое совпадение по словам
+    // Simple word matching
     const memoryText = JSON.stringify(memory).toLowerCase();
     const queryWords = query.toLowerCase().split(' ');
 
     const matches = queryWords.filter(word => memoryText.includes(word));
 
-    // Релевантно если совпадает хотя бы половина слов
+    // Relevant if at least half of the words match
     return matches.length >= Math.ceil(queryWords.length / 2);
   }
 
   /**
-   * Вычисляет оценку для сортировки воспоминаний
+   * Calculate a score for sorting memories
    */
   _calculateRecallScore(memory, query, now) {
     let score = 0;
 
-    // Свежесть (недавние события важнее)
+    // Freshness (recent events are more important)
     const age = now - memory.timestamp;
-    const freshnessScore = 1 / (1 + age / 3600000); // Деление на часы
+    const freshnessScore = 1 / (1 + age / 3600000); // Divided by hours
     score += freshnessScore * 30;
 
-    // Важность
+    // Importance
     score += memory.importance * 20;
 
-    // Эмоциональная интенсивность
+    // Emotional intensity
     score += memory.emotionalIntensity * 15;
 
-    // Чёткость
+    // Clarity
     score += memory.clarity * 10;
 
-    // Якорные воспоминания
+    // Anchored memories
     if (memory.anchored) {
       score += 25;
     }
 
-    // Часто вспоминаемые
+    // Frequently recalled
     score += Math.min(memory.accessCount, 5) * 2;
 
     return score;
   }
 
   /**
-   * Применяет искажения памяти (детали размываются)
+   * Apply memory distortions (details become fuzzy)
    */
   _applyMemoryDistortion(memory) {
     const distorted = { ...memory };
 
-    // Чем менее чёткая память, тем больше искажений
+    // The less clear a memory is, the more it becomes distorted
     const distortionLevel = 1 - memory.clarity;
 
     if (distortionLevel > 0.3 && HumanErrorEngine.chance(distortionLevel)) {
-      // Искажаем детали
+      // Distort details
       if (distorted.details) {
         distorted.details = this._distortDetails(distorted.details, distortionLevel);
         distorted.distorted = true;
@@ -341,12 +341,12 @@ export class ContextualMemorySystem {
   }
 
   /**
-   * Искажает детали воспоминания
+   * Distort memory details
    */
   _distortDetails(details, level) {
     const distorted = { ...details };
 
-    // Числа становятся приблизительными
+    // Numbers become approximate
     for (const [key, value] of Object.entries(distorted)) {
       if (typeof value === 'number' && HumanErrorEngine.chance(level)) {
         const variation = value * level * 0.5;
@@ -358,19 +358,19 @@ export class ContextualMemorySystem {
   }
 
   /**
-   * Генерирует уникальный ID
+   * Generate a unique ID
    */
   _generateId() {
     return `mem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
-   * Ограничивает размер краткосрочной памяти
+   * Limit the size of short-term memory
    */
   _trimShortTerm() {
     const maxSize = 50;
     if (this.shortTerm.length > maxSize) {
-      // Удаляем самые старые и наименее важные
+      // Remove the oldest and least important items
       this.shortTerm.sort((a, b) => {
         const scoreA = a.timestamp + a.importance * 3600000;
         const scoreB = b.timestamp + b.importance * 3600000;
@@ -381,7 +381,7 @@ export class ContextualMemorySystem {
   }
 
   /**
-   * Сохраняет в постоянное хранилище
+   * Save to persistent storage
    */
   saveToStorage() {
     // Persistence is optional: only use the storage if it actually exposes a
@@ -392,17 +392,17 @@ export class ContextualMemorySystem {
     try {
       this.storage.save(`memory_${this.agentName}`, {
         shortTerm: this.shortTerm,
-        mediumTerm: this.mediumTerm.slice(-100), // Только последние 100
+        mediumTerm: this.mediumTerm.slice(-100), // Only the latest 100
         longTerm: this.longTerm,
-        forgotten: this.forgotten.slice(-50), // Только последние 50 забытых
+        forgotten: this.forgotten.slice(-50), // Only the latest 50 forgotten items
       });
     } catch (err) {
-      logger.error(`Ошибка сохранения памяти: ${err.message}`);
+      logger.error(`Error saving memory: ${err.message}`);
     }
   }
 
   /**
-   * Загружает из постоянного хранилища
+   * Load from persistent storage
    */
   loadFromStorage() {
     // Persistence is optional: only load if the storage exposes a load()
@@ -418,15 +418,15 @@ export class ContextualMemorySystem {
         this.longTerm = data.longTerm || [];
         this.forgotten = data.forgotten || [];
 
-        logger.info(`[${this.agentName}] Загружено воспоминаний: ${this.shortTerm.length + this.mediumTerm.length + this.longTerm.length}`);
+        logger.info(`[${this.agentName}] Loaded memories: ${this.shortTerm.length + this.mediumTerm.length + this.longTerm.length}`);
       }
     } catch (err) {
-      logger.warn(`Не удалось загрузить память: ${err.message}`);
+      logger.warn(`Could not load memory: ${err.message}`);
     }
   }
 
   /**
-   * Получает статистику памяти
+   * Get memory statistics
    */
   getStats() {
     return {
@@ -439,7 +439,7 @@ export class ContextualMemorySystem {
   }
 
   /**
-   * Вычисляет среднюю чёткость воспоминаний
+   * Calculate average memory clarity
    */
   _calculateAverageClarity() {
     const all = [...this.shortTerm, ...this.mediumTerm, ...this.longTerm];
