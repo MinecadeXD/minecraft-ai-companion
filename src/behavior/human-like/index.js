@@ -1,15 +1,15 @@
 /**
  * Human-like behavior system
  * 
- * Полная система имитации человеческого поведения для ботов Minecraft.
- * Включает в себя:
- * - Естественные ответы без шаблонов
- * - Вероятностные реакции на события
- * - Имитация печати с опечатками
- * - Система настроений
- * - Личные цели и инициатива
- * - Человеческие ошибки и несовершенства
- * - Случайные AFK
+ * Complete human-like behavior system for Minecraft bots.
+ * Includes:
+ * - Natural responses without templates
+ * - Probabilistic reactions to events
+ * - Typing simulation with typos
+ * - Mood system
+ * - Personal goals and initiative
+ * - Human mistakes and imperfections
+ * - Random AFK periods
  */
 
 export { HumanBehaviorController } from './human-behavior-controller.js';
