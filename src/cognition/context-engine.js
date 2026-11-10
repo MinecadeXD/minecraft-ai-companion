@@ -121,21 +121,21 @@ export class PersonalContextEngine {
    */
   getSituationSummary() {
     const threats = this.immediateThreats.length > 0
-      ? `Опасности рядом: ${this.immediateThreats.map(t => `${t.name} (${Math.round(t.distance)}м)`).join(', ')}`
-      : 'Опасностей рядом нет';
+      ? `Nearby threats: ${this.immediateThreats.map(t => `${t.name} (${Math.round(t.distance)} m)`).join(', ')}`
+      : 'No nearby threats';
 
     const recentChat = this.recentDialogue.length > 0
-      ? `Последний диалог:\n${this.recentDialogue.map(d => `[${d.speaker}]: ${d.message}`).join('\n')}`
-      : 'Диалог пока не начат';
+      ? `Recent conversation:\n${this.recentDialogue.map(d => `[${d.speaker}]: ${d.message}`).join('\n')}`
+      : 'Conversation has not started yet';
 
     const deferred = this.deferredIntentions.length > 0
-      ? `Отложенные намерения в голове: ${this.deferredIntentions.map(i => i.intention).join('; ')}`
-      : 'Нет отложенных задач';
+      ? `Deferred intentions: ${this.deferredIntentions.map(i => i.intention).join('; ')}`
+      : 'No deferred tasks';
 
     return {
       playerActivity: this.playerActivity,
       botActivity: this.botActivity,
-      activeGoal: this.activeGoal || 'нет активной цели',
+      activeGoal: this.activeGoal || 'no active goal',
       threats,
       mood: this.moodState,
       recentChat,
