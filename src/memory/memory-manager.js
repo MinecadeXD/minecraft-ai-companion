@@ -15,21 +15,21 @@ export class MemoryManager {
     this.diary = new Diary(this.longTerm);
     this.episodic = new EpisodicMemory(this.longTerm);
 
-    logger.info('Единый менеджер памяти инициализирован');
+    logger.info('Unified memory manager initialized');
   }
 
   /**
-   * Возвращает компактный контекст памяти для AI Brain.
+   * Return compact memory context for the AI Brain.
    */
   getMemoryContext(currentPos = null, query = null) {
     const parts = [];
 
-    // 0. Свободные мысли, заметки и впечатления (Stream of Thoughts)
+    // 0. Free thoughts, notes, and impressions (Stream of Thoughts)
     try {
       if (typeof this.longTerm.getRecentNotes === 'function') {
         const notes = this.longTerm.getRecentNotes(6);
         if (notes.length > 0) {
-          parts.push('[МОИ МЫСЛИ И ЗАМЕТКИ]');
+          parts.push('[MY THOUGHTS AND NOTES]');
           for (const n of notes) {
             parts.push(`• ${n.content}`);
           }
@@ -37,48 +37,48 @@ export class MemoryManager {
       }
     } catch (_) {}
 
-    // 1. Известные POI
+    // 1. Known POIs
     const allPois = this.pois.getPOIs();
     if (allPois.length > 0) {
-      parts.push('\n[ИЗВЕСТНЫЕ МЕСТА / POI]');
+      parts.push('\n[KNOWN PLACES / POIs]');
       for (const poi of allPois.slice(0, 5)) {
         parts.push(`• ${poi.name} (${poi.type}): [${Math.round(poi.x)}, ${Math.round(poi.y)}, ${Math.round(poi.z)}] ${poi.notes ? '- ' + poi.notes : ''}`);
       }
     }
 
-    // 2. Важные факты
+    // 2. Important facts
     const facts = this.longTerm.getAllFacts();
     if (facts.length > 0) {
-      parts.push('\n[ВАЖНЫЕ ФАКТЫ И ДОГОВОРЁННОСТИ]');
+      parts.push('\n[IMPORTANT FACTS AND COMMITMENTS]');
       for (const fact of facts.slice(0, 5)) {
         parts.push(`• ${fact.key}: ${fact.value}`);
       }
     }
 
-    // 3. Недавние эпизодические воспоминания
+    // 3. Recent episodic memories
     const episodes = this.episodic.recall(query, 3);
     if (episodes.length > 0) {
-      parts.push('\n[НЕДАВНИЕ СОБЫТИЯ]');
+      parts.push('\n[RECENT EVENTS]');
       for (const ep of episodes) {
-        parts.push(`• [День ${ep.mc_day || '?'}] ${ep.summary}`);
+        parts.push(`• [Day ${ep.mc_day || '?'}] ${ep.summary}`);
       }
     }
 
-    // 4. Активный план
+    // 4. Active plan
     const plan = this.shortTerm.getPlan();
     if (plan) {
-      parts.push(`\n[ТЕКУЩИЙ ПЛАН]\nЦель: ${plan.goal}`);
+      parts.push(`\n[CURRENT PLAN]\nGoal: ${plan.goal}`);
       for (let i = 0; i < plan.steps.length; i++) {
         const step = plan.steps[i];
         const mark = step.status === 'completed' ? '✓' : step.status === 'in_progress' ? '►' : '○';
-        parts.push(`${mark} Шаг ${i + 1}: ${step.description}`);
+        parts.push(`${mark} Step ${i + 1}: ${step.description}`);
       }
     }
 
     return parts.join('\n');
   }
 
-  // Свободная память
+  // Free-form memory
   rememberNote(content, tags = '', importance = 5) {
     return this.longTerm.addNote(content, tags, importance);
   }
