@@ -6,7 +6,7 @@ import { createLogger } from '../utils/logger.js';
 const logger = createLogger('BOT');
 
 /**
- * MinecraftBot — обёртка над mineflayer для подключения к серверу.
+ * MinecraftBot — wrapper around Mineflayer for connecting to a server.
  */
 export class MinecraftBot extends EventEmitter {
   constructor(config, capabilities = {}) {
@@ -26,14 +26,14 @@ export class MinecraftBot extends EventEmitter {
   }
 
   /**
-   * Подключение к серверу. Возвращает Promise, который резолвится при spawn.
+   * Connect to the server. Returns a Promise that resolves on spawn.
    */
   connect() {
     this.stopping = false;
     const generation = ++this.connectionToken;
     return new Promise((resolve, reject) => {
       const mc = this.config.minecraft;
-      logger.info(`Подключение к ${mc.host}:${mc.port} как ${mc.username} (v${mc.version})...`);
+      logger.info(`Connecting to ${mc.host}:${mc.port} as ${mc.username} (v${mc.version})...`);
 
       let settled = false;
       const finish = (error = null) => {
@@ -82,7 +82,7 @@ export class MinecraftBot extends EventEmitter {
             return;
           }
           spawned = true;
-          logger.info('✅ Бот заспавнился в мире!');
+          logger.info('✅ Bot spawned in the world!');
           const plugins = loadPlugins(this.bot, this.capabilities);
           if (!plugins.ready) {
             const error = new Error(`Minecraft plugin initialization failed: ${plugins.failures.map((failure) => failure.name).join(', ')}`);
@@ -100,13 +100,13 @@ export class MinecraftBot extends EventEmitter {
 
         listen('death', () => {
           if (!isCurrent()) return;
-          logger.warn('💀 Бот погиб!');
+          logger.warn('💀 Bot died!');
           this.emit('death', { generation, bot: this.bot });
         });
 
         listen('kicked', (reason) => {
           if (!isCurrent()) return;
-          logger.warn(`Бот кикнут: ${typeof reason === 'object' ? JSON.stringify(reason) : reason}`);
+          logger.warn(`Bot was kicked: ${typeof reason === 'object' ? JSON.stringify(reason) : reason}`);
           this.emit('kicked', { generation, reason });
           const error = new Error(`Minecraft bot kicked: ${String(reason)}`);
           finish(error);
@@ -116,7 +116,7 @@ export class MinecraftBot extends EventEmitter {
         listen('error', (err) => {
           if (!isCurrent()) return;
           const errMsg = err.message || err.code || (err.errors ? err.errors.map(e => e.message).join('; ') : err);
-          logger.warn(`[BOT] Сетевая ошибка подключения к Minecraft: ${errMsg}`);
+          logger.warn(`[BOT] Minecraft connection network error: ${errMsg}`);
           this.emit('connectionError', err);
           if (!this.connected) {
             finish(err);
@@ -126,7 +126,7 @@ export class MinecraftBot extends EventEmitter {
 
         listen('end', (reason) => {
           if (!isCurrent()) return;
-          logger.warn(`Соединение разорвано: ${reason}`);
+          logger.warn(`Connection closed: ${reason}`);
           this.emit('end', { generation, reason });
           const error = new Error(`Minecraft connection ended: ${String(reason)}`);
           finish(error);
@@ -140,13 +140,13 @@ export class MinecraftBot extends EventEmitter {
 
         listen('playerJoined', (player) => {
           if (!isCurrent()) return;
-          logger.info(`Игрок зашёл: ${player.username}`);
+          logger.info(`Player joined: ${player.username}`);
           this.emit('playerJoined', player);
         });
 
         listen('playerLeft', (player) => {
           if (!isCurrent()) return;
-          logger.info(`Игрок вышел: ${player.username}`);
+          logger.info(`Player left: ${player.username}`);
           this.emit('playerLeft', player);
         });
 
@@ -156,7 +156,7 @@ export class MinecraftBot extends EventEmitter {
         });
 
       } catch (error) {
-        logger.error(`Не удалось создать бота: ${error.message}`);
+        logger.error(`Failed to create bot: ${error.message}`);
         finish(error);
         this._failAttempt(bot, generation, error);
       }
@@ -201,24 +201,24 @@ export class MinecraftBot extends EventEmitter {
   }
 
   /**
-   * Автоматическое переподключение.
+   * Automatic reconnection.
    */
   _handleDisconnect(token = this.connectionToken) {
     if (this.stopping || token !== this.connectionToken || this.reconnectTimer) return;
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      logger.info(`Переподключение через ${this.reconnectWait / 1000}с (попытка ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+      logger.info(`Reconnecting in ${this.reconnectWait / 1000}s (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       this.reconnectTimer = setTimeout(() => {
         this.reconnectTimer = null;
         if (!this.stopping && token === this.connectionToken) this.connect().catch(() => {});
       }, this.reconnectWait);
     } else {
-      logger.error('Исчерпаны попытки переподключения.');
+      logger.error('All reconnection attempts have been exhausted.');
     }
   }
 
   /**
-   * Отключение от сервера.
+   * Disconnect from the server.
    */
   async forceDisconnect({ reason = 'shutdown', timeoutMs = 2000 } = {}) {
     this.stopping = true;
@@ -250,7 +250,7 @@ export class MinecraftBot extends EventEmitter {
   }
 
   disconnect() {
-    logger.info('Отключение бота...');
+    logger.info('Disconnecting bot...');
     return this.forceDisconnect({ reason: 'disconnect' });
   }
 
