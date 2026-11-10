@@ -6,8 +6,8 @@ const logger = createLogger('AI_OPENAI_COMPATIBLE');
 
 /**
  * OpenAI-Compatible AI Provider (Tooken Club / OpenAI / Local LLMs).
- * Полная поддержка Chat Completions, Tool Calling, Multi-turn reasoning,
- * повторных попыток с экспоненциальным backoff и изоляции ошибок.
+ * Full support for Chat Completions, tool calling, multi-turn reasoning,
+ * exponential-backoff retries, and error isolation.
  */
 export class OpenAICompatibleProvider extends AIProvider {
   /**
@@ -45,7 +45,7 @@ export class OpenAICompatibleProvider extends AIProvider {
       ? `${this.apiKey.substring(0, 4)}...${this.apiKey.substring(this.apiKey.length - 4)}`
       : '***';
 
-    logger.info(`OpenAI-Compatible провайдер инициализирован: модель="${this.model}", baseUrl="${this.baseUrl}", key=${maskedKey}`);
+    logger.info(`OpenAI-compatible provider initialized: model="${this.model}", baseUrl="${this.baseUrl}", key=${maskedKey}`);
   }
 
   get name() {
@@ -53,12 +53,12 @@ export class OpenAICompatibleProvider extends AIProvider {
   }
 
   /**
-   * Проверка доступности моделей через GET /models
+   * Check model availability through GET /models
    * @returns {Promise<{available: boolean, models: string[], error?: string}>}
    */
   async listModels() {
     const url = `${this.baseUrl}/models`;
-    logger.debug(`Запрос списка моделей: GET ${url}`);
+    logger.debug(`Requesting model list: GET ${url}`);
 
     try {
       const response = await this._fetchWithTimeout(url, {
@@ -86,13 +86,13 @@ export class OpenAICompatibleProvider extends AIProvider {
         hasCurrentModel: models.includes(this.model),
       };
     } catch (err) {
-      logger.warn(`Ошибка при получении списка моделей с ${url}: ${err.message}`);
+      logger.warn(`Failed to fetch model list from ${url}: ${err.message}`);
       return { available: false, models: [], error: err.message };
     }
   }
 
   /**
-   * Создаёт чат-сессию с инструментами.
+   * Create a chat session with tools.
    * @param {Object} options
    * @param {string} [options.systemPrompt]
    * @param {Array<Object>} [options.tools]
@@ -126,12 +126,12 @@ export class OpenAICompatibleProvider extends AIProvider {
       session.messages.push({ role: 'system', content: enrichedPrompt });
     }
 
-    logger.debug(`Чат-сессия создана (инструментов: ${formattedTools.length})`);
+    logger.debug(`Chat session created (tools: ${formattedTools.length})`);
     return session;
   }
 
   /**
-   * Отправляет сообщение пользователя и возвращает ответ (с возможными вызовами инструментов).
+   * Send a user message and return the response (including possible tool calls).
    * @param {Object} session
    * @param {string} message
    * @returns {Promise<{text: string, toolCalls: Array<{name: string, args: Object, id?: string}>, raw: any}>}
@@ -143,7 +143,7 @@ export class OpenAICompatibleProvider extends AIProvider {
       return await this._callCompletionsWithRetry(session, options.signal);
     } catch (error) {
       if ((options.allowFallback || this.fallbackOnTimeout) && (error.name === 'TimeoutError' || /timeout|fetch failed|network|econnrefused|enotfound/i.test(error.message || ''))) {
-        logger.warn('Локальная модель недоступна: сохраняем тишину вместо спама ошибками');
+        logger.warn('Local model unavailable; remain silent instead of spamming errors');
         return { text: '', toolCalls: [], raw: null, fallback: true };
       }
       throw error;
@@ -151,7 +151,7 @@ export class OpenAICompatibleProvider extends AIProvider {
   }
 
   /**
-   * Отправляет результаты работы инструментов обратно в модель.
+   * Send tool results back to the model.
    * @param {Object} session
    * @param {Array<{name: string, result: any}>} results
    * @returns {Promise<{text: string, toolCalls: Array<{name: string, args: Object, id?: string}>, raw: any}>}
@@ -162,7 +162,7 @@ export class OpenAICompatibleProvider extends AIProvider {
 
     for (let i = 0; i < results.length; i++) {
       const res = results[i];
-      // Сопоставляем результат с соответствующим ID вызова инструмента
+      // Match the result to the corresponding tool-call ID
       const matched = (res.id && pending.find(p => p.id === res.id)) || pending.find(p => p.name === res.name) || pending[i];
       const toolCallId = matched ? matched.id : `call_${Date.now()}_${i}`;
 
@@ -205,7 +205,7 @@ export class OpenAICompatibleProvider extends AIProvider {
   }
 
   /**
-   * Генерация однократного текстового ответа (реплики, мысли, диалога).
+   * Generate a one-off text response (chat line, thought, or dialogue).
    * @param {string|Object} promptOrOptions
    * @param {Object} [options]
    * @returns {Promise<string>}
@@ -272,14 +272,14 @@ export class OpenAICompatibleProvider extends AIProvider {
       const content = data?.choices?.[0]?.message?.content || '';
       return content.trim();
     } catch (err) {
-      logger.error(`generateText ошибка: ${err.message}`);
+      logger.error(`generateText error: ${err.message}`);
       throw err;
     }
   }
 
 
   /**
-   * Вызов Chat Completions API с повторными попытками (exponential backoff)
+   * Call the Chat Completions API with retries (exponential backoff)
    * @private
    */
   async _callCompletionsWithRetry(session, signal = null) {
@@ -306,7 +306,7 @@ export class OpenAICompatibleProvider extends AIProvider {
           payload.tool_choice = 'auto';
         }
 
-        logger.debug(`[API CALL #${attempt + 1}] Отправка в ${this.baseUrl}/chat/completions (сообщений: ${session.messages.length})`);
+        logger.debug(`[API CALL #${attempt + 1}] Sending to ${this.baseUrl}/chat/completions (messages: ${session.messages.length})`);
         const startTime = Date.now();
 
         const response = await this._fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
@@ -334,25 +334,25 @@ export class OpenAICompatibleProvider extends AIProvider {
             throw error;
           }
 
-          // Ошибки авторизации не имеют смысла для повтора
+          // Retrying authorization errors is pointless
           if (status === 401 || status === 403) {
-            throw new Error(`Ошибка авторизации API (${status}): ${errBody}`);
+            throw new Error(`API authorization error (${status}): ${errBody}`);
           }
 
-          // 429 означает перегрузку: короткая пауза вместо долгого блока
+          // 429 indicates overload: use a short pause instead of a long block
           if (status === 429) {
-            this.cooldownUntil = Date.now() + 5000; // 5 секунд вместо 30
+            this.cooldownUntil = Date.now() + 5000; // 5 seconds instead of 30
             const error = new Error(`API HTTP 429: ${errBody}`);
             error.httpStatus = 429;
             error.retryable = false;
             throw error;
           }
 
-          // 5xx — ограниченно повторяем с задержкой.
+          // Retry 5xx errors a limited number of times with a delay.
           if (status >= 500 && status < 600) {
             const isLast = attempt === this.maxRetries;
             const waitMs = Math.min(10000, 1000 * Math.pow(2, attempt) + Math.random() * 500);
-            logger.warn(`API вернул статус ${status} (${elapsed}ms). ${isLast ? 'Попытки исчерпаны.' : `Повтор через ${Math.round(waitMs)}ms...`}`);
+            logger.warn(`API returned status ${status} (${elapsed} ms). ${isLast ? 'No retries remain.' : `Retrying in ${Math.round(waitMs)} ms...`}`);
 
             if (!isLast) {
               await new Promise((resolve, reject) => {
@@ -367,42 +367,42 @@ export class OpenAICompatibleProvider extends AIProvider {
         }
 
         const data = await response.json();
-        logger.debug(`[API RESPONSE] Получен ответ (${elapsed}ms)`);
+        logger.debug(`[API RESPONSE] Received response (${elapsed} ms)`);
 
         return this._parseChatResponse(session, data);
       } catch (err) {
         lastError = err;
         if (err.httpStatus === 400 || err.retryable === false || signal?.aborted) throw err;
         if (err instanceof TypeError || /fetch failed|network|econnreset|enotfound/i.test(err.message || '')) {
-          this.cooldownUntil = Date.now() + 5000; // 5 секунд вместо 30
+          this.cooldownUntil = Date.now() + 5000; // 5 seconds instead of 30
           err.retryable = false;
           throw err;
         }
         if (err.name === 'AbortError' || err.name === 'TimeoutError' || err.message.includes('timeout')) {
-          logger.warn(`Таймаут запроса к API (${this.timeoutMs}ms) на попытке ${attempt + 1}`);
+          logger.warn(`API request timed out (${this.timeoutMs} ms) on attempt ${attempt + 1}`);
           // A provider timeout already consumed the full request budget. Retrying
           // immediately would multiply 35s stalls and keep every agent waiting.
           err.retryable = false;
           throw err;
         }
-        if (err.message.includes('авторизации')) {
+        if (err.message.includes('authorization')) {
           throw err;
         }
       }
     }
 
-    logger.error(`Все ${this.maxRetries + 1} попыток запроса к API завершились ошибкой: ${lastError?.message}`);
+    logger.error(`All ${this.maxRetries + 1} API request attempts failed: ${lastError?.message}`);
     throw lastError;
   }
 
   /**
-   * Парсинг ответа Chat Completion и обновление истории сообщений
+   * Parse the Chat Completion response and update message history
    * @private
    */
   _parseChatResponse(session, data) {
     const choice = data?.choices?.[0];
     if (!choice || !choice.message) {
-      throw new Error(`Некорректная структура ответа API: ${JSON.stringify(data).substring(0, 300)}`);
+      throw new Error(`Invalid API response structure: ${JSON.stringify(data).substring(0, 300)}`);
     }
 
     const assistantMsg = choice.message;
@@ -419,7 +419,7 @@ export class OpenAICompatibleProvider extends AIProvider {
           try {
             parsedArgs = JSON.parse(tc.function.arguments || '{}');
           } catch (e) {
-            logger.warn(`Не удалось распарсить JSON аргументы для инструмента ${tc.function.name}: ${tc.function.arguments}`);
+            logger.warn(`Could not parse JSON arguments for tool ${tc.function.name}: ${tc.function.arguments}`);
           }
         } else if (typeof tc.function?.arguments === 'object' && tc.function.arguments !== null) {
           parsedArgs = tc.function.arguments;
@@ -442,10 +442,10 @@ export class OpenAICompatibleProvider extends AIProvider {
     }
 
     if (text) {
-      logger.debug(`Текстовый ответ (${text.length} симв.): "${text.substring(0, 100).replace(/\n/g, ' ')}"`);
+      logger.debug(`Text response (${text.length} chars): "${text.substring(0, 100).replace(/\n/g, ' ')}"`);
     }
     if (toolCalls.length > 0) {
-      logger.info(`Вызов инструментов (${toolCalls.length}): ${toolCalls.map(t => t.name).join(', ')}`);
+      logger.info(`Tool calls (${toolCalls.length}): ${toolCalls.map(t => t.name).join(', ')}`);
     }
 
     return {
@@ -456,7 +456,7 @@ export class OpenAICompatibleProvider extends AIProvider {
   }
 
   /**
-   * Fetch с таймаутом через AbortController
+   * Fetch with timeout through AbortController
    * @private
    */
   _trimMessages(messages) {
@@ -474,14 +474,14 @@ export class OpenAICompatibleProvider extends AIProvider {
   _enrichRussianPrompt(systemPrompt, context = {}) {
     const base = String(systemPrompt || '').trim();
     const lines = [
-      'Говори по-русски естественно, как живой товарищ по компании.',
-      'Не отвечай автоматически на каждую реплику: иногда уместнее промолчать или ответить коротко.',
-      'Не используй служебные метки, списки команд и канцелярит. Не утверждай, что действие выполнено, если нет результата инструмента.',
-      'Пиши современно и по-человечески: короткие разговорные фразы, нормальный русский чат, без «выполняю задачу», «принято», «успешно завершено», «готов к работе» и без отчётов NPC.',
+      'Speak naturally in English, like a real teammate playing with friends.',
+      'Do not respond automatically to every message: sometimes silence or a short reply is more appropriate.',
+      'Do not use system labels, command lists, or bureaucratic language. Never claim an action was completed unless a tool result confirms it.',
+      'Write in modern, natural English: use short conversational phrases and casual chat. Avoid phrases such as "executing task", "acknowledged", "successfully completed", "ready for work", and avoid NPC-style reports.',
     ];
-    if (context.personality) lines.push(`Твои черты характера: ${context.personality}`);
-    if (context.emotionalState) lines.push(`Твоё текущее настроение (оно может меняться): ${context.emotionalState}`);
-    if (context.socialContext) lines.push(`Что происходит между друзьями сейчас: ${context.socialContext}`);
+    if (context.personality) lines.push(`Your personality traits: ${context.personality}`);
+    if (context.emotionalState) lines.push(`Your current mood (it may change): ${context.emotionalState}`);
+    if (context.socialContext) lines.push(`What is happening between friends right now: ${context.socialContext}`);
     return [base, lines.join('\n')].filter(Boolean).join('\n\n');
   }
 
