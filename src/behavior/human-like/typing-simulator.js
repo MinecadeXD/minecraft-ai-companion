@@ -4,90 +4,90 @@ import { HumanErrorEngine } from '../human-error-engine.js';
 const logger = createLogger('TYPING_SIMULATOR');
 
 /**
- * Симулятор человеческой печати с опечатками, исправлениями и отвлечениями.
+ * Human typing simulator with typos, corrections, and distractions.
  */
 export class TypingSimulator {
   constructor(profile) {
     this.profile = profile;
     
-    // Скорость печати для каждого бота (символов в минуту)
+    // Typing speed for each bot (characters per minute)
     this.typingSpeed = this._getTypingSpeed(profile.name);
     
-    // Вероятность опечатки
+    // Typo probability
     this.typoChance = this._getTypoChance(profile);
     
-    // Вероятность отвлечься
-    this.distractionChance = 0.05; // 5% шанс отвлечься
+    // Distraction probability
+    this.distractionChance = 0.05; // 5% chance of getting distracted
   }
 
   /**
-   * Определяет скорость печати для персонажа
+   * Determine the typing speed for a character
    */
   _getTypingSpeed(name) {
     const speeds = {
-      Sam: 250,      // Средняя скорость
-      Max: 300,      // Быстрый
-      Jack: 180,     // Медленный, энергичный
-      Ryan: 220,     // Средне-медленный
-      Alex: 240,     // Средний
-      Leo: 200       // Медленно-средний
+      Sam: 250,      // Average speed
+      Max: 300,      // Fast
+      Jack: 180,     // Slow but energetic
+      Ryan: 220,     // Moderately slow
+      Alex: 240,     // Average
+      Leo: 200       // Moderately slow
     };
     
     return speeds[name] || 240;
   }
 
   /**
-   * Определяет вероятность опечатки для персонажа
+   * Determine the typo probability for a character
    */
   _getTypoChance(profile) {
-    const baseChance = 0.03; // 3% базовый шанс
+    const baseChance = 0.03; // 3% base chance
     
-    // Jack печатает быстро и небрежно - больше опечаток
+    // Jack types quickly and carelessly, so he makes more typos
     if (profile.name === 'Jack') return 0.08;
     
-    // Max аккуратный - меньше опечаток
+    // Max is careful and makes fewer typos
     if (profile.name === 'Max') return 0.01;
     
     return baseChance;
   }
 
   /**
-   * Обрабатывает сообщение перед отправкой
-   * @param {string} message - оригинальное сообщение
+   * Process a message before sending it
+   * @param {string} message - original message
    * @returns {Object} { finalMessage: string, delay: number, interrupted: boolean }
    */
   async processMessage(message) {
-    // Проверяем отвлечение
+    // Check for distraction
     if (HumanErrorEngine.chance(this.distractionChance, this.profile)) {
-      // Отвлекся - не отправляет сообщение
-      logger.debug(`[${this.profile.name}] Отвлекся, сообщение не отправлено`);
+      // Got distracted — do not send the message
+      logger.debug(`[${this.profile.name}] Got distracted; message was not sent`);
       return { finalMessage: null, delay: 0, interrupted: true };
     }
 
-    // Добавляем опечатки
+    // Add typos
     let finalMessage = this._addTypos(message);
     
-    // Иногда исправляем опечатки
+    // Sometimes correct typos
     if (finalMessage !== message && HumanErrorEngine.chance(0.6, this.profile)) {
       finalMessage = this._addCorrection(message, finalMessage);
     }
 
-    // Рассчитываем задержку печати
+    // Calculate typing delay
     const delay = this._calculateTypingDelay(finalMessage);
 
     return { finalMessage, delay, interrupted: false };
   }
 
   /**
-   * Добавляет опечатки в текст
+   * Add typos to text
    */
   _addTypos(text) {
-    if (text.length < 5) return text; // Короткие сообщения без опечаток
+    if (text.length < 5) return text; // Short messages are not given typos
     
     let result = text;
     const words = text.split(' ');
     
-    // Проверяем каждое слово
+    // Check each word
     for (let i = 0; i < words.length; i++) {
       if (HumanErrorEngine.chance(this.typoChance, this.profile) && words[i].length > 3) {
         words[i] = this._makeTypo(words[i]);
@@ -98,21 +98,21 @@ export class TypingSimulator {
   }
 
   /**
-   * Создает опечатку в слове
+   * Create a typo in a word
    */
   _makeTypo(word) {
     if (word.length < 3) return word;
     
     const typoTypes = [
-      'swap',      // Перестановка соседних букв
-      'duplicate', // Дублирование буквы
-      'skip',      // Пропуск буквы
-      'wrong'      // Неправильная буква (соседняя на клавиатуре)
+      'swap',      // Swap adjacent letters
+      'duplicate', // Duplicate a letter
+      'skip',      // Skip a letter
+      'wrong'      // Wrong letter (an adjacent key on the keyboard)
     ];
     
     const type = HumanErrorEngine.choice(typoTypes);
     const chars = word.split('');
-    const pos = Math.floor(HumanErrorEngine.range(1, chars.length - 1.01)); // Не первая и не последняя
+    const pos = Math.floor(HumanErrorEngine.range(1, chars.length - 1.01)); // Not the first or last character
     
     switch (type) {
       case 'swap':
@@ -138,44 +138,39 @@ export class TypingSimulator {
   }
 
   /**
-   * Возвращает соседнюю букву на клавиатуре
+   * Return an adjacent keyboard key
    */
   _getNeighborKey(char) {
-    const ruKeyboard = {
-      'а': ['ы', 'ф', 'в'],
-      'б': ['н', 'г', 'д'],
-      'в': ['а', 'с', 'п'],
-      'г': ['ш', 'л', 'р'],
-      'д': ['б', 'л', 'о'],
-      'е': ['н', 'у', 'к'],
-      'ж': ['д', 'о', 'л'],
-      'з': ['ч', 'я', 'х'],
-      'и': ['п', 'р', 'т'],
-      'й': ['ф', 'ц', 'у'],
-      'к': ['е', 'н', 'у'],
-      'л': ['д', 'ж', 'р'],
-      'м': ['т', 'и', 'ь'],
-      'н': ['г', 'т', 'е'],
-      'о': ['д', 'ш', 'щ'],
-      'п': ['в', 'р', 'и'],
-      'р': ['п', 'о', 'л'],
-      'с': ['в', 'м', 'ы'],
-      'т': ['н', 'б', 'и'],
-      'у': ['к', 'й', 'ц'],
-      'ф': ['а', 'й', 'я'],
-      'х': ['з', 'ъ', 'щ'],
-      'ц': ['й', 'у', 'в'],
-      'ч': ['я', 'с', 'м'],
-      'ш': ['г', 'щ', 'о'],
-      'щ': ['ш', 'з', 'х'],
-      'ы': ['а', 'в', 'п'],
-      'ь': ['б', 'м', 'ю'],
-      'э': ['ю', 'ж', 'д'],
-      'ю': ['ь', 'б', '.'],
-      'я': ['ф', 'ч', 'с']
+    const enKeyboard = {
+      q: ['w', 'a'],
+      w: ['q', 'e', 'a', 's'],
+      e: ['w', 'r', 's', 'd'],
+      r: ['e', 't', 'd', 'f'],
+      t: ['r', 'y', 'f', 'g'],
+      y: ['t', 'u', 'g', 'h'],
+      u: ['y', 'i', 'h', 'j'],
+      i: ['u', 'o', 'j', 'k'],
+      o: ['i', 'p', 'k', 'l'],
+      p: ['o', 'l'],
+      a: ['q', 'w', 's', 'z'],
+      s: ['w', 'e', 'a', 'd', 'z', 'x'],
+      d: ['e', 'r', 's', 'f', 'x', 'c'],
+      f: ['r', 't', 'd', 'g', 'c', 'v'],
+      g: ['t', 'y', 'f', 'h', 'v', 'b'],
+      h: ['y', 'u', 'g', 'j', 'b', 'n'],
+      j: ['u', 'i', 'h', 'k', 'n', 'm'],
+      k: ['i', 'o', 'j', 'l', 'm'],
+      l: ['o', 'p', 'k'],
+      z: ['a', 's', 'x'],
+      x: ['z', 's', 'd', 'c'],
+      c: ['x', 'd', 'f', 'v'],
+      v: ['c', 'f', 'g', 'b'],
+      b: ['v', 'g', 'h', 'n'],
+      n: ['b', 'h', 'j', 'm'],
+      m: ['n', 'j', 'k']
     };
     
-    const neighbors = ruKeyboard[char.toLowerCase()];
+    const neighbors = enKeyboard[char.toLowerCase()];
     if (neighbors && neighbors.length > 0) {
       return HumanErrorEngine.choice(neighbors);
     }
@@ -184,63 +179,63 @@ export class TypingSimulator {
   }
 
   /**
-   * Добавляет исправление опечатки
+   * Add a typo correction
    */
   _addCorrection(original, typo) {
-    // Варианты исправления:
-    // 1. "*правильное слово" (самый частый, 60%)
-    // 2. "опечатка* правильное" (20%)
-    // 3. Оставляем с опечаткой (20%)
+    // Correction options:
+    // 1. "*correct word" (most common, 60%)
+    // 2. "typo* correct" (20%)
+    // 3. Leave the typo as-is (20%)
     
     if (HumanErrorEngine.chance(0.6, this.profile)) {
-      // Исправление через *
+      // Correction using *
       return `${typo}\n*${original}`;
     } else if (HumanErrorEngine.chance(0.5, this.profile)) {
-      // Просто правильная версия
+      // Just the corrected version
       return original;
     } else {
-      // Оставляем с опечаткой
+      // Leave it with the typo
       return typo;
     }
   }
 
   /**
-   * Рассчитывает задержку печати
+   * Calculate typing delay
    */
   _calculateTypingDelay(message) {
     const charsPerMinute = this.typingSpeed;
     const charsPerMs = charsPerMinute / 60000;
     
-    // Базовая задержка
+    // Base delay
     let delay = message.length / charsPerMs;
     
-    // Добавляем случайную вариацию ±30%
+    // Add random variation of ±30%
     const variation = 0.3;
     delay = delay * (1 + HumanErrorEngine.jitter(variation, this.profile));
     
-    // Минимум 500мс, максимум 10сек
+    // Minimum 500 ms, maximum 10 seconds
     delay = Math.max(500, Math.min(10000, delay));
     
-    // Добавляем "время на раздумье" перед отправкой
-    const thinkTime = HumanErrorEngine.range(200, 1000, this.profile); // 200-1000мс
+    // Add "thinking time" before sending
+    const thinkTime = HumanErrorEngine.range(200, 1000, this.profile); // 200–1000 ms
     
     return Math.round(delay + thinkTime);
   }
 
   /**
-   * Симулирует начало печати и возможное прерывание
-   * @returns {boolean} true если начал печатать, false если передумал
+   * Simulate starting to type and possibly stopping
+   * @returns {boolean} true if typing started, false if the agent changed its mind
    */
   startTyping() {
-    // 10% шанс что начал печатать и передумал
+    // 10% chance of starting to type and then changing their mind
     return !HumanErrorEngine.chance(0.1, this.profile);
   }
 
   /**
-   * Возвращает индикатор печати (для отображения "печатает...")
+   * Return the typing indicator (for displaying "typing...")
    */
   getTypingIndicatorDuration(messageLength) {
-    // Показываем "печатает..." на время реальной печати
+    // Show "typing..." for the duration of the actual typing
     return this._calculateTypingDelay('x'.repeat(messageLength));
   }
 }
