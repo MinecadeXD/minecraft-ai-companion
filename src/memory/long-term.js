@@ -25,7 +25,7 @@ export class LongTermMemory {
       // WAL mode optional if locked
     }
     this._initTables();
-    logger.info(`Долгосрочная память SQLite инициализирована: ${resolvedPath}`);
+    logger.info(`Long-term SQLite memory initialized: ${resolvedPath}`);
   }
 
   _initTables() {
